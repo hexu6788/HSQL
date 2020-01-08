@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29609.76
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HSQL.Test", "HSQL.Test\HSQL.Test.csproj", "{2E3C693A-A443-43F5-A4D0-3F1EBF597F13}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HSQL", "HSQL\HSQL.csproj", "{AC3561DE-2E0A-466D-B0CF-A09B65CC8051}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E3C693A-A443-43F5-A4D0-3F1EBF597F13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E3C693A-A443-43F5-A4D0-3F1EBF597F13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E3C693A-A443-43F5-A4D0-3F1EBF597F13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E3C693A-A443-43F5-A4D0-3F1EBF597F13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC3561DE-2E0A-466D-B0CF-A09B65CC8051}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC3561DE-2E0A-466D-B0CF-A09B65CC8051}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC3561DE-2E0A-466D-B0CF-A09B65CC8051}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC3561DE-2E0A-466D-B0CF-A09B65CC8051}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E72F8B6C-5DBF-4E1D-A442-2584ABE4A5B3}
+	EndGlobalSection
+EndGlobal
