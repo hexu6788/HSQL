@@ -1,8 +1,10 @@
 using HSQL.Test.TestDataBaseModel;
+using HSQL.Test.TestHelper;
 using HSQL.Test.TestViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace HSQL.Test
@@ -66,11 +68,45 @@ namespace HSQL.Test
                 Age = 60
             };
 
-            Expression<Func<Student, bool>> expression = x => (x.Name == student.Name && x.Age <= student.Age && x.Age > 18);
+            Expression<Func<Student, bool>> expression = x => (x.Name == student.Name && x.Age <= student.Age && x.Age > 18 && x.Birthday < 99999 && x.Birthday > UnixTime.ToUnixTimeSecond(new DateTime(1990, 1, 1)));
 
             var where = ExpressionToSqlWhere.Resolve(expression);
 
-            Assert.AreEqual(where, $"name = '{student.Name}' AND age <= {student.Age} AND age > 18");
+            Assert.AreEqual(where, $"name = '{student.Name}' AND age <= {student.Age} AND age > 18 AND birthday < 99999 AND birthday > {UnixTime.ToUnixTimeSecond(new DateTime(1990, 1, 1))}");
+        }
+
+        [TestMethod]
+        public void TestRoutine5()
+        {
+            var score = new Score()
+            {
+                SubjectId = "yuwen"
+            };
+            decimal value = (decimal)60.0;
+
+            Expression<Func<Score, bool>> expression = x => (x.SubjectId == score.SubjectId && x.Value >= value);
+
+            var where = ExpressionToSqlWhere.Resolve(expression);
+
+            Assert.AreEqual(where, $"subject_id = '{score.SubjectId}' AND value >= {value}");
+        }
+
+        [TestMethod]
+        public void TestRoutine6()
+        {
+            var studentList = new List<Student>()
+            {
+                new Student() { Id = "1" },
+                new Student() { Id = "2" },
+                new Student() { Id = "3" },
+                new Student() { Id = "4" }
+            };
+
+            Expression<Func<Score, bool>> expression = x => studentList.Select(s => s.Id).ToList().Contains(x.StudentId);
+
+            var where = ExpressionToSqlWhere.Resolve(expression);
+
+            Assert.AreEqual(where, $"student_id IN ('1','2','3','4')");
         }
 
         [TestMethod]
