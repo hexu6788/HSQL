@@ -5,11 +5,18 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace HSQL
 {
     public class ExpressionToSqlWhere
     {
+        public static string ToWhere(Expression expression) 
+        {
+            var where = Resolve(expression);
+            return RemoveBeginEndBracket(where);
+        }
+
         public static string Resolve(Expression expression)
         {
             if (expression == null)
@@ -27,8 +34,13 @@ namespace HSQL
                 {
                     case ExpressionType.AndAlso:
                     case ExpressionType.OrElse:
-                        return $"{Resolve(binaryExpression.Left)} {symbol} {Resolve(binaryExpression.Right)}";
+                        {
+                            var left = Resolve(binaryExpression.Left);
+                            var right = Resolve(binaryExpression.Right);
+                            return Combining(left, symbol, right);
+                        }
                     case ExpressionType.Equal:
+                    case ExpressionType.NotEqual:
                     case ExpressionType.GreaterThanOrEqual:
                     case ExpressionType.GreaterThan:
                     case ExpressionType.LessThanOrEqual:
@@ -46,7 +58,7 @@ namespace HSQL
                             else
                                 throw new Exception("未处理异常");
 
-                            return $"{left} {symbol} {right}";
+                            return Combining(left, symbol, right);
                         }
                     default:
                         throw new Exception("未处理异常");
@@ -63,6 +75,10 @@ namespace HSQL
             else if (expression is ConstantExpression)
             {
                 return ResolveConstant((ConstantExpression)expression);
+            }
+            else if (expression is UnaryExpression)
+            {
+                return ResolveUnary((UnaryExpression)expression);
             }
             throw new Exception("未处理异常");
         }
@@ -84,7 +100,7 @@ namespace HSQL
                 else
                     throw new Exception("未处理异常");
 
-                return $"{left} IN ({right})";
+                return Combining(left, "IN", $"({right})");
             }
             else
             {
@@ -100,9 +116,9 @@ namespace HSQL
                 switch (expression.Method.Name)
                 {
                     case "Equals":
-                        return $"{left} = '{right}'";
+                        return Combining(left, "=", $"'{right}'");
                     case "Contains":
-                        return $"{left} LIKE '%{right}%'";
+                        return Combining(left, "LIKE", $"'%{right}%'");
                     default:
                         throw new Exception("未处理异常");
                 }
@@ -125,6 +141,16 @@ namespace HSQL
             return expression.Value.ToString();
         }
 
+        private static string ResolveUnary(UnaryExpression expression) 
+        {
+            if (expression.NodeType == ExpressionType.Not)
+            {
+                var value = ResolveMethodCall((MethodCallExpression)expression.Operand).Replace(" = ", " != ");
+                return value;
+            }
+            throw new Exception("未处理异常");
+        }
+
         private static string ExpressionTypeSymbol(ExpressionType nodeType)
         {
             switch (nodeType)
@@ -135,6 +161,8 @@ namespace HSQL
                     return "OR";
                 case ExpressionType.Equal:
                     return "=";
+                case ExpressionType.NotEqual:
+                    return "!=";
                 case ExpressionType.GreaterThanOrEqual:
                     return ">=";
                 case ExpressionType.GreaterThan:
@@ -180,6 +208,68 @@ namespace HSQL
                 return string.Join(",", Expression.Lambda<Func<List<string>>>(Expression.Convert(expression, typeof(List<string>))).Compile().Invoke().Select(x => string.Format("'{0}'", x)));
 
             throw new Exception("未处理异常");
+        }
+
+        private static string Combining(string left, string symbol, string right)
+        {
+            if (symbol.Equals(">")
+                || symbol.Equals(">=")
+                || symbol.Equals("=")
+                || symbol.Equals("!=")
+                || symbol.Equals("<")
+                || symbol.Equals("<=")
+                || symbol.Equals("IN")
+                || symbol.Equals("LIKE")
+                || symbol.Equals("AND"))
+            {
+                return $"{left} {symbol} {right}";
+            }
+            else if (symbol.Equals("OR"))
+            {
+                if (!IsNormalExpression(left))
+                    left = $"({left})";
+                if (!IsNormalExpression(right))
+                    right = $"({right})";
+
+                return $"({left} {symbol} {right})";
+            }
+            return $"{left} {symbol} {right}";
+        }
+
+        private static bool IsNormalExpression(string text)
+        {
+            if (text.IndexOf("(") == 0 && text.LastIndexOf(")") == text.Length - 1)
+                return true;
+
+            var count = 0;
+
+            count += text.IndexOf(" > ") > -1 ? 1 : 0;
+            count += text.IndexOf(" >= ") > -1 ? 1 : 0;
+            count += text.IndexOf(" = ") > -1 ? 1 : 0;
+            count += text.IndexOf(" != ") > -1 ? 1 : 0;
+            count += text.IndexOf(" < ") > -1 ? 1 : 0;
+            count += text.IndexOf(" <= ") > -1 ? 1 : 0;
+            count += text.IndexOf(" IN ") > -1 ? 1 : 0;
+            count += text.IndexOf(" LIKE ") > -1 ? 1 : 0;
+
+            var isNormal = count == 1;
+            return isNormal;
+        }
+
+        private static string RemoveBeginEndBracket(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return text;
+
+            if (!text.Contains("(") || !text.Contains(")"))
+                return text;
+
+            if (text.IndexOf("(") == 0 && text.LastIndexOf(")") == text.Length - 1)
+            {
+                return text.Substring(1, text.Length - 2);
+            }
+            return text;
+            
         }
 
     }
