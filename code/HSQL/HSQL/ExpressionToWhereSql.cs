@@ -1,4 +1,5 @@
 ﻿using HSQL.Attribute;
+using HSQL.Const;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,15 +10,15 @@ using System.Text.RegularExpressions;
 
 namespace HSQL
 {
-    public class ExpressionToSqlWhere
+    public class ExpressionToWhereSql
     {
-        public static string ToWhere(Expression expression) 
+        public static string ToWhereString(Expression expression) 
         {
             var where = Resolve(expression);
             return RemoveBeginEndBracket(where);
         }
 
-        public static string Resolve(Expression expression)
+        private static string Resolve(Expression expression)
         {
             if (expression == null)
                 throw new Exception("未处理异常");
@@ -52,7 +53,19 @@ namespace HSQL
                             if (binaryExpression.Right.NodeType == ExpressionType.MemberAccess)
                                 right = ResolveMemberValue((MemberExpression)binaryExpression.Right, false);
                             else if (binaryExpression.Right.NodeType == ExpressionType.Constant)
-                                right = ((ConstantExpression)binaryExpression.Right).Value.ToString();
+                            {
+                                var value = ResolveConstant((ConstantExpression)binaryExpression.Right);
+                                if (binaryExpression.Right.Type == TypeOfConst.Int
+                                    || binaryExpression.Right.Type == TypeOfConst.Long
+                                    || binaryExpression.Right.Type == TypeOfConst.Float
+                                    || binaryExpression.Right.Type == TypeOfConst.Double
+                                    || binaryExpression.Right.Type == TypeOfConst.Decimal)
+                                    right = value;
+                                else if (binaryExpression.Right.Type == TypeOfConst.String)
+                                    right = $"'{value}'";
+                                else
+                                    throw new Exception("未处理异常");
+                            }
                             else if (binaryExpression.Right.NodeType == ExpressionType.Call)
                                 right = ResolveMethodCall((MethodCallExpression)binaryExpression.Right);
                             else
@@ -128,7 +141,7 @@ namespace HSQL
 
         private static string ResolveMemberName(MemberExpression expression)
         {
-           return ((ColumnAttribute)expression.Member.GetCustomAttributes(typeof(ColumnAttribute), true)[0]).Name;
+           return ((ColumnAttribute)expression.Member.GetCustomAttributes(TypeOfConst.ColumnAttribute, true)[0]).Name;
         }
 
         private static string ResolveMemberValue(MemberExpression expression, bool onlyValue = true)
@@ -178,34 +191,34 @@ namespace HSQL
 
         private static string Eval(Expression expression,bool onlyValue = true)
         {
-            if (expression.Type == typeof(int))
-                return Expression.Lambda<Func<int>>(Expression.Convert(expression, typeof(int))).Compile().Invoke().ToString();
-            else if (expression.Type == typeof(long))
-                return Expression.Lambda<Func<long>>(Expression.Convert(expression, typeof(long))).Compile().Invoke().ToString();
-            else if (expression.Type == typeof(decimal))
-                return Expression.Lambda<Func<decimal>>(Expression.Convert(expression, typeof(decimal))).Compile().Invoke().ToString();
-            else if (expression.Type == typeof(float))
-                return Expression.Lambda<Func<float>>(Expression.Convert(expression, typeof(float))).Compile().Invoke().ToString();
-            else if (expression.Type == typeof(double))
-                return Expression.Lambda<Func<double>>(Expression.Convert(expression, typeof(double))).Compile().Invoke().ToString();
-            else if (expression.Type == typeof(string))
+            if (expression.Type == TypeOfConst.Int)
+                return Expression.Lambda<Func<int>>(Expression.Convert(expression, TypeOfConst.Int)).Compile().Invoke().ToString();
+            else if (expression.Type == TypeOfConst.Long)
+                return Expression.Lambda<Func<long>>(Expression.Convert(expression, TypeOfConst.Long)).Compile().Invoke().ToString();
+            else if (expression.Type == TypeOfConst.Decimal)
+                return Expression.Lambda<Func<decimal>>(Expression.Convert(expression, TypeOfConst.Decimal)).Compile().Invoke().ToString();
+            else if (expression.Type == TypeOfConst.Float)
+                return Expression.Lambda<Func<float>>(Expression.Convert(expression, TypeOfConst.Float)).Compile().Invoke().ToString();
+            else if (expression.Type == TypeOfConst.Double)
+                return Expression.Lambda<Func<double>>(Expression.Convert(expression, TypeOfConst.Double)).Compile().Invoke().ToString();
+            else if (expression.Type == TypeOfConst.String)
             {
                 return onlyValue ?
-                    Expression.Lambda<Func<string>>(Expression.Convert(expression, typeof(string))).Compile().Invoke() :
-                    $"'{Expression.Lambda<Func<string>>(Expression.Convert(expression, typeof(string))).Compile().Invoke()}'";
+                    Expression.Lambda<Func<string>>(Expression.Convert(expression, TypeOfConst.String)).Compile().Invoke() :
+                    $"'{Expression.Lambda<Func<string>>(Expression.Convert(expression, TypeOfConst.String)).Compile().Invoke()}'";
             }
-            else if (expression.Type == typeof(List<int>))
-                return string.Join(",", Expression.Lambda<Func<List<int>>>(Expression.Convert(expression, typeof(List<int>))).Compile().Invoke().Select(x => string.Format("{0}", x)));
-            else if (expression.Type == typeof(List<long>))
-                return string.Join(",", Expression.Lambda<Func<List<long>>>(Expression.Convert(expression, typeof(List<long>))).Compile().Invoke().Select(x => string.Format("{0}", x)));
-            else if (expression.Type == typeof(List<decimal>))
-                return string.Join(",", Expression.Lambda<Func<List<decimal>>>(Expression.Convert(expression, typeof(List<decimal>))).Compile().Invoke().Select(x => string.Format("{0}", x)));
-            else if (expression.Type == typeof(List<float>))
-                return string.Join(",", Expression.Lambda<Func<List<float>>>(Expression.Convert(expression, typeof(List<float>))).Compile().Invoke().Select(x => string.Format("{0}", x)));
-            else if (expression.Type == typeof(List<double>))
-                return string.Join(",", Expression.Lambda<Func<List<double>>>(Expression.Convert(expression, typeof(List<double>))).Compile().Invoke().Select(x => string.Format("{0}", x)));
-            else if (expression.Type == typeof(List<string>))
-                return string.Join(",", Expression.Lambda<Func<List<string>>>(Expression.Convert(expression, typeof(List<string>))).Compile().Invoke().Select(x => string.Format("'{0}'", x)));
+            else if (expression.Type == TypeOfConst.ListInt)
+                return string.Join(",", Expression.Lambda<Func<List<int>>>(Expression.Convert(expression, TypeOfConst.ListInt)).Compile().Invoke().Select(x => string.Format("{0}", x)));
+            else if (expression.Type == TypeOfConst.ListLong)
+                return string.Join(",", Expression.Lambda<Func<List<long>>>(Expression.Convert(expression, TypeOfConst.ListLong)).Compile().Invoke().Select(x => string.Format("{0}", x)));
+            else if (expression.Type == TypeOfConst.ListDecimal)
+                return string.Join(",", Expression.Lambda<Func<List<decimal>>>(Expression.Convert(expression, TypeOfConst.ListDecimal)).Compile().Invoke().Select(x => string.Format("{0}", x)));
+            else if (expression.Type == TypeOfConst.ListFloat)
+                return string.Join(",", Expression.Lambda<Func<List<float>>>(Expression.Convert(expression, TypeOfConst.ListFloat)).Compile().Invoke().Select(x => string.Format("{0}", x)));
+            else if (expression.Type == TypeOfConst.ListDouble)
+                return string.Join(",", Expression.Lambda<Func<List<double>>>(Expression.Convert(expression, TypeOfConst.ListDouble)).Compile().Invoke().Select(x => string.Format("{0}", x)));
+            else if (expression.Type == TypeOfConst.ListString)
+                return string.Join(",", Expression.Lambda<Func<List<string>>>(Expression.Convert(expression, TypeOfConst.ListString)).Compile().Invoke().Select(x => string.Format("'{0}'", x)));
 
             throw new Exception("未处理异常");
         }

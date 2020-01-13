@@ -5,16 +5,16 @@ namespace HSQL
     /// <summary>
     /// 数据库方言
     /// </summary>
-    internal enum Dialect
+    public enum Dialect
     {
         /// <summary>
-        /// MYSQL
+        /// MySQL
         /// </summary>
-        MYSQL = 1,
+        MySQL = 1,
 
         /// <summary>
-        /// SQLSERVER
+        /// SQLServer
         /// </summary>
-        SQLSERVER = 2
+        SQLServer = 2
     }
 }
