@@ -2,6 +2,7 @@
 using HSQL.Const;
 using HSQL.DatabaseHelper;
 using HSQL.Extensions;
+using HSQL.PerformanceOptimization;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -31,6 +32,7 @@ namespace HSQL
         {
             var type = typeof(T);
             var list = new List<T>();
+            var propertyInfoList = Store.GetPropertyInfoList(type);
 
             switch (_dialect)
             {
@@ -41,7 +43,7 @@ namespace HSQL
                             while (reader.Read())
                             {
                                 T instance = Activator.CreateInstance<T>();
-                                foreach (var property in instance.GetType().GetProperties())
+                                foreach (var property in propertyInfoList)
                                 {
                                     var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
                                     if (attributes.Length > 0)
@@ -62,7 +64,7 @@ namespace HSQL
                             while (reader.Read())
                             {
                                 T instance = Activator.CreateInstance<T>();
-                                foreach (var property in instance.GetType().GetProperties())
+                                foreach (var property in propertyInfoList)
                                 {
                                     var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
                                     if (attributes.Length > 0)
@@ -87,6 +89,7 @@ namespace HSQL
             var type = typeof(T);
             var tableName = ExpressionBase.GetTableName(type);
             var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var propertyInfoList = Store.GetPropertyInfoList(type);
             var pageStart = (pageIndex - 1) * pageSize;
             var where = ExpressionToWhereSql.ToWhereString(_predicate);
 
@@ -96,15 +99,12 @@ namespace HSQL
             {
                 case Dialect.MySQL:
                     {
-                        var total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, $"SELECT COUNT(*) FROM {tableName} WHERE {where};"));
-                        var totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
-                        
                         using (var reader = MySQLHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {where} LIMIT {pageStart},{pageSize};"))
                         {
                             while (reader.Read())
                             {
                                 T instance = Activator.CreateInstance<T>();
-                                foreach (var property in instance.GetType().GetProperties())
+                                foreach (var property in propertyInfoList)
                                 {
                                     var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
                                     if (attributes.Length > 0)
@@ -120,15 +120,12 @@ namespace HSQL
                     }
                 case Dialect.SQLServer:
                     {
-                        var total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, $"SELECT COUNT(*) FROM {tableName};"));
-                        var totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
-
                         using (var reader = SQLServerHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {where} ORDER BY id OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;"))
                         {
                             while (reader.Read())
                             {
                                 T instance = Activator.CreateInstance<T>();
-                                foreach (var property in instance.GetType().GetProperties())
+                                foreach (var property in propertyInfoList)
                                 {
                                     var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
                                     if (attributes.Length > 0)
@@ -153,6 +150,7 @@ namespace HSQL
             var type = typeof(T);
             var tableName = ExpressionBase.GetTableName(type);
             var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var propertyInfoList = Store.GetPropertyInfoList(type);
             var pageStart = (pageIndex - 1) * pageSize;
 
             var where = ExpressionToWhereSql.ToWhereString(_predicate);
@@ -171,7 +169,7 @@ namespace HSQL
                             while (reader.Read())
                             {
                                 T instance = Activator.CreateInstance<T>();
-                                foreach (var property in instance.GetType().GetProperties())
+                                foreach (var property in propertyInfoList)
                                 {
                                     var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
                                     if (attributes.Length > 0)
@@ -195,7 +193,7 @@ namespace HSQL
                             while (reader.Read())
                             {
                                 T instance = Activator.CreateInstance<T>();
-                                foreach (var property in instance.GetType().GetProperties())
+                                foreach (var property in propertyInfoList)
                                 {
                                     var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
                                     if (attributes.Length > 0)
@@ -219,6 +217,7 @@ namespace HSQL
         {
             var type = typeof(T);
             T instance = default(T);
+            var propertyInfoList = Store.GetPropertyInfoList(type);
 
             switch (_dialect)
             {
@@ -229,7 +228,7 @@ namespace HSQL
                             while (reader.Read())
                             {
                                 instance = Activator.CreateInstance<T>();
-                                foreach (var property in instance.GetType().GetProperties())
+                                foreach (var property in propertyInfoList)
                                 {
                                     var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
                                     if (attributes.Length > 0)
@@ -249,7 +248,7 @@ namespace HSQL
                             while (reader.Read())
                             {
                                 instance = Activator.CreateInstance<T>();
-                                foreach (var property in instance.GetType().GetProperties())
+                                foreach (var property in propertyInfoList)
                                 {
                                     var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
                                     if (attributes.Length > 0)

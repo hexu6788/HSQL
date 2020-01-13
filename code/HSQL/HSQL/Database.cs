@@ -21,7 +21,11 @@ namespace HSQL
 
         public bool Insert<T>(T t)
         {
-            var tableName = ExpressionBase.GetTableName(typeof(T));
+            if (t == null)
+                throw new Exception("插入数据不能为空！");
+
+            var type = typeof(T);
+            var tableName = ExpressionBase.GetTableName(type);
             var columnList = ExpressionBase.GetColumnList<T>(t);
 
             var sql = $"INSERT INTO {tableName}({string.Join(",", columnList.Select(x => x.Name))}) VALUES({string.Join(",", columnList.Select(x => string.Format("@{0}", x.Name)))});";
@@ -43,7 +47,6 @@ namespace HSQL
                 throw new Exception("插入数据不能为空！");
 
             var type = typeof(T);
-
             var tableName = ExpressionBase.GetTableName(type);
             var columnNameList = ExpressionBase.GetColumnNameList(type);
 
@@ -63,7 +66,13 @@ namespace HSQL
 
         public bool Update<T>(Expression<Func<T, bool>> selectPpredicate, T instance)
         {
-            var tableName = ExpressionBase.GetTableName(typeof(T));
+            if (selectPpredicate == null)
+                throw new Exception("更新筛选条件不能为空！");
+            if (instance == null)
+                throw new Exception("更新值不能为空！");
+
+            var type = typeof(T);
+            var tableName = ExpressionBase.GetTableName(type);
             var columnList = ExpressionBase.GetColumnListWithOutNull<T>(instance);
 
             var where = ExpressionToWhereSql.ToWhereString(selectPpredicate);
@@ -86,7 +95,8 @@ namespace HSQL
             if (string.IsNullOrWhiteSpace(where))
                 throw new Exception("删除时必须包含删除条件！");
 
-            var tableName = ExpressionBase.GetTableName(typeof(T));
+            var type = typeof(T);
+            var tableName = ExpressionBase.GetTableName(type);
 
             var sql = $"DELETE FROM {tableName} WHERE {where};";
 

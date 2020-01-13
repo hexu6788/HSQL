@@ -1,6 +1,7 @@
 ﻿using HSQL.Attribute;
 using HSQL.Const;
 using HSQL.Model;
+using HSQL.PerformanceOptimization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,12 @@ namespace HSQL
     {
         internal static string GetTableName(Type type)
         {
-            return ((TableAttribute)type.GetCustomAttributes(TypeOfConst.TableAttribute, true)[0]).Name;
+            return Store.GetTableName(type);
+        }
+
+        internal static List<string> GetColumnNameList(Type type)
+        {
+            return Store.GetColumnNameList(type);
         }
 
         internal static List<Column> GetColumnList<T>(T t)
@@ -48,19 +54,6 @@ namespace HSQL
             }
             if (list.Count <= 0)
                 throw new Exception("缺少列名");
-            return list;
-        }
-
-        internal static List<string> GetColumnNameList(Type type)
-        {
-            var list = new List<string>();
-            foreach (var property in type.GetProperties())
-            {
-                foreach (ColumnAttribute attribute in property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true))
-                {
-                    list.Add(attribute.Name);
-                }
-            }
             return list;
         }
 
