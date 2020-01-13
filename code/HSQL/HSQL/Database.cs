@@ -61,6 +61,25 @@ namespace HSQL
             }
         }
 
+        public bool Update<T>(Expression<Func<T, bool>> selectPpredicate, T instance)
+        {
+            var tableName = ExpressionBase.GetTableName(typeof(T));
+            var columnList = ExpressionBase.GetColumnListWithOutNull<T>(instance);
+
+            var where = ExpressionToWhereSql.ToWhereString(selectPpredicate);
+            var sql = $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {where};";
+
+            switch (_dialect)
+            {
+                case Dialect.MySQL:
+                    return MySQLHelper.ExecuteNonQuery(_connectionString, sql, columnList.Select(x => new MySqlParameter(x.Name, x.Value)).ToArray()) > 0;
+                case Dialect.SQLServer:
+                    return SQLServerHelper.ExecuteNonQuery(_connectionString, sql, columnList.Select(x => new SqlParameter(x.Name, x.Value)).ToArray()) > 0;
+                default:
+                    throw new Exception("未选择数据库方言！");
+            }
+        }
+
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
         {
             var where = ExpressionToWhereSql.ToWhereString(predicate);

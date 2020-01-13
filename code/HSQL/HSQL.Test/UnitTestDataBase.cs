@@ -56,11 +56,28 @@ namespace HSQL.Test
         }
 
         [TestMethod]
-        public void TestDelete()
+        public void TestUpdate()
         {
             var database = new Database(Dialect.MySQL, connnectionString);
 
-            var result = database.Delete<Student>(x => x.Age > 0);
+            database.Delete<Student>(x => x.Id.Contains("test_update_list"));
+
+            var list = new List<Student>();
+            for (var i = 0; i < 1000; i++)
+            {
+                list.Add(new Student()
+                {
+                    Id = $"test_update_list_{i}",
+                    Name = "zhangsan",
+                    Age = 18,
+                    SchoolId = "123"
+                });
+            }
+            database.Insert<Student>(list);
+
+            var result = database.Update<Student>(x => x.Id.Contains("test_update_list"), new Student() { Age = 19 });
+            
+            database.Delete<Student>(x => x.Id.Contains("test_update_list"));
 
             Assert.AreEqual(true, result);
         }
@@ -175,6 +192,16 @@ namespace HSQL.Test
                 Assert.IsTrue(x.Id.Contains("test_query_page_2_list"));
                 Assert.AreEqual("zhangsan", x.Name);
             });
+        }
+
+        [TestMethod]
+        public void TestDelete()
+        {
+            var database = new Database(Dialect.MySQL, connnectionString);
+
+            var result = database.Delete<Student>(x => x.Age > 0);
+
+            Assert.AreEqual(true, result);
         }
     }
 }

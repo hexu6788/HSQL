@@ -88,7 +88,6 @@ namespace HSQL
             var tableName = ExpressionBase.GetTableName(type);
             var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
             var pageStart = (pageIndex - 1) * pageSize;
-
             var where = ExpressionToWhereSql.ToWhereString(_predicate);
 
             var list = new List<T>();

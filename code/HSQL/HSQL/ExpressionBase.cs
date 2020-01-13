@@ -63,5 +63,42 @@ namespace HSQL
             }
             return list;
         }
+
+        internal static List<Column> GetColumnListWithOutNull<T>(T instance)
+        {
+            var list = new List<Column>();
+
+            foreach (var property in instance.GetType().GetProperties())
+            {
+                foreach (ColumnAttribute attribute in property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true))
+                {
+                    var value = property.GetValue(instance, null);
+                    if (property.PropertyType == TypeOfConst.String
+                        || property.PropertyType == TypeOfConst.ByteArray)
+                    {
+                        if (value != null)
+                            list.Add(new Column(attribute.Name, value));
+                    }
+                    else if (property.PropertyType == TypeOfConst.Int)
+                    {
+                        if (Convert.ToInt32(value) != 0)
+                            list.Add(new Column(attribute.Name, value));
+                    }
+                    else if (property.PropertyType == TypeOfConst.Long)
+                    {
+                        if (Convert.ToInt64(value) != 0)
+                            list.Add(new Column(attribute.Name, value));
+                    }
+                    else if (property.PropertyType == TypeOfConst.Decimal)
+                    {
+                        if (Convert.ToDecimal(value) != 0)
+                            list.Add(new Column(attribute.Name, value));
+                    }
+                }
+            }
+            if (list.Count <= 0)
+                throw new Exception("缺少列名");
+            return list;
+        }
     }
 }
