@@ -4,7 +4,7 @@
 
 ![markdown](https://github.com/hexu6788/HSQL/blob/master/file/logo-2.png?raw=true "hsql")
 
-HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操作的一种框架，通过简单的语法，使数据库操作不再成为难事。
+HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操作的一种框架，通过简单的语法，使数据库操作不再成为难事。目前支持的数据库有 MySql、SqlServer。
 
 ### 使用方法
 + <a href="#创建映射模型">创建映射模型</a>
