@@ -64,7 +64,7 @@ var result = database.Insert<Student>(new Student()
     SchoolId = "123"
 });
 ```
-> Insert 方法可插入一个对象，表示对 t_student 表插入一条数据。<br/>最后被解释为 SQL 语句 -> INSERT INTO t_student(id,name,age,school_id,birthday) VALUES(@id,@name,@age,@school_id,@birthday);
+> Insert 方法可插入一个对象，表示对 t_student 表插入一条数据。<br/>最后被解释为 SQL 语句 -> <br/>INSERT INTO t_student(id,name,age,school_id,birthday) VALUES(@id,@name,@age,@school_id,@birthday);
 
 
 
@@ -84,7 +84,7 @@ for (var i = 0; i < 1000; i++)
 }
 var result = database.Insert<Student>(list);
 ```
-> Insert 方法可插入一个集合对象，表示对 t_student 表进行批量插入。<br/>最后被解释为事务性批量插入的 SQL 语句，如 INSERT INTO t_student(id,name,age,school_id,birthday) VALUES(@id,@name,@age,@school_id,@birthday); 会进行多条语句事务操作。
+> Insert 方法可插入一个集合对象，表示对 t_student 表进行批量插入。<br/>最后被解释为事务性批量插入的 SQL 语句，如 <br/>INSERT INTO t_student(id,name,age,school_id,birthday) VALUES(@id,@name,@age,@school_id,@birthday); <br/>会进行多条语句事务操作。
 
 
 
@@ -93,7 +93,7 @@ var result = database.Insert<Student>(list);
 ```csharp
 var result = database.Update<Student>(x => x.Id.Contains("test_update_list"), new Student() { Age = 19 });
 ```
-> Update 方法表示更新操作。如：<br/>参数1：x => x.Id.Contains("test_update_list") 被解释为 WHERE id LIKE '%test_update_list%' <br/>参数2：new Student() { Age = 19 } 被解释为 SET age = @age <br/>最终SQL语句为：UPDATE t_student SET age = @age WHERE id LIKE '%test_update_list%';
+> Update 方法表示更新操作。如：<br/>参数1：x => x.Id.Contains("test_update_list") 被解释为 WHERE id LIKE '%test_update_list%' <br/>参数2：new Student() { Age = 19 } 被解释为 SET age = @age <br/>最终SQL语句为：<br/>UPDATE t_student SET age = @age WHERE id LIKE '%test_update_list%';
 
 
 
@@ -103,7 +103,7 @@ var result = database.Update<Student>(x => x.Id.Contains("test_update_list"), ne
 ```csharp
 var result = database.Delete<Student>(x => x.Age > 0);
 ```
-> Delete 方法表示删除操作。最终被解释为 SQL 语句：DELETE FROM t_student WHERE age > 0;
+> Delete 方法表示删除操作。最终被解释为 SQL 语句：<br/>DELETE FROM t_student WHERE age > 0;
 
 
 
@@ -112,7 +112,7 @@ var result = database.Delete<Student>(x => x.Age > 0);
 ```csharp
 var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query_list")).ToList();
 ```
-> Query => ToList 方法表示查询操作。最终被解释为 SQL 语句：SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id LIKE '%test_query_list%';
+> Query => ToList 方法表示查询操作。最终被解释为 SQL 语句：<br/>SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id LIKE '%test_query_list%';
 
 
 
@@ -121,7 +121,7 @@ var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query
 ```csharp
 var student = database.Query<Student>(x => x.Age == 19 && x.Id.Equals("test_query_single")).FirstOrDefault();
 ```
-> Query => ToList 方法表示查询操作：<br/>当 Dialect 为 MySQL 时 最终被解释为 SQL 语句：SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id = 'test_query_single' LIMIT 0,1;<br/>当 Dialect 为 SQLServer 时 最终被解释为 SQL 语句：SELECT TOP 1 id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id = 'test_query_single';
+> Query => ToList 方法表示查询操作：<br/>当 Dialect 为 MySQL 时 最终被解释为 SQL 语句：<br/>SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id = 'test_query_single' LIMIT 0,1;<br/>当 Dialect 为 SQLServer 时 最终被解释为 SQL 语句：<br/>SELECT TOP 1 id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id = 'test_query_single';
 
 
 
@@ -130,7 +130,7 @@ var student = database.Query<Student>(x => x.Age == 19 && x.Id.Equals("test_quer
 ```csharp
 var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query_page_list")).ToList(2, 10);
 ```
-> Query => ToList(2,10) 方法表示分页查询操作，pageIndex 为第几页，pageSize 为每页记录条数。最终被解释为 SQL 语句：SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id LIKE '%test_query_page_list%' LIMIT 10,10;
+> Query => ToList(2,10) 方法表示分页查询操作，pageIndex 为第几页，pageSize 为每页记录条数。最终被解释为 SQL 语句：<br/>SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id LIKE '%test_query_page_list%' LIMIT 10,10;
 
 
 
