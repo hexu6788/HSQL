@@ -21,6 +21,7 @@ HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操�
 
 
 ### 性能
+_无索引、单机、单表、表数据为十万行_
 + <a href="#单实例插入十万次">单实例插入十万次</a>
 + <a href="#批量插入十万次">批量插入十万次</a>
 + <a href="#查询单实例十万次">查询单实例十万次</a>
@@ -203,9 +204,9 @@ var stopwatch = new Stopwatch();
 stopwatch.Start();
 var result = database.Insert<Student>(list);
 stopwatch.Stop();
-var elapsedMilliseconds = $"插入十万条次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
+var elapsedMilliseconds = $"插入十万次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
 ```
-> 第一次测试 -> 插入十万条次共耗时： 11177 毫秒，平均单次插入耗时： 0.11177 毫秒 <br/> 第二次测试 -> 插入十万条次共耗时： 10776 毫秒，平均单次插入耗时： 0.10776 毫秒 
+> 第一次测试 -> 插入十万次共耗时： 11177 毫秒，平均单次查询耗时： 0.11177 毫秒 <br/> 第二次测试 -> 插入十万条次共耗时： 10776 毫秒，平均单次查询耗时： 0.10776 毫秒 
 
 
 
@@ -234,8 +235,8 @@ for (var i = 0; i < 100000; i++)
     var student = database.Query<Student>(x => x.Age == 18 && x.Id.Equals($"{i}") && x.SchoolId.Equals("123")).FirstOrDefault();
 }
 stopwatch.Stop();
-var elapsedMilliseconds = $"查询十万条次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
+var elapsedMilliseconds = $"查询十万次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
 ```
-> 十万条数据时: <br/> 第一次测试 -> 查询十万条次共耗时： 877936‬ 毫秒，平均单次插入耗时： 8.77936 毫秒 <br/> 第二次测试 -> 查询十万条次共耗时： 874122‬ 毫秒，平均单次插入耗时： 8.74122 毫秒 
+> 十万条数据时: <br/> 第一次测试 -> 查询十万条次共耗时： 877936‬ 毫秒，平均单次查询耗时： 8.77936 毫秒 <br/> 第二次测试 -> 查询十万条次共耗时： 874122‬ 毫秒，平均单次查询耗时： 8.74122 毫秒 
 
 
