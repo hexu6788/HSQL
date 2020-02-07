@@ -20,7 +20,7 @@ HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操�
     + <a href="#灵活条件查询">灵活条件查询</a>
 
 
-<a id="创建数据库操作实例">创建数据库操作实例：</a>
+<a id="创建映射模型">创建映射模型：</a>
 ```csharp
 [Table("t_student")]
 public class Student
