@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace HSQL.Test
 {
@@ -18,6 +20,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestInsert()
         {
+
             var student = new Student()
             {
                 Name = "zhangsan",
