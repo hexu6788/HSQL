@@ -41,8 +41,7 @@ public class Student
     public long Birthday { get; set; }
 }
 ```
-> Table 标记一个表对象。如：[Table("t_student")] 代表 Student 类将映射为数据库表 t_student
-> Column 标记一个列对象。如：[Column("id")] 代表 Id 属性将映射为数据库列 id
+> Table 标记一个表对象。如：[Table("t_student")] 代表 Student 类将映射为数据库表 t_student<br/>Column 标记一个列对象。如：[Column("id")] 代表 Id 属性将映射为数据库列 id
 
 
 
