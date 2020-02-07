@@ -123,6 +123,8 @@ namespace HSQL
                     right = Eval((MemberExpression)expression.Arguments[0]);
                 else if (expression.Arguments[0] is ConstantExpression)
                     right = ResolveConstant((ConstantExpression)expression.Arguments[0]);
+                else if (expression.Arguments[0] is MethodCallExpression)
+                    right = ResolveMethodCall((MethodCallExpression)expression.Arguments[0]);
                 else
                     throw new Exception("未处理异常");
 

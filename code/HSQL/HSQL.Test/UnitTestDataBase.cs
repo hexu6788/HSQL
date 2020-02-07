@@ -99,7 +99,10 @@ namespace HSQL.Test
                 Age = 19
             });
 
-            var student = database.Query<Student>(x => x.Age == 19 && x.Id.Equals("test_query_single")).AddCondition(x => x.Name == "zhangsan").FirstOrDefault();
+            var i = 2;
+            var student = database.Query<Student>(x => x.Id.Equals($"{i}")).FirstOrDefault();
+
+            //var student = database.Query<Student>(x => x.Age == 19 && x.Id.Equals("test_query_single")).AddCondition(x => x.Name == "zhangsan").FirstOrDefault();
 
             Assert.AreEqual(19, student.Age);
             Assert.AreEqual("test_query_single", student.Id);

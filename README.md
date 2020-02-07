@@ -20,6 +20,12 @@ HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操�
     + <a href="#灵活条件查询">灵活条件查询</a>
 
 
+### 性能
++ <a href="#单实例插入十万次">单实例插入十万次</a>
++ <a href="#批量插入十万次">批量插入十万次</a>
++ <a href="#查询单实例十万次">查询单实例十万次</a>
+
+
 <a id="创建映射模型">创建映射模型：</a>
 ```csharp
 [Table("t_student")]
@@ -130,7 +136,7 @@ var student = database.Query<Student>(x => x.Age == 19 && x.Id.Equals("test_quer
 ```csharp
 var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query_page_list")).ToList(2, 10);
 ```
-> Query => ToList(2,10) 方法表示分页查询操作，pageIndex 为第几页，pageSize 为每页记录条数。最终被解释为 SQL 语句：<br/>SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id LIKE '%test_query_page_list%' LIMIT 10,10;
+> Query => ToList(2,10) 方法表示分页查询操作，pageIndex 为第几页，pageSize 为每页记录条数。<br/>最终被解释为 SQL 语句：<br/>SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id LIKE '%test_query_page_list%' LIMIT 10,10;
 
 
 
@@ -139,5 +145,97 @@ var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query
 ```csharp
 var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query_page_list")).AddCondition(x => x.Name == "zhangsan").ToList(2, 10);
 ```
->  AddCondition 方法可以对查询进行动态增加条件。最终解释的 SQL 的 WHERE 部分会包含 AND name = 'zhangsan'
+>  AddCondition 方法可以对查询进行动态增加条件。<br/>最终解释的 SQL 的 WHERE 部分会包含 AND name = 'zhangsan'
+
+
+
+
+
+
+
+<a id="单实例插入十万次">单实例插入十万次：</a>
+```csharp
+var database = new Database(Dialect.MySQL, connnectionString);
+database.Delete<Student>(x => x.Age >= 0);
+var list = new List<Student>();
+for (var i = 0; i < 100000; i++)
+{
+    list.Add(new Student()
+    {
+        Id = $"{i}",
+        Name = "zhangsan",
+        Age = 18,
+        SchoolId = "123"
+    });
+}
+
+var stopwatch = new Stopwatch();
+stopwatch.Start();
+list.ForEach(x =>
+{
+    var result = database.Insert<Student>(x);
+});
+stopwatch.Stop();
+var elapsedMilliseconds = $"插入十万条次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
+```
+> 第一次测试 -> 插入十万条次共耗时： 111038 毫秒，平均单次插入耗时： 1.11038 毫秒 <br/> 第二次测试 -> 插入十万条次共耗时： 109037 毫秒，平均单次插入耗时： 1.09037 毫秒 
+
+
+
+
+<a id="批量插入十万次">批量插入十万次：</a>
+```csharp
+var database = new Database(Dialect.MySQL, connnectionString);
+database.Delete<Student>(x => x.Age >= 0);
+var list = new List<Student>();
+for (var i = 0; i < 100000; i++)
+{
+    list.Add(new Student()
+    {
+        Id = $"{i}",
+        Name = "zhangsan",
+        Age = 18,
+        SchoolId = "123"
+    });
+}
+
+var stopwatch = new Stopwatch();
+stopwatch.Start();
+var result = database.Insert<Student>(list);
+stopwatch.Stop();
+var elapsedMilliseconds = $"插入十万条次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
+```
+> 第一次测试 -> 插入十万条次共耗时： 11177 毫秒，平均单次插入耗时： 0.11177 毫秒 <br/> 第二次测试 -> 插入十万条次共耗时： 10776 毫秒，平均单次插入耗时： 0.10776 毫秒 
+
+
+
+
+
+<a id="查询单实例十万次">查询单实例十万次：</a>
+```csharp
+var database = new Database(Dialect.MySQL, connnectionString);
+database.Delete<Student>(x => x.Age >= 0);
+var list = new List<Student>();
+for (var i = 0; i < 100000; i++)
+{
+    list.Add(new Student()
+    {
+        Id = $"{i}",
+        Name = "zhangsan",
+        Age = 18,
+        SchoolId = "123"
+    });
+}
+
+var stopwatch = new Stopwatch();
+stopwatch.Start();
+for (var i = 0; i < 100000; i++)
+{
+    var student = database.Query<Student>(x => x.Age == 18 && x.Id.Equals($"{i}") && x.SchoolId.Equals("123")).FirstOrDefault();
+}
+stopwatch.Stop();
+var elapsedMilliseconds = $"查询十万条次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
+```
+> 十万条数据时: <br/> 第一次测试 -> 查询十万条次共耗时： 877936‬ 毫秒，平均单次插入耗时： 8.77936 毫秒 <br/> 第二次测试 -> 查询十万条次共耗时： 874122‬ 毫秒，平均单次插入耗时： 8.74122 毫秒 
+
 
