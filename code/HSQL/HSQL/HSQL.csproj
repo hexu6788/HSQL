@@ -2,6 +2,14 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>何旭</Authors>
+    <Company />
+    <Description>HSQL 是一种轻量级的基于 .NET 的ORM框架</Description>
+    <PackageProjectUrl>https://github.com/hexu6788/HSQL</PackageProjectUrl>
+    <Version>1.0.0.0</Version>
+    <SignAssembly>false</SignAssembly>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
