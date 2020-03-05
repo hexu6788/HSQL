@@ -10,7 +10,7 @@
     <Version>1.0.0.0</Version>
     <SignAssembly>false</SignAssembly>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageId>HSQL.NET</PackageId>
+    <PackageId>HSQL-standard</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
