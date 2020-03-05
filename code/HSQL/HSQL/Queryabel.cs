@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 
 namespace HSQL
 {
@@ -37,39 +38,44 @@ namespace HSQL
         public List<T> ToList()
         {
             var type = typeof(T);
-            var list = new List<T>();
             var propertyInfoList = Store.GetPropertyInfoList(type);
             var tableName = ExpressionBase.GetTableName(type);
             var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
+            var sqlStringBuilder = new StringBuilder();
+            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            if (!string.IsNullOrWhiteSpace(whereString))
+                sqlStringBuilder.Append($" WHERE {whereString}");
+            sqlStringBuilder.Append(";");
+
+            IDataReader reader = null;
             switch (_dialect)
             {
                 case Dialect.MySQL:
-                    {
-                        using (var reader = MySQLHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {whereString};"))
-                        {
-                            while (reader.Read())
-                            {
-                                list.Add(CreateInstance<T>(reader, propertyInfoList));
-                            }
-                        }
-                        break;
-                    }
+                    reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
+                    break;
                 case Dialect.SQLServer:
-                    {
-                        using (var reader = SQLServerHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {whereString};"))
-                        {
-                            while (reader.Read())
-                            {
-                                list.Add(CreateInstance<T>(reader, propertyInfoList));
-                            }
-                        }
-                    }
+                    reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 default:
                     throw new Exception("未选择数据库方言！");
             }
+
+            var list = new List<T>();
+            try
+            {
+                while (reader.Read())
+                {
+                    list.Add(CreateInstance<T>(reader, propertyInfoList));
+                }
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Dispose();
+            }
+
             return list;
         }
 
@@ -80,36 +86,40 @@ namespace HSQL
             var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
             var propertyInfoList = Store.GetPropertyInfoList(type);
             var pageStart = (pageIndex - 1) * pageSize;
-            var where = ExpressionToWhereSql.ToWhereString(_predicate);
+            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var list = new List<T>();
+            var sqlStringBuilder = new StringBuilder();
+            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            if (!string.IsNullOrWhiteSpace(whereString))
+                sqlStringBuilder.Append($" WHERE {whereString}");
 
+            IDataReader reader = null;
             switch (_dialect)
             {
                 case Dialect.MySQL:
-                    {
-                        using (var reader = MySQLHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {where} LIMIT {pageStart},{pageSize};"))
-                        {
-                            while (reader.Read())
-                            {
-                                list.Add(CreateInstance<T>(reader, propertyInfoList));
-                            }
-                        }
-                        break;
-                    }
+                    sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
+                    reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
+                    break;
                 case Dialect.SQLServer:
-                    {
-                        using (var reader = SQLServerHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {where} ORDER BY id OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;"))
-                        {
-                            while (reader.Read())
-                            {
-                                list.Add(CreateInstance<T>(reader, propertyInfoList));
-                            }
-                        }
-                    }
+                    sqlStringBuilder.Append($" ORDER BY id OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
+                    reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 default:
                     throw new Exception("未选择数据库方言！");
+            }
+
+            var list = new List<T>();
+            try
+            {
+                while (reader.Read())
+                {
+                    list.Add(CreateInstance<T>(reader, propertyInfoList));
+                }
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Dispose();
             }
             return list;
         }
@@ -122,84 +132,91 @@ namespace HSQL
             var propertyInfoList = Store.GetPropertyInfoList(type);
             var pageStart = (pageIndex - 1) * pageSize;
 
-            var where = ExpressionToWhereSql.ToWhereString(_predicate);
+            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var list = new List<T>();
+            var sqlWhereStringBuilder = new StringBuilder();
+            sqlWhereStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            if (!string.IsNullOrWhiteSpace(whereString))
+                sqlWhereStringBuilder.Append($" WHERE {whereString}");
 
+            var pageWhereString = $"SELECT COUNT(*) FROM {tableName};";
+
+            IDataReader reader = null;
             switch (_dialect)
             {
                 case Dialect.MySQL:
-                    {
-                        total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, $"SELECT COUNT(*) FROM {tableName} WHERE {where};"));
-                        totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
-
-                        using (var reader = MySQLHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {where} LIMIT {pageStart},{pageSize};"))
-                        {
-                            while (reader.Read())
-                            {
-                                list.Add(CreateInstance<T>(reader, propertyInfoList));
-                            }
-                        }
-                        break;
-                    }
+                    total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, pageWhereString));
+                    sqlWhereStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
+                    reader = MySQLHelper.ExecuteReader(_connectionString, sqlWhereStringBuilder.ToString());
+                    break;
                 case Dialect.SQLServer:
-                    {
-                        total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, $"SELECT COUNT(*) FROM {tableName};"));
-                        totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
-
-                        using (var reader = SQLServerHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {where} ORDER BY id OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;"))
-                        {
-                            while (reader.Read())
-                            {
-                                list.Add(CreateInstance<T>(reader, propertyInfoList));
-                            }
-                        }
-                    }
+                    total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, pageWhereString));
+                    sqlWhereStringBuilder.Append($" ORDER BY id OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
+                    reader = SQLServerHelper.ExecuteReader(_connectionString, sqlWhereStringBuilder.ToString());
                     break;
                 default:
                     throw new Exception("未选择数据库方言！");
             }
+            totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
+
+            var list = new List<T>();
+            try
+            {
+                while (reader.Read())
+                {
+                    list.Add(CreateInstance<T>(reader, propertyInfoList));
+                }
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Dispose();
+            }
+
             return list;
         }
 
         public T FirstOrDefault()
         {
             var type = typeof(T);
-            T instance = default(T);
             var propertyInfoList = Store.GetPropertyInfoList(type);
             var tableName = ExpressionBase.GetTableName(type);
             var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
+            var sqlWhereStringBuilder = new StringBuilder();
+            sqlWhereStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            if (!string.IsNullOrWhiteSpace(whereString))
+                sqlWhereStringBuilder.Append($" WHERE {whereString}");
+
+            IDataReader reader = null;
+            
             switch (_dialect)
             {
                 case Dialect.MySQL:
-                    {
-                        using (var reader = MySQLHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {whereString} LIMIT 0,1;"))
-                        {
-                            while (reader.Read())
-                            {
-                                instance = CreateInstance<T>(reader, propertyInfoList);
-                            }
-                        }
-                        break;
-                    }
+                    sqlWhereStringBuilder.Append($" LIMIT 0,1;");
+                    reader = MySQLHelper.ExecuteReader(_connectionString, sqlWhereStringBuilder.ToString());
+                    break;
                 case Dialect.SQLServer:
-                    {
-                        using (var reader = SQLServerHelper.ExecuteReader(_connectionString, $"SELECT TOP 1 {columnJoinString} FROM {tableName} WHERE {whereString};"))
-                        {
-                            while (reader.Read())
-                            {
-                                instance = CreateInstance<T>(reader, propertyInfoList);
-                            }
-                        }
-                    }
+                    sqlWhereStringBuilder.Append($" ORDER BY id OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;");
+                    reader = SQLServerHelper.ExecuteReader(_connectionString, sqlWhereStringBuilder.ToString());
                     break;
                 default:
                     throw new Exception("未选择数据库方言！");
             }
-            return instance;
 
+            T instance = default(T);
+            try
+            {
+                if (reader.Read())
+                    instance = CreateInstance<T>(reader, propertyInfoList);
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Dispose();
+            }
+            return instance;
         }
 
 

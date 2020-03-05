@@ -14,6 +14,9 @@ namespace HSQL
     {
         public static string ToWhereString(Expression expression) 
         {
+            if (expression == null)
+                return string.Empty;
+
             var where = Resolve(expression);
             return RemoveBeginEndBracket(where);
         }

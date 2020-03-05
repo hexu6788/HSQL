@@ -99,8 +99,8 @@ namespace HSQL.Test
                 Age = 19
             });
 
-            var i = 2;
-            var student = database.Query<Student>(x => x.Id.Equals($"{i}")).FirstOrDefault();
+
+            var student = database.Query<Student>(x => x.Id.Equals("test_query_single")).FirstOrDefault();
 
             //var student = database.Query<Student>(x => x.Age == 19 && x.Id.Equals("test_query_single")).AddCondition(x => x.Name == "zhangsan").FirstOrDefault();
 
@@ -114,7 +114,7 @@ namespace HSQL.Test
         {
             var database = new Database(Dialect.MySQL, connnectionString);
 
-            database.Delete<Student>(x => x.Id.Contains("test_query_list"));
+            database.Delete<Student>(x => x.Id.Contains("test"));
 
             var addList = new List<Student>();
             for (var i = 1; i <= 1000; i++)
@@ -128,7 +128,7 @@ namespace HSQL.Test
             }
             database.Insert<Student>(addList);
 
-            var list = database.Query<Student>(x => 1 == 1).ToList();
+            var list = database.Query<Student>().ToList();
 
             Assert.AreEqual(list.Count, 1000);
         }

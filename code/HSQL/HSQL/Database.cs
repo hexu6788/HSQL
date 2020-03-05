@@ -111,6 +111,11 @@ namespace HSQL
             }
         }
 
+        public Queryabel<T> Query<T>()
+        {
+            return Query<T>(null);
+        }
+
         public Queryabel<T> Query<T>(Expression<Func<T, bool>> predicate)
         {
             var queryabel = new Queryabel<T>(_connectionString, _dialect, predicate);
