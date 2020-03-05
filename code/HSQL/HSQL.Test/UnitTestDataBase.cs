@@ -110,6 +110,30 @@ namespace HSQL.Test
         }
 
         [TestMethod]
+        public void TestQueryAll()
+        {
+            var database = new Database(Dialect.MySQL, connnectionString);
+
+            database.Delete<Student>(x => x.Id.Contains("test_query_list"));
+
+            var addList = new List<Student>();
+            for (var i = 1; i <= 1000; i++)
+            {
+                addList.Add(new Student()
+                {
+                    Id = $"test_query_list_{i}",
+                    Name = "zhangsan",
+                    Age = 19
+                });
+            }
+            database.Insert<Student>(addList);
+
+            var list = database.Query<Student>(x => 1 == 1).ToList();
+
+            Assert.AreEqual(list.Count, 1000);
+        }
+
+        [TestMethod]
         public void TestQueryList()
         {
             var database = new Database(Dialect.MySQL, connnectionString);

@@ -5,7 +5,9 @@ using HSQL.Extensions;
 using HSQL.PerformanceOptimization;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace HSQL
 {
@@ -24,7 +26,11 @@ namespace HSQL
 
         public Queryabel<T> AddCondition(Expression<Func<T, bool>> condition)
         {
-            _predicate = _predicate.AndAlso(condition);
+            if (_predicate == null)
+                _predicate = condition;
+            else
+                _predicate = _predicate.AndAlso(condition);
+
             return this;
         }
 
@@ -33,47 +39,30 @@ namespace HSQL
             var type = typeof(T);
             var list = new List<T>();
             var propertyInfoList = Store.GetPropertyInfoList(type);
+            var tableName = ExpressionBase.GetTableName(type);
+            var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
             switch (_dialect)
             {
                 case Dialect.MySQL:
                     {
-                        using (var reader = MySQLHelper.ExecuteReader(_connectionString, $"SELECT {string.Join(",", ExpressionBase.GetColumnNameList(type))} FROM {ExpressionBase.GetTableName(type)} WHERE {ExpressionToWhereSql.ToWhereString(_predicate)};"))
+                        using (var reader = MySQLHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {whereString};"))
                         {
                             while (reader.Read())
                             {
-                                T instance = Activator.CreateInstance<T>();
-                                foreach (var property in propertyInfoList)
-                                {
-                                    var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-                                    if (attributes.Length > 0)
-                                    {
-                                        var key = ((ColumnAttribute)attributes[0]).Name;
-                                        property.SetValue(instance, reader[key]);
-                                    }
-                                }
-                                list.Add(instance);
+                                list.Add(CreateInstance<T>(reader, propertyInfoList));
                             }
                         }
                         break;
                     }
                 case Dialect.SQLServer:
                     {
-                        using (var reader = SQLServerHelper.ExecuteReader(_connectionString, $"SELECT {string.Join(",", ExpressionBase.GetColumnNameList(type))} FROM {ExpressionBase.GetTableName(type)} WHERE {ExpressionToWhereSql.ToWhereString(_predicate)};"))
+                        using (var reader = SQLServerHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {whereString};"))
                         {
                             while (reader.Read())
                             {
-                                T instance = Activator.CreateInstance<T>();
-                                foreach (var property in propertyInfoList)
-                                {
-                                    var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-                                    if (attributes.Length > 0)
-                                    {
-                                        var key = ((ColumnAttribute)attributes[0]).Name;
-                                        property.SetValue(instance, reader[key]);
-                                    }
-                                }
-                                list.Add(instance);
+                                list.Add(CreateInstance<T>(reader, propertyInfoList));
                             }
                         }
                     }
@@ -103,17 +92,7 @@ namespace HSQL
                         {
                             while (reader.Read())
                             {
-                                T instance = Activator.CreateInstance<T>();
-                                foreach (var property in propertyInfoList)
-                                {
-                                    var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-                                    if (attributes.Length > 0)
-                                    {
-                                        var key = ((ColumnAttribute)attributes[0]).Name;
-                                        property.SetValue(instance, reader[key]);
-                                    }
-                                }
-                                list.Add(instance);
+                                list.Add(CreateInstance<T>(reader, propertyInfoList));
                             }
                         }
                         break;
@@ -124,17 +103,7 @@ namespace HSQL
                         {
                             while (reader.Read())
                             {
-                                T instance = Activator.CreateInstance<T>();
-                                foreach (var property in propertyInfoList)
-                                {
-                                    var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-                                    if (attributes.Length > 0)
-                                    {
-                                        var key = ((ColumnAttribute)attributes[0]).Name;
-                                        property.SetValue(instance, reader[key]);
-                                    }
-                                }
-                                list.Add(instance);
+                                list.Add(CreateInstance<T>(reader, propertyInfoList));
                             }
                         }
                     }
@@ -168,17 +137,7 @@ namespace HSQL
                         {
                             while (reader.Read())
                             {
-                                T instance = Activator.CreateInstance<T>();
-                                foreach (var property in propertyInfoList)
-                                {
-                                    var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-                                    if (attributes.Length > 0)
-                                    {
-                                        var key = ((ColumnAttribute)attributes[0]).Name;
-                                        property.SetValue(instance, reader[key]);
-                                    }
-                                }
-                                list.Add(instance);
+                                list.Add(CreateInstance<T>(reader, propertyInfoList));
                             }
                         }
                         break;
@@ -192,17 +151,7 @@ namespace HSQL
                         {
                             while (reader.Read())
                             {
-                                T instance = Activator.CreateInstance<T>();
-                                foreach (var property in propertyInfoList)
-                                {
-                                    var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-                                    if (attributes.Length > 0)
-                                    {
-                                        var key = ((ColumnAttribute)attributes[0]).Name;
-                                        property.SetValue(instance, reader[key]);
-                                    }
-                                }
-                                list.Add(instance);
+                                list.Add(CreateInstance<T>(reader, propertyInfoList));
                             }
                         }
                     }
@@ -218,45 +167,30 @@ namespace HSQL
             var type = typeof(T);
             T instance = default(T);
             var propertyInfoList = Store.GetPropertyInfoList(type);
+            var tableName = ExpressionBase.GetTableName(type);
+            var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
             switch (_dialect)
             {
                 case Dialect.MySQL:
                     {
-                        using (var reader = MySQLHelper.ExecuteReader(_connectionString, $"SELECT {string.Join(",", ExpressionBase.GetColumnNameList(type))} FROM {ExpressionBase.GetTableName(type)} WHERE {ExpressionToWhereSql.ToWhereString(_predicate)} LIMIT 0,1;"))
+                        using (var reader = MySQLHelper.ExecuteReader(_connectionString, $"SELECT {columnJoinString} FROM {tableName} WHERE {whereString} LIMIT 0,1;"))
                         {
                             while (reader.Read())
                             {
-                                instance = Activator.CreateInstance<T>();
-                                foreach (var property in propertyInfoList)
-                                {
-                                    var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-                                    if (attributes.Length > 0)
-                                    {
-                                        var key = ((ColumnAttribute)attributes[0]).Name;
-                                        property.SetValue(instance, reader[key]);
-                                    }
-                                }
+                                instance = CreateInstance<T>(reader, propertyInfoList);
                             }
                         }
                         break;
                     }
                 case Dialect.SQLServer:
                     {
-                        using (var reader = SQLServerHelper.ExecuteReader(_connectionString, $"SELECT TOP 1 {string.Join(",", ExpressionBase.GetColumnNameList(type))} FROM {ExpressionBase.GetTableName(type)} WHERE {ExpressionToWhereSql.ToWhereString(_predicate)};"))
+                        using (var reader = SQLServerHelper.ExecuteReader(_connectionString, $"SELECT TOP 1 {columnJoinString} FROM {tableName} WHERE {whereString};"))
                         {
                             while (reader.Read())
                             {
-                                instance = Activator.CreateInstance<T>();
-                                foreach (var property in propertyInfoList)
-                                {
-                                    var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-                                    if (attributes.Length > 0)
-                                    {
-                                        var key = ((ColumnAttribute)attributes[0]).Name;
-                                        property.SetValue(instance, reader[key]);
-                                    }
-                                }
+                                instance = CreateInstance<T>(reader, propertyInfoList);
                             }
                         }
                     }
@@ -268,7 +202,20 @@ namespace HSQL
 
         }
 
-        
-        
+
+        private T CreateInstance<T>(IDataReader reader, List<PropertyInfo> propertyInfoList) 
+        {
+            T instance = Activator.CreateInstance<T>();
+            foreach (var property in propertyInfoList)
+            {
+                var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
+                if (attributes.Length > 0)
+                {
+                    var key = ((ColumnAttribute)attributes[0]).Name;
+                    property.SetValue(instance, reader[key]);
+                }
+            }
+            return instance;
+        }
     }
 }
