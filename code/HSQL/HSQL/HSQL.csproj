@@ -7,10 +7,10 @@
     <Company />
     <Description>HSQL 是一种轻量级的基于 .NET 的ORM框架</Description>
     <PackageProjectUrl>https://github.com/hexu6788/HSQL</PackageProjectUrl>
-    <Version>1.0.0.0</Version>
+    <Version>1.0.0.1</Version>
     <SignAssembly>false</SignAssembly>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageId>HSQL-standard</PackageId>
+    <PackageId>HSQL-Standard</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
