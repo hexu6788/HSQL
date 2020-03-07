@@ -6,13 +6,13 @@ namespace HSQL.Model
 {
     internal class Column
     {
-        public Column() { }
-        public Column(string name, object value)
+        internal Column() { }
+        internal Column(string name, object value)
         {
             Name = name;
             Value = value;
         }
-        public string Name { get; set; }
-        public object Value { get; set; }
+        internal string Name { get; set; }
+        internal object Value { get; set; }
     }
 }

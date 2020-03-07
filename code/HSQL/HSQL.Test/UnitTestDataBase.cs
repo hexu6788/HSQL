@@ -114,7 +114,7 @@ namespace HSQL.Test
         {
             var database = new Database(Dialect.MySQL, connnectionString);
 
-            database.Delete<Student>(x => x.Id.Contains("test"));
+            database.Delete<Student>(x => !x.Id.Contains(""));
 
             var addList = new List<Student>();
             for (var i = 1; i <= 1000; i++)

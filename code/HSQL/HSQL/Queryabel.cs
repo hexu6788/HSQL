@@ -24,6 +24,7 @@ namespace HSQL
             _dialect = dialect;
             _predicate = predicate;
         }
+        
 
         public Queryabel<T> AddCondition(Expression<Func<T, bool>> condition)
         {
@@ -67,7 +68,7 @@ namespace HSQL
             {
                 while (reader.Read())
                 {
-                    list.Add(CreateInstance<T>(reader, propertyInfoList));
+                    list.Add(InstanceFactory.CreateInstance<T>(reader, propertyInfoList));
                 }
             }
             finally
@@ -113,7 +114,7 @@ namespace HSQL
             {
                 while (reader.Read())
                 {
-                    list.Add(CreateInstance<T>(reader, propertyInfoList));
+                    list.Add(InstanceFactory.CreateInstance<T>(reader, propertyInfoList));
                 }
             }
             finally
@@ -164,7 +165,7 @@ namespace HSQL
             {
                 while (reader.Read())
                 {
-                    list.Add(CreateInstance<T>(reader, propertyInfoList));
+                    list.Add(InstanceFactory.CreateInstance<T>(reader, propertyInfoList));
                 }
             }
             finally
@@ -209,7 +210,7 @@ namespace HSQL
             try
             {
                 if (reader.Read())
-                    instance = CreateInstance<T>(reader, propertyInfoList);
+                    instance = InstanceFactory.CreateInstance<T>(reader, propertyInfoList);
             }
             finally
             {
@@ -220,19 +221,6 @@ namespace HSQL
         }
 
 
-        private T CreateInstance<T>(IDataReader reader, List<PropertyInfo> propertyInfoList) 
-        {
-            T instance = Activator.CreateInstance<T>();
-            foreach (var property in propertyInfoList)
-            {
-                var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-                if (attributes.Length > 0)
-                {
-                    var key = ((ColumnAttribute)attributes[0]).Name;
-                    property.SetValue(instance, reader[key]);
-                }
-            }
-            return instance;
-        }
+        
     }
 }

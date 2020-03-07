@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace HSQL.Extensions
 {
-    public static class ExpressionExtensions
+    static class ExpressionExtensions
     {
 
         private static Expression<T> Compose<T>(this Expression<T> first, Expression<T> second, Func<Expression, Expression, Expression> merge)
@@ -21,7 +21,7 @@ namespace HSQL.Extensions
         }
     }
 
-    public class ParameterRebinder : ExpressionVisitor
+    class ParameterRebinder : ExpressionVisitor
     {
         private readonly Dictionary<ParameterExpression, ParameterExpression> map;
         public ParameterRebinder(Dictionary<ParameterExpression, ParameterExpression> map)
