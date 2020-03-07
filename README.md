@@ -9,7 +9,7 @@ HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操�
 ### 安装方法
 
 ```csharp
-Install-Package HSQL-standard -Version 1.0.0
+Install-Package HSQL-standard
 ```
 
 ### 使用方法
