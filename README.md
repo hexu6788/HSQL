@@ -2,14 +2,14 @@
 
 **HSQL 是一种轻量级的基于 .NET 的数据库对象关系映射「ORM」框架**
 
-![markdown](https://github.com/hexu6788/HSQL/blob/master/file/logo-2.png?raw=true "hsql")
+![markdown](https://github.com/hexu6788/HSQL/blob/master/file/logo-2.png?raw=true "HSQL")
 
-HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操作的一种框架，通过简单的语法，使数据库操作不再成为难事。目前支持的数据库有 MySql、SqlServer。
+HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操作的一种框架，通过简单的语法，使数据库操作不再成为难事。目前支持的数据库有 MySql、SQLServer。
 
 ### 安装方法
 
 ```csharp
-Install-Package HSQL-standard
+Install-Package HSQL-Standard
 ```
 
 ### 使用方法
@@ -162,10 +162,11 @@ var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query
 
 <a id="单实例插入十万次">单实例插入十万次：</a>
 ```csharp
+var number = 300000;
 var database = new Database(Dialect.MySQL, connnectionString);
 database.Delete<Student>(x => x.Age >= 0);
 var list = new List<Student>();
-for (var i = 0; i < 100000; i++)
+for (var i = 0; i < number; i++)
 {
     list.Add(new Student()
     {
@@ -183,19 +184,22 @@ list.ForEach(x =>
     var result = database.Insert<Student>(x);
 });
 stopwatch.Stop();
-var elapsedMilliseconds = $"插入十万条次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
+
+var qps = number / (stopwatch.ElapsedMilliseconds / 1000.0);
+var elapsedMilliseconds = $"QPS 为：{qps}";
 ```
-> 第一次测试 -> 插入十万条次共耗时： 111038 毫秒，平均单次插入耗时： 1.11038 毫秒 <br/> 第二次测试 -> 插入十万条次共耗时： 109037 毫秒，平均单次插入耗时： 1.09037 毫秒 
+![markdown](https://github.com/hexu6788/HSQL/blob/master/performance/image/insert_single.jpg?raw=true "HSQL 和 ADO.NET 单次插入操作性能")
 
 
 
 
 <a id="批量插入十万次">批量插入十万次：</a>
 ```csharp
+var number = 300000;
 var database = new Database(Dialect.MySQL, connnectionString);
 database.Delete<Student>(x => x.Age >= 0);
 var list = new List<Student>();
-for (var i = 0; i < 100000; i++)
+for (var i = 0; i < number; i++)
 {
     list.Add(new Student()
     {
@@ -210,10 +214,11 @@ var stopwatch = new Stopwatch();
 stopwatch.Start();
 var result = database.Insert<Student>(list);
 stopwatch.Stop();
-var elapsedMilliseconds = $"插入十万次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
-```
-> 第一次测试 -> 插入十万次共耗时： 11177 毫秒，平均单次查询耗时： 0.11177 毫秒 <br/> 第二次测试 -> 插入十万条次共耗时： 10776 毫秒，平均单次查询耗时： 0.10776 毫秒 
 
+var qps = number / (stopwatch.ElapsedMilliseconds / 1000.0);
+var elapsedMilliseconds = $"QPS 为：{qps}";
+```
+![markdown](https://github.com/hexu6788/HSQL/blob/master/performance/image/insert_batch.jpg?raw=true "HSQL 和 ADO.NET 批量插入操作性能")
 
 
 
