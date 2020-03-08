@@ -19,6 +19,12 @@ namespace HSQL
             _connectionString = connectionString;
         }
 
+        /// <summary>
+        /// 执行新增操作
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        /// <param name="t">要新增的实例</param>
+        /// <returns>是否新增成功</returns>
         public bool Insert<T>(T t)
         {
             if (t == null)
@@ -41,6 +47,12 @@ namespace HSQL
             }
         }
 
+        /// <summary>
+        /// 执行批量新增操作
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        /// <param name="list">要新增的实例</param>
+        /// <returns>是否新增成功</returns>
         public bool Insert<T>(List<T> list)
         {
             if (list == null || list.Count <= 0 || list.Count(x => x == null) > 0)
@@ -64,6 +76,13 @@ namespace HSQL
             }
         }
 
+        /// <summary>
+        /// 执行更新操作
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        /// <param name="selectPpredicate">条件表达式，可理解为 SQL 语句中的 WHERE。如：WHERE age = 16 可写为 x=> x.Age = 16</param>
+        /// <param name="instance">目标表达式，可理解为SQL 语句中的 SET。如：SET age = 16 , name = '张三' 可写为 new Student(){ Age = 16 , Name = "张三" }</param>
+        /// <returns>是否更新成功</returns>
         public bool Update<T>(Expression<Func<T, bool>> selectPpredicate, T instance)
         {
             if (selectPpredicate == null)
@@ -89,6 +108,12 @@ namespace HSQL
             }
         }
 
+        /// <summary>
+        /// 执行删除操作
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        /// <param name="predicate">条件表达式</param>
+        /// <returns>是否删除成功</returns>
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
         {
             var where = ExpressionToWhereSql.ToWhereString(predicate);
@@ -111,11 +136,20 @@ namespace HSQL
             }
         }
 
+        /// <summary>
+        /// 无条件查询
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
         public Queryabel<T> Query<T>()
         {
             return Query<T>(null);
         }
 
+        /// <summary>
+        /// 无条件查询
+        /// </summary>
+        /// <param name="predicate">查询条件表达式</param>
+        /// <typeparam name="T">类型</typeparam>
         public Queryabel<T> Query<T>(Expression<Func<T, bool>> predicate)
         {
             var queryabel = new Queryabel<T>(_connectionString, _dialect, predicate);

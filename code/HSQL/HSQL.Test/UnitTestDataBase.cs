@@ -79,7 +79,7 @@ namespace HSQL.Test
             database.Insert<Student>(list);
 
             var result = database.Update<Student>(x => x.Id.Contains("test_update_list"), new Student() { Age = 19 });
-            
+
             database.Delete<Student>(x => x.Id.Contains("test_update_list"));
 
             Assert.AreEqual(true, result);
