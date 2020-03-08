@@ -218,7 +218,7 @@ stopwatch.Stop();
 var qps = number / (stopwatch.ElapsedMilliseconds / 1000.0);
 var elapsedMilliseconds = $"QPS 为：{qps}";
 ```
-![markdown](https://github.com/hexu6788/HSQL/blob/master/performance/image/insert_batch.jpg?raw=true "HSQL 和 ADO.NET 批量插入操作性能")
+![markdown](https://github.com/hexu6788/HSQL/blob/master/performance/image/insert_batch.png?raw=true "HSQL 和 ADO.NET 批量插入操作性能")
 
 
 
