@@ -30,6 +30,7 @@ Install-Package HSQL-Standard
 _无索引、单机、单表、表数据为十万行_
 + <a href="#单实例插入十万次">单实例插入十万次</a>
 + <a href="#批量插入十万次">批量插入十万次</a>
++ <a href="#查询填充性能">查询填充性能</a>
 + <a href="#查询单实例十万次">查询单实例十万次</a>
 
 
@@ -221,7 +222,7 @@ var elapsedMilliseconds = $"QPS 为：{qps}";
 ![markdown](https://github.com/hexu6788/HSQL/blob/master/performance/image/insert_batch.png?raw=true "HSQL 和 ADO.NET 批量插入操作性能")
 
 
-<a id="数据填充性能">数据填充性能：</a>
+<a id="查询填充性能">查询填充性能：</a>
 ```csharp
 var number = 2000000;
 var database = new Database(Dialect.MySQL, connectionString);
@@ -245,7 +246,7 @@ var student = database.Query<Student>().ToList();
 stopwatch.Stop();
 var elapsedMilliseconds = $"数据量为{number}条时，耗时：{stopwatch.ElapsedMilliseconds} ms";
 ```
-![markdown](https://github.com/hexu6788/HSQL/blob/master/performance/image/query_all.png?raw=true "HSQL 和 ADO.NET 数据填充性能")
+![markdown](https://github.com/hexu6788/HSQL/blob/master/performance/image/query_all.png?raw=true "HSQL 和 ADO.NET 查询填充性能")
 
 
 
