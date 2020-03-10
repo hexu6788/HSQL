@@ -221,6 +221,32 @@ var elapsedMilliseconds = $"QPS 为：{qps}";
 ![markdown](https://github.com/hexu6788/HSQL/blob/master/performance/image/insert_batch.png?raw=true "HSQL 和 ADO.NET 批量插入操作性能")
 
 
+<a id="数据填充性能">数据填充性能：</a>
+```csharp
+var number = 2000000;
+var database = new Database(Dialect.MySQL, connectionString);
+database.Delete<Student>(x => x.Age >= 0);
+var list = new List<Student>();
+for (var i = 0; i < number; i++)
+{
+    list.Add(new Student()
+    {
+        Id = $"{i}",
+        Name = "zhangsan",
+        Age = 18,
+        SchoolId = "123"
+    });
+}
+var result = database.Insert<Student>(list);
+
+var stopwatch = new Stopwatch();
+stopwatch.Start();
+var student = database.Query<Student>().ToList();
+stopwatch.Stop();
+var elapsedMilliseconds = $"数据量为{number}条时，耗时：{stopwatch.ElapsedMilliseconds} ms";
+```
+![markdown](https://github.com/hexu6788/HSQL/blob/master/performance/image/query_all.png?raw=true "HSQL 和 ADO.NET 数据填充性能")
+
 
 
 <a id="查询单实例十万次">查询单实例十万次：</a>
