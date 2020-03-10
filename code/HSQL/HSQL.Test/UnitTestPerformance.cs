@@ -1,30 +1,23 @@
 using HSQL.Test.TestDataBaseModel;
-using HSQL.Test.TestHelper;
-using HSQL.Test.TestViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MySql.Data.MySqlClient;
-using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace HSQL.Test
 {
     [TestClass]
     public class UnitTestPerformance
     {
-        string connnectionString = $"Server=127.0.0.1;Database=test;Uid=root;Pwd=123456;";
+        string connectionString = $"Server=127.0.0.1;Database=test;Uid=root;Pwd=123456;";
 
         [TestMethod]
         public void TestInsert()
         {
             var number = 300000;
 
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, connectionString);
             database.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();
             for (var i = 0; i < number; i++)
@@ -56,7 +49,7 @@ namespace HSQL.Test
         {
             var number = 300000;
 
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, connectionString);
             database.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();
             for (var i = 0; i < number; i++)
@@ -73,7 +66,7 @@ namespace HSQL.Test
             stopwatch.Start();
             list.ForEach(x =>
             {
-                using (var connection = new MySqlConnection(connnectionString))
+                using (var connection = new MySqlConnection(connectionString))
                 {
                     using (var command = connection.CreateCommand())
                     {
@@ -102,7 +95,7 @@ namespace HSQL.Test
         {
             var number = 300000;
 
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, connectionString);
             database.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();
             for (var i = 0; i < number; i++)
@@ -130,7 +123,7 @@ namespace HSQL.Test
         {
             var number = 300000;
 
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, connectionString);
             database.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();
             for (var i = 0; i < number; i++)
@@ -146,7 +139,7 @@ namespace HSQL.Test
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            using (var connection = new MySqlConnection(connnectionString))
+            using (var connection = new MySqlConnection(connectionString))
             {
                 using (var command = connection.CreateCommand())
                 {
@@ -177,7 +170,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQuerySingle()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, connectionString);
             database.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();
             for (var i = 0; i < 100000; i++)
@@ -200,6 +193,89 @@ namespace HSQL.Test
             }
             stopwatch.Stop();
             var elapsedMilliseconds = $"查询十万条次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
+        }
+
+        [TestMethod]
+        public void TestQueryAll()
+        {
+            var number = 2000000;
+
+            var database = new Database(Dialect.MySQL, connectionString);
+            database.Delete<Student>(x => x.Age >= 0);
+            var list = new List<Student>();
+            for (var i = 0; i < number; i++)
+            {
+                list.Add(new Student()
+                {
+                    Id = $"{i}",
+                    Name = "zhangsan",
+                    Age = 18,
+                    SchoolId = "123"
+                });
+            }
+            var result = database.Insert<Student>(list);
+
+            
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var student = database.Query<Student>().ToList();
+            stopwatch.Stop();
+
+            var elapsedMilliseconds = $"数据量为{number}条时，耗时：{stopwatch.ElapsedMilliseconds} ms";
+        }
+
+        [TestMethod]
+        public void TestAdoNetQueryAll()
+        {
+            var number = 2000000;
+
+            var database = new Database(Dialect.MySQL, connectionString);
+            database.Delete<Student>(x => x.Age >= 0);
+            var list = new List<Student>();
+            for (var i = 0; i < number; i++)
+            {
+                list.Add(new Student()
+                {
+                    Id = $"{i}",
+                    Name = "zhangsan",
+                    Age = 18,
+                    SchoolId = "123"
+                });
+            }
+            var result = database.Insert<Student>(list);
+
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var connection = new MySqlConnection(connectionString);
+            var command = connection.CreateCommand();
+            connection.Open();
+            command.CommandText = "SELECT * FROM t_student;";
+            IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
+            command.Parameters.Clear();
+
+            var list2 = new List<Student>();
+            try
+            {
+                while (reader.Read())
+                {
+                    var student = new Student();
+                    student.Id = reader["id"] == null ? "" : reader["id"].ToString();
+                    student.Name = reader["name"] == null ? "" : reader["name"].ToString();
+                    student.Age = reader["age"] == null ? 0 : (int)reader["age"];
+                    student.SchoolId = reader["school_id"] == null ? "" : reader["school_id"].ToString();
+                    student.Birthday = reader["birthday"] == null ? (long)0 : (long)reader["birthday"];
+                    list2.Add(student);
+                }
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Dispose();
+            }
+            stopwatch.Stop();
+
+            var elapsedMilliseconds = $"数据量为{number}条时，耗时：{stopwatch.ElapsedMilliseconds} ms";
         }
     }
 }

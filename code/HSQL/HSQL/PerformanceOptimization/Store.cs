@@ -13,6 +13,7 @@ namespace HSQL.PerformanceOptimization
         private static Dictionary<Type, List<PropertyInfo>> _propertyInfoListStore = new Dictionary<Type, List<PropertyInfo>>();
         private static Dictionary<Type, string> _tableNameStore = new Dictionary<Type, string>();
         private static Dictionary<Type, List<string>> _columnNameListStore = new Dictionary<Type, List<string>>();
+        private static Dictionary<PropertyInfo, string> _columnAttributeNameStore = new Dictionary<PropertyInfo, string>();
 
         internal static List<PropertyInfo> GetPropertyInfoList(Type type)
         {
@@ -49,6 +50,18 @@ namespace HSQL.PerformanceOptimization
             }
             _columnNameListStore.Add(type, columnNameList);
             return columnNameList;
+        }
+
+        internal static string GetPropertyColumnAttributeName(PropertyInfo property)
+        {
+            if (_columnAttributeNameStore.ContainsKey(property))
+                return _columnAttributeNameStore.GetValueOrDefault(property);
+
+            var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
+            var name = ((ColumnAttribute)attributes[0]).Name;
+            _columnAttributeNameStore.Add(property, name);
+
+            return name;
         }
     }
 }
