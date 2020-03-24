@@ -2,6 +2,7 @@
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
@@ -44,6 +45,150 @@ namespace HSQL
                     return SQLServerHelper.ExecuteNonQuery(_connectionString, sql, columnList.Select(x => new SqlParameter(x.Name, x.Value)).ToArray()) > 0;
                 default:
                     throw new Exception("未选择数据库方言！");
+            }
+        }
+
+        /// <summary>
+        /// 执行新增操作
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        /// <typeparam name="K">类型</typeparam>
+        /// <param name="t">要新增的实例</param>
+        /// <param name="k">要新增的实例</param>
+        /// <returns>是否新增成功</returns>
+        public bool Insert<T,K>(T t,K k)
+        {
+            if (t == null || k == null)
+                throw new Exception("插入数据不能为空！");
+
+            var typeT = typeof(T);
+            var tableNameT = ExpressionBase.GetTableName(typeT);
+            var columnListT = ExpressionBase.GetColumnList<T>(t);
+
+            var typeK = typeof(K);
+            var tableNameK = ExpressionBase.GetTableName(typeK);
+            var columnListK = ExpressionBase.GetColumnList<K>(k);
+
+            var sqlList = new List<string>();
+            sqlList.Add($"INSERT INTO {tableNameT}({string.Join(",", columnListT.Select(x => x.Name))}) VALUES({string.Join(",", columnListT.Select(x => string.Format("@{0}", x.Name)))});");
+            sqlList.Add($"INSERT INTO {tableNameK}({string.Join(",", columnListK.Select(x => x.Name))}) VALUES({string.Join(",", columnListK.Select(x => string.Format("@{0}", x.Name)))});");
+
+            if (_dialect == Dialect.MySQL)
+            {
+                var parametersList = new List<MySqlParameter[]>();
+                parametersList.Add(ExpressionBase.GetColumnList<T>(t).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray());
+                parametersList.Add(ExpressionBase.GetColumnList<K>(k).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray());
+
+                return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+            }
+            else if (_dialect == Dialect.SQLServer)
+            {
+                var parametersList = new List<SqlParameter[]>();
+                parametersList.Add(ExpressionBase.GetColumnList<T>(t).Select(x => new SqlParameter(x.Name, x.Value)).ToArray());
+                parametersList.Add(ExpressionBase.GetColumnList<K>(k).Select(x => new SqlParameter(x.Name, x.Value)).ToArray());
+                
+                return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+            }
+            else
+            {
+                throw new Exception("未选择数据库方言！");
+            }
+        }
+
+        /// <summary>
+        /// 执行新增操作
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        /// <typeparam name="K">类型</typeparam>
+        /// <param name="t">要新增的实例</param>
+        /// <param name="kList">要新增的实例</param>
+        /// <returns>是否新增成功</returns>
+        public bool Insert<T,K>(T t,List<K> kList)
+        {
+            if (t == null || kList == null || kList.Count <= 0 || kList.Count(x => x == null) > 0)
+                throw new Exception("插入数据不能为空！");
+
+            var typeT = typeof(T);
+            var tableNameT = ExpressionBase.GetTableName(typeT);
+            var columnListT = ExpressionBase.GetColumnList<T>(t);
+
+            var typeK = typeof(K);
+            var tableNameK = ExpressionBase.GetTableName(typeK);
+            var columnNameListK = ExpressionBase.GetColumnNameList(typeK);
+
+            var sqlList = new List<string>();
+            sqlList.Add($"INSERT INTO {tableNameT}({string.Join(",", columnListT.Select(x => x.Name))}) VALUES({string.Join(",", columnListT.Select(x => string.Format("@{0}", x.Name)))});");
+            var sqlK = $"INSERT INTO {tableNameK}({string.Join(",", columnNameListK)}) VALUES({string.Join(",", columnNameListK.Select(x => $"@{x}"))});";
+            sqlList.AddRange(kList.Select(x => sqlK).ToList());
+
+            if (_dialect == Dialect.MySQL)
+            {
+                var parametersList = new List<MySqlParameter[]>();
+                parametersList.Add(ExpressionBase.GetColumnList<T>(t).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray());
+                parametersList.AddRange(kList.Select(x => ExpressionBase.GetColumnList<K>(x).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray()).ToList());
+
+                return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+            }
+            else if (_dialect == Dialect.SQLServer)
+            {
+                var parametersList = new List<SqlParameter[]>();
+                parametersList.Add(ExpressionBase.GetColumnList<T>(t).Select(x => new SqlParameter(x.Name, x.Value)).ToArray());
+                parametersList.AddRange(kList.Select(x => ExpressionBase.GetColumnList<K>(x).Select(x => new SqlParameter(x.Name, x.Value)).ToArray()).ToList());
+
+                return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+            }
+            else
+            {
+                throw new Exception("未选择数据库方言！");
+            }
+        }
+
+        /// <summary>
+        /// 执行新增操作
+        /// </summary>
+        /// <typeparam name="K">类型</typeparam>
+        /// <param name="t">类型</param>
+        /// <param name="tList">要新增的实例</param>
+        /// <param name="kList">要新增的实例</param>
+        /// <returns>是否新增成功</returns>
+        public bool Insert<T, K>(List<T> tList, List<K> kList)
+        {
+            if (tList == null || tList.Count <= 0 || tList.Count(x => x == null) > 0 || kList == null || kList.Count <= 0 || kList.Count(x => x == null) > 0)
+                throw new Exception("插入数据不能为空！");
+
+            var typeT = typeof(T);
+            var tableNameT = ExpressionBase.GetTableName(typeT);
+            var columnNameListT = ExpressionBase.GetColumnNameList(typeT);
+
+            var typeK = typeof(K);
+            var tableNameK = ExpressionBase.GetTableName(typeK);
+            var columnNameListK = ExpressionBase.GetColumnNameList(typeK);
+
+            var sqlList = new List<string>();
+            var sqlT = $"INSERT INTO {tableNameT}({string.Join(",", columnNameListT)}) VALUES({string.Join(",", columnNameListT.Select(x => $"@{x}"))});";
+            var sqlK = $"INSERT INTO {tableNameK}({string.Join(",", columnNameListK)}) VALUES({string.Join(",", columnNameListK.Select(x => $"@{x}"))});";
+            sqlList.AddRange(tList.Select(x => sqlT).ToList());
+            sqlList.AddRange(kList.Select(x => sqlK).ToList());
+
+            if (_dialect == Dialect.MySQL)
+            {
+                var parametersList = new List<MySqlParameter[]>();
+                parametersList.AddRange(tList.Select(x => ExpressionBase.GetColumnList<T>(x).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray()).ToList());
+                parametersList.AddRange(kList.Select(x => ExpressionBase.GetColumnList<K>(x).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray()).ToList());
+
+                return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+            }
+            else if (_dialect == Dialect.SQLServer)
+            {
+                var parametersList = new List<SqlParameter[]>();
+                parametersList.AddRange(tList.Select(x => ExpressionBase.GetColumnList<T>(x).Select(x => new SqlParameter(x.Name, x.Value)).ToArray()).ToList());
+                parametersList.AddRange(kList.Select(x => ExpressionBase.GetColumnList<K>(x).Select(x => new SqlParameter(x.Name, x.Value)).ToArray()).ToList());
+
+                return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+            }
+            else
+            {
+                throw new Exception("未选择数据库方言！");
             }
         }
 

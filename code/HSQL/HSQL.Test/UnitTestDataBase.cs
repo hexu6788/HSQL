@@ -36,6 +36,91 @@ namespace HSQL.Test
         }
 
         [TestMethod]
+        public void TestInsertTK()
+        {
+            var school = new School()
+            {
+                Id = "1",
+                Name = "北京大学"
+            };
+
+            var student = new Student()
+            {
+                Name = $"zhangsan",
+                Age = 18,
+                SchoolId = school.Id
+            };
+
+
+            var database = new Database(Dialect.MySQL, connnectionString);
+
+            var result = database.Insert<School, Student>(school, student);
+
+            Assert.AreEqual(true, result);
+        }
+
+        [TestMethod]
+        public void TestInsertTKList()
+        {
+            var school = new School()
+            {
+                Id = "1",
+                Name = "北京大学"
+            };
+
+            var studentList = new List<Student>();
+            for (var i = 1; i <= 10; i++)
+            {
+                studentList.Add(new Student()
+                {
+                    Name = $"zhangsan_{i}",
+                    Age = 18,
+                    SchoolId = school.Id
+                });
+            }
+
+
+            var database = new Database(Dialect.MySQL, connnectionString);
+
+            var result = database.Insert<School, Student>(school, studentList);
+
+            Assert.AreEqual(true, result);
+        }
+
+        [TestMethod]
+        public void TestInsertTListKList()
+        {
+            var schoolList = new List<School>();
+            for (var i = 1; i < 10; i++)
+            {
+                schoolList.Add(new School()
+                {
+                    Id = $"{i}",
+                    Name = $"大学{i}"
+                });
+            }
+            
+
+            var studentList = new List<Student>();
+            for (var i = 1; i <= 10; i++)
+            {
+                studentList.Add(new Student()
+                {
+                    Name = $"zhangsan_{i}",
+                    Age = 18,
+                    SchoolId = $"{i}"
+                });
+            }
+
+
+            var database = new Database(Dialect.MySQL, connnectionString);
+
+            var result = database.Insert<School, Student>(schoolList, studentList);
+
+            Assert.AreEqual(true, result);
+        }
+
+        [TestMethod]
         public void TestBatchInsert()
         {
             var list = new List<Student>();
