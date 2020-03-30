@@ -1,10 +1,12 @@
 ﻿using HSQL.Attribute;
 using HSQL.Const;
+using HSQL.Model;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace HSQL.PerformanceOptimization
 {
@@ -62,6 +64,35 @@ namespace HSQL.PerformanceOptimization
             _columnAttributeNameStore.Add(property, name);
 
             return name;
+        }
+
+        internal static string BuildInsertSQL(string tableName, List<Column> columnList)
+        {
+            return $"INSERT INTO {tableName}({string.Join(",", columnList.Select(x => x.Name))}) VALUES({string.Join(",", columnList.Select(x => string.Format("@{0}", x.Name)))});";
+        }
+
+        internal static string BuildInsertSQL(string tableName, List<string> columnNameList)
+        {
+            return $"INSERT INTO {tableName}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(x => $"@{x}"))});";
+        }
+
+        internal static string BuildUpdateSQL(string tableName,List<Column> columnList,string where)
+        {
+            return $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {where};";
+        }
+
+        internal static string BuildDeleteSQL(string tableName,string where) {
+            return $"DELETE FROM {tableName} WHERE {where};";
+        }
+
+        internal static MySqlParameter[] BuildMySqlParameter(List<Column> columnList)
+        {
+            return columnList.Select(x => new MySqlParameter(x.Name, x.Value)).ToArray();
+        }
+
+        internal static SqlParameter[] BuildSqlParameter(List<Column> columnList)
+        {
+            return columnList.Select(x => new SqlParameter(x.Name, x.Value)).ToArray();
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using HSQL.DatabaseHelper;
+using HSQL.PerformanceOptimization;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -35,14 +36,14 @@ namespace HSQL
             var tableName = ExpressionBase.GetTableName(type);
             var columnList = ExpressionBase.GetColumnList<T>(t);
 
-            var sql = $"INSERT INTO {tableName}({string.Join(",", columnList.Select(x => x.Name))}) VALUES({string.Join(",", columnList.Select(x => string.Format("@{0}", x.Name)))});";
+            var sql = Store.BuildInsertSQL(tableName, columnList);
 
             switch (_dialect)
             {
                 case Dialect.MySQL:
-                    return MySQLHelper.ExecuteNonQuery(_connectionString, sql, columnList.Select(x => new MySqlParameter(x.Name, x.Value)).ToArray()) > 0;
+                    return MySQLHelper.ExecuteNonQuery(_connectionString, sql, Store.BuildMySqlParameter(columnList)) > 0;
                 case Dialect.SQLServer:
-                    return SQLServerHelper.ExecuteNonQuery(_connectionString, sql, columnList.Select(x => new SqlParameter(x.Name, x.Value)).ToArray()) > 0;
+                    return SQLServerHelper.ExecuteNonQuery(_connectionString, sql, Store.BuildSqlParameter(columnList)) > 0;
                 default:
                     throw new Exception("未选择数据库方言！");
             }
@@ -56,7 +57,7 @@ namespace HSQL
         /// <param name="t">要新增的实例</param>
         /// <param name="k">要新增的实例</param>
         /// <returns>是否新增成功</returns>
-        public bool Insert<T,K>(T t,K k)
+        public bool Insert<T, K>(T t, K k)
         {
             if (t == null || k == null)
                 throw new Exception("插入数据不能为空！");
@@ -70,23 +71,23 @@ namespace HSQL
             var columnListK = ExpressionBase.GetColumnList<K>(k);
 
             var sqlList = new List<string>();
-            sqlList.Add($"INSERT INTO {tableNameT}({string.Join(",", columnListT.Select(x => x.Name))}) VALUES({string.Join(",", columnListT.Select(x => string.Format("@{0}", x.Name)))});");
-            sqlList.Add($"INSERT INTO {tableNameK}({string.Join(",", columnListK.Select(x => x.Name))}) VALUES({string.Join(",", columnListK.Select(x => string.Format("@{0}", x.Name)))});");
+            sqlList.Add(Store.BuildInsertSQL(tableNameT, columnListT));
+            sqlList.Add(Store.BuildInsertSQL(tableNameK, columnListK));
 
             if (_dialect == Dialect.MySQL)
             {
                 var parametersList = new List<MySqlParameter[]>();
-                parametersList.Add(ExpressionBase.GetColumnList<T>(t).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray());
-                parametersList.Add(ExpressionBase.GetColumnList<K>(k).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray());
+                parametersList.Add(Store.BuildMySqlParameter(columnListT));
+                parametersList.Add(Store.BuildMySqlParameter(columnListK));
 
                 return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
             }
             else if (_dialect == Dialect.SQLServer)
             {
                 var parametersList = new List<SqlParameter[]>();
-                parametersList.Add(ExpressionBase.GetColumnList<T>(t).Select(x => new SqlParameter(x.Name, x.Value)).ToArray());
-                parametersList.Add(ExpressionBase.GetColumnList<K>(k).Select(x => new SqlParameter(x.Name, x.Value)).ToArray());
-                
+                parametersList.Add(Store.BuildSqlParameter(columnListT));
+                parametersList.Add(Store.BuildSqlParameter(columnListK));
+
                 return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
             }
             else
@@ -103,7 +104,7 @@ namespace HSQL
         /// <param name="t">要新增的实例</param>
         /// <param name="kList">要新增的实例</param>
         /// <returns>是否新增成功</returns>
-        public bool Insert<T,K>(T t,List<K> kList)
+        public bool Insert<T, K>(T t, List<K> kList)
         {
             if (t == null || kList == null || kList.Count <= 0 || kList.Count(x => x == null) > 0)
                 throw new Exception("插入数据不能为空！");
@@ -117,23 +118,23 @@ namespace HSQL
             var columnNameListK = ExpressionBase.GetColumnNameList(typeK);
 
             var sqlList = new List<string>();
-            sqlList.Add($"INSERT INTO {tableNameT}({string.Join(",", columnListT.Select(x => x.Name))}) VALUES({string.Join(",", columnListT.Select(x => string.Format("@{0}", x.Name)))});");
-            var sqlK = $"INSERT INTO {tableNameK}({string.Join(",", columnNameListK)}) VALUES({string.Join(",", columnNameListK.Select(x => $"@{x}"))});";
+            sqlList.Add(Store.BuildInsertSQL(tableNameT, columnListT));
+            var sqlK = Store.BuildInsertSQL(tableNameK, columnNameListK);
             sqlList.AddRange(kList.Select(x => sqlK).ToList());
 
             if (_dialect == Dialect.MySQL)
             {
                 var parametersList = new List<MySqlParameter[]>();
-                parametersList.Add(ExpressionBase.GetColumnList<T>(t).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray());
-                parametersList.AddRange(kList.Select(x => ExpressionBase.GetColumnList<K>(x).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray()).ToList());
+                parametersList.Add(Store.BuildMySqlParameter(columnListT));
+                parametersList.AddRange(kList.Select(x => Store.BuildMySqlParameter(ExpressionBase.GetColumnList<K>(x))).ToList());
 
                 return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
             }
             else if (_dialect == Dialect.SQLServer)
             {
                 var parametersList = new List<SqlParameter[]>();
-                parametersList.Add(ExpressionBase.GetColumnList<T>(t).Select(x => new SqlParameter(x.Name, x.Value)).ToArray());
-                parametersList.AddRange(kList.Select(x => ExpressionBase.GetColumnList<K>(x).Select(x => new SqlParameter(x.Name, x.Value)).ToArray()).ToList());
+                parametersList.Add(Store.BuildSqlParameter(columnListT));
+                parametersList.AddRange(kList.Select(x => Store.BuildSqlParameter(ExpressionBase.GetColumnList<K>(x))).ToList());
 
                 return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
             }
@@ -165,24 +166,24 @@ namespace HSQL
             var columnNameListK = ExpressionBase.GetColumnNameList(typeK);
 
             var sqlList = new List<string>();
-            var sqlT = $"INSERT INTO {tableNameT}({string.Join(",", columnNameListT)}) VALUES({string.Join(",", columnNameListT.Select(x => $"@{x}"))});";
-            var sqlK = $"INSERT INTO {tableNameK}({string.Join(",", columnNameListK)}) VALUES({string.Join(",", columnNameListK.Select(x => $"@{x}"))});";
+            var sqlT = Store.BuildInsertSQL(tableNameT, columnNameListT);
+            var sqlK = Store.BuildInsertSQL(tableNameK, columnNameListK);
             sqlList.AddRange(tList.Select(x => sqlT).ToList());
             sqlList.AddRange(kList.Select(x => sqlK).ToList());
 
             if (_dialect == Dialect.MySQL)
             {
                 var parametersList = new List<MySqlParameter[]>();
-                parametersList.AddRange(tList.Select(x => ExpressionBase.GetColumnList<T>(x).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray()).ToList());
-                parametersList.AddRange(kList.Select(x => ExpressionBase.GetColumnList<K>(x).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray()).ToList());
+                parametersList.AddRange(tList.Select(x => Store.BuildMySqlParameter(ExpressionBase.GetColumnList<T>(x))).ToList());
+                parametersList.AddRange(kList.Select(x => Store.BuildMySqlParameter(ExpressionBase.GetColumnList<K>(x))).ToList());
 
                 return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
             }
             else if (_dialect == Dialect.SQLServer)
             {
                 var parametersList = new List<SqlParameter[]>();
-                parametersList.AddRange(tList.Select(x => ExpressionBase.GetColumnList<T>(x).Select(x => new SqlParameter(x.Name, x.Value)).ToArray()).ToList());
-                parametersList.AddRange(kList.Select(x => ExpressionBase.GetColumnList<K>(x).Select(x => new SqlParameter(x.Name, x.Value)).ToArray()).ToList());
+                parametersList.AddRange(tList.Select(x => Store.BuildSqlParameter(ExpressionBase.GetColumnList<T>(x))).ToList());
+                parametersList.AddRange(kList.Select(x => Store.BuildSqlParameter(ExpressionBase.GetColumnList<K>(x))).ToList());
 
                 return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
             }
@@ -207,15 +208,15 @@ namespace HSQL
             var tableName = ExpressionBase.GetTableName(type);
             var columnNameList = ExpressionBase.GetColumnNameList(type);
 
-            var sql = $"INSERT INTO {tableName}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(x => $"@{x}"))});";
+            var sql = Store.BuildInsertSQL(tableName, columnNameList);
             var sqlList = list.Select(x => sql).ToList();
 
             switch (_dialect)
             {
                 case Dialect.MySQL:
-                    return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, list.Select(x => ExpressionBase.GetColumnList<T>(x).Select(x => new MySqlParameter(x.Name, x.Value)).ToArray()).ToList()) > 0;
+                    return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, list.Select(x => Store.BuildMySqlParameter(ExpressionBase.GetColumnList<T>(x))).ToList()) > 0;
                 case Dialect.SQLServer:
-                    return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, list.Select(x => ExpressionBase.GetColumnList<T>(x).Select(x => new SqlParameter(x.Name, x.Value)).ToArray()).ToList()) > 0;
+                    return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, list.Select(x => Store.BuildSqlParameter(ExpressionBase.GetColumnList<T>(x))).ToList()) > 0;
                 default:
                     throw new Exception("未选择数据库方言！");
             }
@@ -238,16 +239,16 @@ namespace HSQL
             var type = typeof(T);
             var tableName = ExpressionBase.GetTableName(type);
             var columnList = ExpressionBase.GetColumnListWithOutNull<T>(instance);
-
             var where = ExpressionToWhereSql.ToWhereString(selectPpredicate);
-            var sql = $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {where};";
+
+            var sql = Store.BuildUpdateSQL(tableName, columnList, where);
 
             switch (_dialect)
             {
                 case Dialect.MySQL:
-                    return MySQLHelper.ExecuteNonQuery(_connectionString, sql, columnList.Select(x => new MySqlParameter(x.Name, x.Value)).ToArray()) > 0;
+                    return MySQLHelper.ExecuteNonQuery(_connectionString, sql, Store.BuildMySqlParameter(columnList)) > 0;
                 case Dialect.SQLServer:
-                    return SQLServerHelper.ExecuteNonQuery(_connectionString, sql, columnList.Select(x => new SqlParameter(x.Name, x.Value)).ToArray()) > 0;
+                    return SQLServerHelper.ExecuteNonQuery(_connectionString, sql, Store.BuildSqlParameter(columnList)) > 0;
                 default:
                     throw new Exception("未选择数据库方言！");
             }
@@ -268,8 +269,7 @@ namespace HSQL
             var type = typeof(T);
             var tableName = ExpressionBase.GetTableName(type);
 
-            var sql = $"DELETE FROM {tableName} WHERE {where};";
-
+            var sql = Store.BuildDeleteSQL(tableName, where);
             switch (_dialect)
             {
                 case Dialect.MySQL:
