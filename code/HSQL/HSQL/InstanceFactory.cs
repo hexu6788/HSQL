@@ -16,7 +16,8 @@ namespace HSQL
             foreach (var property in propertyInfoList)
             {
                 var key = Store.GetPropertyColumnAttributeName(property);
-                property.SetValue(instance, reader[key]);
+                var value = reader[key];
+                property.SetValue(instance, value);
             }
             return instance;
         }

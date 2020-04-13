@@ -102,6 +102,61 @@ namespace HSQL
         /// <typeparam name="T">类型</typeparam>
         /// <typeparam name="K">类型</typeparam>
         /// <param name="t">要新增的实例</param>
+        /// <param name="k">要新增的实例</param>
+        /// <param name="v">要新增的实例</param>
+        /// <returns>是否新增成功</returns>
+        public bool Insert<T, K, V>(T t, K k, V v)
+        {
+            if (t == null || k == null || v == null)
+                throw new Exception("插入数据不能为空！");
+
+            var typeT = typeof(T);
+            var tableNameT = ExpressionBase.GetTableName(typeT);
+            var columnListT = ExpressionBase.GetColumnList<T>(t);
+
+            var typeK = typeof(K);
+            var tableNameK = ExpressionBase.GetTableName(typeK);
+            var columnListK = ExpressionBase.GetColumnList<K>(k);
+
+            var typeV = typeof(V);
+            var tableNameV = ExpressionBase.GetTableName(typeV);
+            var columnListV = ExpressionBase.GetColumnList<V>(v);
+
+            var sqlList = new List<string>();
+            sqlList.Add(Store.BuildInsertSQL(tableNameT, columnListT));
+            sqlList.Add(Store.BuildInsertSQL(tableNameK, columnListK));
+            sqlList.Add(Store.BuildInsertSQL(tableNameV, columnListV));
+
+            if (_dialect == Dialect.MySQL)
+            {
+                var parametersList = new List<MySqlParameter[]>();
+                parametersList.Add(Store.BuildMySqlParameter(columnListT));
+                parametersList.Add(Store.BuildMySqlParameter(columnListK));
+                parametersList.Add(Store.BuildMySqlParameter(columnListV));
+
+                return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+            }
+            else if (_dialect == Dialect.SQLServer)
+            {
+                var parametersList = new List<SqlParameter[]>();
+                parametersList.Add(Store.BuildSqlParameter(columnListT));
+                parametersList.Add(Store.BuildSqlParameter(columnListK));
+                parametersList.Add(Store.BuildSqlParameter(columnListV));
+
+                return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+            }
+            else
+            {
+                throw new Exception("未选择数据库方言！");
+            }
+        }
+
+        /// <summary>
+        /// 执行新增操作
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        /// <typeparam name="K">类型</typeparam>
+        /// <param name="t">要新增的实例</param>
         /// <param name="kList">要新增的实例</param>
         /// <returns>是否新增成功</returns>
         public bool Insert<T, K>(T t, List<K> kList)
@@ -135,6 +190,63 @@ namespace HSQL
                 var parametersList = new List<SqlParameter[]>();
                 parametersList.Add(Store.BuildSqlParameter(columnListT));
                 parametersList.AddRange(kList.Select(x => Store.BuildSqlParameter(ExpressionBase.GetColumnList<K>(x))).ToList());
+
+                return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+            }
+            else
+            {
+                throw new Exception("未选择数据库方言！");
+            }
+        }
+
+
+        /// <summary>
+        /// 执行新增操作
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        /// <typeparam name="K">类型</typeparam>
+        /// <param name="t">要新增的实例</param>
+        /// <param name="k">要新增的实例</param>
+        /// <param name="vList">要新增的实例</param>
+        /// <returns>是否新增成功</returns>
+        public bool Insert<T, K, V>(T t, K k, List<V> vList)
+        {
+            if (t == null || k == null || vList == null || vList.Count <= 0 || vList.Count(x => x == null) > 0)
+                throw new Exception("插入数据不能为空！");
+
+            var typeT = typeof(T);
+            var tableNameT = ExpressionBase.GetTableName(typeT);
+            var columnListT = ExpressionBase.GetColumnList<T>(t);
+
+            var typeK = typeof(K);
+            var tableNameK = ExpressionBase.GetTableName(typeK);
+            var columnListK = ExpressionBase.GetColumnList<K>(k);
+
+            var typeV = typeof(V);
+            var tableNameV = ExpressionBase.GetTableName(typeV);
+            var columnNameListV = ExpressionBase.GetColumnNameList(typeV);
+
+            var sqlList = new List<string>();
+            sqlList.Add(Store.BuildInsertSQL(tableNameT, columnListT));
+            sqlList.Add(Store.BuildInsertSQL(tableNameK, columnListK));
+            var sqlV = Store.BuildInsertSQL(tableNameV, columnNameListV);
+            sqlList.AddRange(vList.Select(x => sqlV).ToList());
+
+            if (_dialect == Dialect.MySQL)
+            {
+                var parametersList = new List<MySqlParameter[]>();
+                parametersList.Add(Store.BuildMySqlParameter(columnListT));
+                parametersList.Add(Store.BuildMySqlParameter(columnListK));
+                parametersList.AddRange(vList.Select(x => Store.BuildMySqlParameter(ExpressionBase.GetColumnList<V>(x))).ToList());
+
+                return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+            }
+            else if (_dialect == Dialect.SQLServer)
+            {
+                var parametersList = new List<SqlParameter[]>();
+                parametersList.Add(Store.BuildSqlParameter(columnListT));
+                parametersList.Add(Store.BuildSqlParameter(columnListK));
+                parametersList.AddRange(vList.Select(x => Store.BuildSqlParameter(ExpressionBase.GetColumnList<V>(x))).ToList());
 
                 return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
             }

@@ -19,6 +19,10 @@ namespace HSQL.Extensions
         {
             return first.Compose(second, Expression.AndAlso);
         }
+        public static Expression<Func<T, bool>> OrElse<T>(this Expression<Func<T, bool>> first, Expression<Func<T, bool>> second)
+        {
+            return first.Compose(second, Expression.OrElse);
+        }
     }
 
     class ParameterRebinder : ExpressionVisitor

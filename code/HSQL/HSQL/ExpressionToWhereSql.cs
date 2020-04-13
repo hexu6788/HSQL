@@ -12,7 +12,7 @@ namespace HSQL
 {
     public class ExpressionToWhereSql
     {
-        public static string ToWhereString(Expression expression) 
+        public static string ToWhereString(Expression expression)
         {
             if (expression == null)
                 return string.Empty;
@@ -146,7 +146,7 @@ namespace HSQL
 
         private static string ResolveMemberName(MemberExpression expression)
         {
-           return ((ColumnAttribute)expression.Member.GetCustomAttributes(TypeOfConst.ColumnAttribute, true)[0]).Name;
+            return ((ColumnAttribute)expression.Member.GetCustomAttributes(TypeOfConst.ColumnAttribute, true)[0]).Name;
         }
 
         private static string ResolveMemberValue(MemberExpression expression, bool onlyValue = true)
@@ -159,7 +159,7 @@ namespace HSQL
             return expression.Value.ToString();
         }
 
-        private static string ResolveUnary(UnaryExpression expression) 
+        private static string ResolveUnary(UnaryExpression expression)
         {
             if (expression.NodeType == ExpressionType.Not)
             {
@@ -194,7 +194,7 @@ namespace HSQL
             }
         }
 
-        private static string Eval(Expression expression,bool onlyValue = true)
+        private static string Eval(Expression expression, bool onlyValue = true)
         {
             if (expression.Type == TypeOfConst.Int)
                 return Expression.Lambda<Func<int>>(Expression.Convert(expression, TypeOfConst.Int)).Compile().Invoke().ToString();
@@ -282,12 +282,12 @@ namespace HSQL
             if (!text.Contains("(") || !text.Contains(")"))
                 return text;
 
-            if (text.IndexOf("(") == 0 && text.LastIndexOf(")") == text.Length - 1)
-            {
-                return text.Substring(1, text.Length - 2);
-            }
+            //if (text.IndexOf("(") == 0 && text.LastIndexOf(")") == text.Length - 1)
+            //{
+            //    return text.Substring(1, text.Length - 2);
+            //}
             return text;
-            
+
         }
 
     }

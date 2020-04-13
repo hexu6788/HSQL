@@ -35,6 +35,15 @@ namespace HSQL
 
             return this;
         }
+        public Queryabel<T> AndOrCondition(Expression<Func<T, bool>> condition)
+        {
+            if (_predicate == null)
+                _predicate = condition;
+            else
+                _predicate = _predicate.OrElse(condition);
+
+            return this;
+        }
 
         public List<T> ToList()
         {
