@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 
-namespace HSQL.Extensions
+namespace HSQL
 {
     static class ExpressionExtensions
     {

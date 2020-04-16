@@ -1,14 +1,7 @@
 using HSQL.Test.TestDataBaseModel;
-using HSQL.Test.TestHelper;
-using HSQL.Test.TestViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
+using HSQL;
 
 namespace HSQL.Test
 {
@@ -195,9 +188,21 @@ namespace HSQL.Test
         }
 
         [TestMethod]
+        public void TestQueryOrderBy()
+        {
+            var database = new Database(Dialect.MySQL, connnectionString);
+
+            var list = database.Query<Student>();
+
+
+        }
+
+        [TestMethod]
         public void TestQueryAll()
         {
             var database = new Database(Dialect.MySQL, connnectionString);
+
+            database.Query<Student>().OrderBy(x => x.Id).ToList();
 
             database.Delete<Student>(x => !x.Id.Contains(""));
 
@@ -221,9 +226,9 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQueryList()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var fff = new Database(Dialect.MySQL, connnectionString);
+            fff.Delete<Student>(x => x.Id.Contains("test_query_list"));
 
-            database.Delete<Student>(x => x.Id.Contains("test_query_list"));
 
             var addList = new List<Student>();
             for (var i = 1; i <= 1000; i++)
@@ -235,8 +240,8 @@ namespace HSQL.Test
                     Age = 19
                 });
             }
-            database.Insert<Student>(addList);
-            var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query_list")).AddCondition(x => x.Name == "zhangsan").ToList();
+            fff.Insert<Student>(addList);
+            var list = fff.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query_list")).AddCondition(x => x.Name == "zhangsan").ToList();
 
             list.ForEach(x =>
             {

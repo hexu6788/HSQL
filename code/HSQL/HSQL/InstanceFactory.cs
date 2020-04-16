@@ -17,6 +17,9 @@ namespace HSQL
             {
                 var key = Store.GetPropertyColumnAttributeName(property);
                 var value = reader[key];
+                if (value is DBNull)
+                    continue;
+
                 property.SetValue(instance, value);
             }
             return instance;

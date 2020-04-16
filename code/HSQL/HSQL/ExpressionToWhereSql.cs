@@ -59,6 +59,7 @@ namespace HSQL
                             {
                                 var value = ResolveConstant((ConstantExpression)binaryExpression.Right);
                                 if (binaryExpression.Right.Type == TypeOfConst.Int
+                                    || binaryExpression.Right.Type == TypeOfConst.UInt
                                     || binaryExpression.Right.Type == TypeOfConst.Long
                                     || binaryExpression.Right.Type == TypeOfConst.Float
                                     || binaryExpression.Right.Type == TypeOfConst.Double
@@ -115,6 +116,9 @@ namespace HSQL
                     right = ResolveMethodCall((MethodCallExpression)expression.Object);
                 else
                     throw new Exception("未处理异常");
+
+                if (string.IsNullOrWhiteSpace(right))
+                    return string.Empty;
 
                 return Combining(left, "IN", $"({right})");
             }

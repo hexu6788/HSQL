@@ -8,6 +8,8 @@ namespace HSQL.DatabaseHelper
 {
     class MySQLHelper
     {
+        public string a { get; set; }
+
         internal static int ExecuteNonQuery(string connectionString, string commandText)
         {
             if (string.IsNullOrWhiteSpace(connectionString))

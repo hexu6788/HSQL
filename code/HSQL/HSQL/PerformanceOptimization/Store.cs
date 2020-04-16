@@ -22,7 +22,12 @@ namespace HSQL.PerformanceOptimization
             if (_propertyInfoListStore.ContainsKey(type))
                 return _propertyInfoListStore.GetValueOrDefault(type);
 
-            var propertyInfoList = type.GetProperties().ToList();
+            var propertyInfoList = type.GetProperties().Where(property =>
+            {
+                var count = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true).Count();
+                return count > 0;
+            }).ToList();
+
             _propertyInfoListStore.Add(type, propertyInfoList);
             return propertyInfoList;
         }

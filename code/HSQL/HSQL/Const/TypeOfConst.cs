@@ -9,6 +9,7 @@ namespace HSQL.Const
     {
         internal static Type String = typeof(string);
         internal static Type Int = typeof(int);
+        internal static Type UInt = typeof(uint);
         internal static Type Long = typeof(long);
         internal static Type Float = typeof(float);
         internal static Type Double = typeof(double);

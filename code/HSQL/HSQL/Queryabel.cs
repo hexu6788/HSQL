@@ -1,11 +1,11 @@
 ﻿using HSQL.Attribute;
 using HSQL.Const;
 using HSQL.DatabaseHelper;
-using HSQL.Extensions;
 using HSQL.PerformanceOptimization;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -18,13 +18,24 @@ namespace HSQL
         private Dialect _dialect;
         private Expression<Func<T, bool>> _predicate;
 
+        private string _orderField = string.Empty;
+        private string _orderBy = string.Empty;
+
+        internal void SetOrderField(string field)
+        {
+            this._orderField = field;
+        }
+        internal void SetOrderBy(string orderBy)
+        {
+            this._orderBy = orderBy;
+        }
+
         public Queryabel(string connectionString, Dialect dialect, Expression<Func<T, bool>> predicate)
         {
             _connectionString = connectionString;
             _dialect = dialect;
             _predicate = predicate;
         }
-        
 
         public Queryabel<T> AddCondition(Expression<Func<T, bool>> condition)
         {
@@ -57,15 +68,24 @@ namespace HSQL
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
             if (!string.IsNullOrWhiteSpace(whereString))
                 sqlStringBuilder.Append($" WHERE {whereString}");
-            sqlStringBuilder.Append(";");
-
+            
             IDataReader reader = null;
             switch (_dialect)
             {
                 case Dialect.MySQL:
+                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+
+                    sqlStringBuilder.Append(";");
                     reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 case Dialect.SQLServer:
+                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+                    else
+                        sqlStringBuilder.Append($" ORDER BY id");
+
+                    sqlStringBuilder.Append($" OFFSET 1 ROWS FETCH NEXT 9999999 ROWS ONLY;");
                     reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 default:
@@ -107,11 +127,20 @@ namespace HSQL
             switch (_dialect)
             {
                 case Dialect.MySQL:
+                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+
                     sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
                     reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 case Dialect.SQLServer:
-                    sqlStringBuilder.Append($" ORDER BY id OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
+                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+                    else
+                        sqlStringBuilder.Append($" ORDER BY id");
+
+
+                    sqlStringBuilder.Append($" OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
                     reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 default:
@@ -144,10 +173,10 @@ namespace HSQL
 
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var sqlWhereStringBuilder = new StringBuilder();
-            sqlWhereStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            var sqlStringBuilder = new StringBuilder();
+            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
             if (!string.IsNullOrWhiteSpace(whereString))
-                sqlWhereStringBuilder.Append($" WHERE {whereString}");
+                sqlStringBuilder.Append($" WHERE {whereString}");
 
             var pageWhereString = $"SELECT COUNT(*) FROM {tableName};";
 
@@ -156,13 +185,21 @@ namespace HSQL
             {
                 case Dialect.MySQL:
                     total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, pageWhereString));
-                    sqlWhereStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
-                    reader = MySQLHelper.ExecuteReader(_connectionString, sqlWhereStringBuilder.ToString());
+                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+
+                    sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
+                    reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 case Dialect.SQLServer:
                     total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, pageWhereString));
-                    sqlWhereStringBuilder.Append($" ORDER BY id OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
-                    reader = SQLServerHelper.ExecuteReader(_connectionString, sqlWhereStringBuilder.ToString());
+                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+                    else
+                        sqlStringBuilder.Append($" ORDER BY id");
+
+                    sqlStringBuilder.Append($" OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
+                    reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 default:
                     throw new Exception("未选择数据库方言！");
@@ -228,8 +265,5 @@ namespace HSQL
             }
             return instance;
         }
-
-
-        
     }
 }
