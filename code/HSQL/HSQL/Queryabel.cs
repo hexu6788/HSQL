@@ -56,6 +56,39 @@ namespace HSQL
             return this;
         }
 
+        public int Count()
+        {
+            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+
+            var countStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {ExpressionBase.GetTableName(typeof(T))}");
+
+            if (!string.IsNullOrWhiteSpace(whereString))
+            {
+                countStringBuilder.Append($" WHERE {whereString}");
+            }
+
+            var total = 0;
+            switch (_dialect)
+            {
+                case Dialect.MySQL:
+                    countStringBuilder.Append(";");
+                    total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, countStringBuilder.ToString()));
+                    break;
+                case Dialect.SQLServer:
+                    countStringBuilder.Append(";");
+                    total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, countStringBuilder.ToString()));
+                    break;
+                default:
+                    throw new Exception("未选择数据库方言！");
+            }
+            return total;
+        }
+
+        public bool Exists()
+        {
+            return Count() > 0;
+        }
+
         public List<T> ToList()
         {
             var type = typeof(T);
@@ -173,18 +206,22 @@ namespace HSQL
 
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var sqlStringBuilder = new StringBuilder();
-            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
-            if (!string.IsNullOrWhiteSpace(whereString))
-                sqlStringBuilder.Append($" WHERE {whereString}");
+            var sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
+            var pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
 
-            var pageWhereString = $"SELECT COUNT(*) FROM {tableName};";
+            if (!string.IsNullOrWhiteSpace(whereString))
+            {
+                sqlStringBuilder.Append($" WHERE {whereString}");
+                pageStringBuilder.Append($" WHERE {whereString}");
+            }
 
             IDataReader reader = null;
             switch (_dialect)
             {
                 case Dialect.MySQL:
-                    total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, pageWhereString));
+                    pageStringBuilder.Append(";");
+                    total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
+                    
                     if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                         sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
@@ -192,7 +229,9 @@ namespace HSQL
                     reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 case Dialect.SQLServer:
-                    total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, pageWhereString));
+                    pageStringBuilder.Append(";");
+                    total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
+                    
                     if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                         sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
                     else
@@ -231,22 +270,31 @@ namespace HSQL
             var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var sqlWhereStringBuilder = new StringBuilder();
-            sqlWhereStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            var sqlStringBuilder = new StringBuilder();
+            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
             if (!string.IsNullOrWhiteSpace(whereString))
-                sqlWhereStringBuilder.Append($" WHERE {whereString}");
+                sqlStringBuilder.Append($" WHERE {whereString}");
 
             IDataReader reader = null;
             
             switch (_dialect)
             {
                 case Dialect.MySQL:
-                    sqlWhereStringBuilder.Append($" LIMIT 0,1;");
-                    reader = MySQLHelper.ExecuteReader(_connectionString, sqlWhereStringBuilder.ToString());
+
+                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+
+                    sqlStringBuilder.Append($" LIMIT 0,1;");
+                    reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 case Dialect.SQLServer:
-                    sqlWhereStringBuilder.Append($" ORDER BY id OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;");
-                    reader = SQLServerHelper.ExecuteReader(_connectionString, sqlWhereStringBuilder.ToString());
+                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+                    else
+                        sqlStringBuilder.Append($" ORDER BY id");
+
+                    sqlStringBuilder.Append($" OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;");
+                    reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 default:
                     throw new Exception("未选择数据库方言！");

@@ -2,9 +2,16 @@ using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using HSQL;
+using Newtonsoft.Json;
+using System;
+using System.Text;
+using System.Web;
+using System.Dynamic;
 
 namespace HSQL.Test
 {
+    
+
     [TestClass]
     public class UnitTestDataBase
     {
@@ -13,7 +20,6 @@ namespace HSQL.Test
         [TestMethod]
         public void TestInsert()
         {
-
             var student = new Student()
             {
                 Name = "zhangsan",
@@ -92,7 +98,7 @@ namespace HSQL.Test
                     Name = $"ด๓ัง{i}"
                 });
             }
-            
+
 
             var studentList = new List<Student>();
             for (var i = 1; i <= 10; i++)
@@ -127,7 +133,7 @@ namespace HSQL.Test
                     SchoolId = "123"
                 });
             }
-            
+
 
             var database = new Database(Dialect.MySQL, connnectionString);
 
