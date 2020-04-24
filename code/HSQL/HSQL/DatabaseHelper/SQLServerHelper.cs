@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
-using System.Dynamic;
 using System.Linq;
-using System.Text;
 
 namespace HSQL.DatabaseHelper
 {
@@ -17,6 +16,7 @@ namespace HSQL.DatabaseHelper
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
 
+
             var result = 0;
             using (var connection = new SqlConnection(connectionString))
             {
@@ -30,15 +30,13 @@ namespace HSQL.DatabaseHelper
             }
             return result;
         }
-
-        internal static int ExecuteNonQuery(string connectionString, string commandText, SqlParameter[] parameters)
+        internal static int ExecuteNonQuery(string connectionString, string commandText, List<SqlParameter> parameters)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new ArgumentNullException("连接字符串不能为空！");
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
-            if (parameters == null || parameters.Length <= 0)
-                throw new ArgumentNullException("参数不能为空");
+
 
             var result = 0;
             using (var connection = new SqlConnection(connectionString))
@@ -47,14 +45,13 @@ namespace HSQL.DatabaseHelper
                 {
                     connection.Open();
                     command.CommandText = commandText;
-                    command.Parameters.AddRange(parameters);
+                    command.Parameters.AddRange(parameters.ToArray());
                     result = command.ExecuteNonQuery();
                     command.Parameters.Clear();
                 }
             }
             return result;
         }
-
         internal static int ExecuteNonQueryBatch(string connectionString, List<string> commandTextList)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -90,7 +87,6 @@ namespace HSQL.DatabaseHelper
             }
             return result;
         }
-
         internal static int ExecuteNonQueryBatch(string connectionString, List<string> commandTextList, List<SqlParameter[]> parametersList)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -129,7 +125,6 @@ namespace HSQL.DatabaseHelper
             }
             return result;
         }
-
         internal static SqlDataReader ExecuteReader(string connectionString, string commandText)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -146,7 +141,6 @@ namespace HSQL.DatabaseHelper
 
             return reader;
         }
-
         internal static object ExecuteScalar(string connectionString, string commandText)
         {
             if (string.IsNullOrWhiteSpace(connectionString))

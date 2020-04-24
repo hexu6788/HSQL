@@ -4,6 +4,7 @@ using HSQL.Model;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
@@ -98,6 +99,16 @@ namespace HSQL.PerformanceOptimization
         internal static SqlParameter[] BuildSqlParameter(List<Column> columnList)
         {
             return columnList.Select(x => new SqlParameter(x.Name, x.Value)).ToArray();
+        }
+
+        internal static DbParameter[] BuildDbParameter(Dialect _dialect, List<Column> columnList)
+        {
+            if (_dialect == Dialect.MySQL)
+                return columnList.Select(x => new MySqlParameter(x.Name, x.Value)).ToArray();
+            else if (_dialect == Dialect.SQLServer)
+                return columnList.Select(x => new SqlParameter(x.Name, x.Value)).ToArray();
+            else
+                return new List<DbParameter>().ToArray();
         }
     }
 }

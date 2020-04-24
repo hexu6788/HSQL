@@ -1,4 +1,5 @@
 ﻿using HSQL.DatabaseHelper;
+using HSQL.Exceptions;
 using HSQL.PerformanceOptimization;
 using MySql.Data.MySqlClient;
 using System;
@@ -17,6 +18,9 @@ namespace HSQL
 
         public Database(Dialect dialect, string connectionString)
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new ConnectionStringIsEmptyException();
+
             _dialect = dialect;
             _connectionString = connectionString;
         }
@@ -30,23 +34,13 @@ namespace HSQL
         public bool Insert<T>(T t)
         {
             if (t == null)
-                throw new Exception("插入数据不能为空！");
+                throw new DataIsNullException();
 
-            var type = typeof(T);
-            var tableName = ExpressionBase.GetTableName(type);
             var columnList = ExpressionBase.GetColumnList<T>(t);
 
-            var sql = Store.BuildInsertSQL(tableName, columnList);
+            var sql = Store.BuildInsertSQL(ExpressionBase.GetTableName(typeof(T)), columnList);
 
-            switch (_dialect)
-            {
-                case Dialect.MySQL:
-                    return MySQLHelper.ExecuteNonQuery(_connectionString, sql, Store.BuildMySqlParameter(columnList)) > 0;
-                case Dialect.SQLServer:
-                    return SQLServerHelper.ExecuteNonQuery(_connectionString, sql, Store.BuildSqlParameter(columnList)) > 0;
-                default:
-                    throw new Exception("未选择数据库方言！");
-            }
+            return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, sql, Store.BuildDbParameter(_dialect, columnList));
         }
 
         /// <summary>
@@ -60,7 +54,7 @@ namespace HSQL
         public bool Insert<T, K>(T t, K k)
         {
             if (t == null || k == null)
-                throw new Exception("插入数据不能为空！");
+                throw new DataIsNullException();
 
             var typeT = typeof(T);
             var tableNameT = ExpressionBase.GetTableName(typeT);
@@ -74,26 +68,12 @@ namespace HSQL
             sqlList.Add(Store.BuildInsertSQL(tableNameT, columnListT));
             sqlList.Add(Store.BuildInsertSQL(tableNameK, columnListK));
 
-            if (_dialect == Dialect.MySQL)
-            {
-                var parametersList = new List<MySqlParameter[]>();
-                parametersList.Add(Store.BuildMySqlParameter(columnListT));
-                parametersList.Add(Store.BuildMySqlParameter(columnListK));
 
-                return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
-            }
-            else if (_dialect == Dialect.SQLServer)
+            return BaseSQLHelper.ExecuteNonQueryBatch(_dialect, _connectionString, sqlList, new List<DbParameter[]>()
             {
-                var parametersList = new List<SqlParameter[]>();
-                parametersList.Add(Store.BuildSqlParameter(columnListT));
-                parametersList.Add(Store.BuildSqlParameter(columnListK));
-
-                return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
-            }
-            else
-            {
-                throw new Exception("未选择数据库方言！");
-            }
+                Store.BuildSqlParameter(columnListT),
+                Store.BuildSqlParameter(columnListK)
+            });
         }
 
         /// <summary>
@@ -127,28 +107,12 @@ namespace HSQL
             sqlList.Add(Store.BuildInsertSQL(tableNameK, columnListK));
             sqlList.Add(Store.BuildInsertSQL(tableNameV, columnListV));
 
-            if (_dialect == Dialect.MySQL)
-            {
-                var parametersList = new List<MySqlParameter[]>();
-                parametersList.Add(Store.BuildMySqlParameter(columnListT));
-                parametersList.Add(Store.BuildMySqlParameter(columnListK));
-                parametersList.Add(Store.BuildMySqlParameter(columnListV));
+            var parametersList = new List<DbParameter[]>();
+            parametersList.Add(Store.BuildMySqlParameter(columnListT));
+            parametersList.Add(Store.BuildMySqlParameter(columnListK));
+            parametersList.Add(Store.BuildMySqlParameter(columnListV));
 
-                return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
-            }
-            else if (_dialect == Dialect.SQLServer)
-            {
-                var parametersList = new List<SqlParameter[]>();
-                parametersList.Add(Store.BuildSqlParameter(columnListT));
-                parametersList.Add(Store.BuildSqlParameter(columnListK));
-                parametersList.Add(Store.BuildSqlParameter(columnListV));
-
-                return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
-            }
-            else
-            {
-                throw new Exception("未选择数据库方言！");
-            }
+            return BaseSQLHelper.ExecuteNonQueryBatch(_dialect, _connectionString, sqlList, parametersList);
         }
 
         /// <summary>
@@ -177,25 +141,26 @@ namespace HSQL
             var sqlK = Store.BuildInsertSQL(tableNameK, columnNameListK);
             sqlList.AddRange(kList.Select(x => sqlK).ToList());
 
+
             if (_dialect == Dialect.MySQL)
             {
-                var parametersList = new List<MySqlParameter[]>();
+                var parametersList = new List<DbParameter[]>();
                 parametersList.Add(Store.BuildMySqlParameter(columnListT));
                 parametersList.AddRange(kList.Select(x => Store.BuildMySqlParameter(ExpressionBase.GetColumnList<K>(x))).ToList());
 
-                return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+                return BaseSQLHelper.ExecuteNonQueryBatch(_dialect, _connectionString, sqlList, parametersList);
             }
             else if (_dialect == Dialect.SQLServer)
             {
-                var parametersList = new List<SqlParameter[]>();
+                var parametersList = new List<DbParameter[]>();
                 parametersList.Add(Store.BuildSqlParameter(columnListT));
                 parametersList.AddRange(kList.Select(x => Store.BuildSqlParameter(ExpressionBase.GetColumnList<K>(x))).ToList());
 
-                return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, parametersList) > 0;
+                return BaseSQLHelper.ExecuteNonQueryBatch(_dialect, _connectionString, sqlList, parametersList);
             }
             else
             {
-                throw new Exception("未选择数据库方言！");
+                throw new NoDialectException();
             }
         }
 
@@ -380,56 +345,40 @@ namespace HSQL
         public bool Insert<T>(List<T> list)
         {
             if (list == null || list.Count <= 0 || list.Count(x => x == null) > 0)
-                throw new Exception("插入数据不能为空！");
+                throw new DataIsNullException();
 
             var type = typeof(T);
             var tableName = ExpressionBase.GetTableName(type);
             var columnNameList = ExpressionBase.GetColumnNameList(type);
 
             var sql = Store.BuildInsertSQL(tableName, columnNameList);
-            var sqlList = list.Select(x => sql).ToList();
+            var sqls = list.Select(x => sql).ToList();
 
-            switch (_dialect)
-            {
-                case Dialect.MySQL:
-                    return MySQLHelper.ExecuteNonQueryBatch(_connectionString, sqlList, list.Select(x => Store.BuildMySqlParameter(ExpressionBase.GetColumnList<T>(x))).ToList()) > 0;
-                case Dialect.SQLServer:
-                    return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, sqlList, list.Select(x => Store.BuildSqlParameter(ExpressionBase.GetColumnList<T>(x))).ToList()) > 0;
-                default:
-                    throw new Exception("未选择数据库方言！");
-            }
+            var parametersList = list.Select(x => Store.BuildDbParameter(_dialect, ExpressionBase.GetColumnList<T>(x))).ToList();
+            return BaseSQLHelper.ExecuteNonQueryBatch(_dialect, _connectionString, sqls, parametersList);
         }
 
         /// <summary>
         /// 执行更新操作
         /// </summary>
         /// <typeparam name="T">类型</typeparam>
-        /// <param name="selectPpredicate">条件表达式，可理解为 SQL 语句中的 WHERE。如：WHERE age = 16 可写为 x=> x.Age = 16</param>
+        /// <param name="expression">条件表达式，可理解为 SQL 语句中的 WHERE。如：WHERE age = 16 可写为 x=> x.Age = 16</param>
         /// <param name="instance">目标表达式，可理解为SQL 语句中的 SET。如：SET age = 16 , name = '张三' 可写为 new Student(){ Age = 16 , Name = "张三" }</param>
         /// <returns>是否更新成功</returns>
-        public bool Update<T>(Expression<Func<T, bool>> selectPpredicate, T instance)
+        public bool Update<T>(Expression<Func<T, bool>> expression, T instance)
         {
-            if (selectPpredicate == null)
-                throw new Exception("更新筛选条件不能为空！");
+            if (expression == null)
+                throw new ExpressionIsNullException();
             if (instance == null)
-                throw new Exception("更新值不能为空！");
+                throw new DataIsNullException();
 
-            var type = typeof(T);
-            var tableName = ExpressionBase.GetTableName(type);
+            var tableName = ExpressionBase.GetTableName(typeof(T));
             var columnList = ExpressionBase.GetColumnListWithOutNull<T>(instance);
-            var where = ExpressionToWhereSql.ToWhereString(selectPpredicate);
+            var where = ExpressionToWhereSql.ToWhereString(expression);
 
             var sql = Store.BuildUpdateSQL(tableName, columnList, where);
 
-            switch (_dialect)
-            {
-                case Dialect.MySQL:
-                    return MySQLHelper.ExecuteNonQuery(_connectionString, sql, Store.BuildMySqlParameter(columnList)) > 0;
-                case Dialect.SQLServer:
-                    return SQLServerHelper.ExecuteNonQuery(_connectionString, sql, Store.BuildSqlParameter(columnList)) > 0;
-                default:
-                    throw new Exception("未选择数据库方言！");
-            }
+            return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, sql, Store.BuildDbParameter(_dialect, columnList));
         }
 
         /// <summary>
@@ -437,13 +386,13 @@ namespace HSQL
         /// </summary>
         /// <typeparam name="T">修改类型</typeparam>
         /// <typeparam name="K">新增类型</typeparam>
-        /// <param name="selectPpredicateT">条件表达式，可理解为 SQL 语句中的 WHERE。如：WHERE age = 16 可写为 x=> x.Age = 16</param>
+        /// <param name="predicateT">条件表达式，可理解为 SQL 语句中的 WHERE。如：WHERE age = 16 可写为 x=> x.Age = 16</param>
         /// <param name="t">目标表达式，可理解为SQL 语句中的 SET。如：SET age = 16 , name = '张三' 可写为 new Student(){ Age = 16 , Name = "张三" }</param>
         /// <param name="k">新增实例</param>
         /// <returns>是否更新和新增成功</returns>
-        public bool UpdateAndInsert<T, K>(Expression<Func<T, bool>> selectPpredicateT, T t, K k)
+        public bool UpdateAndInsert<T, K>(Expression<Func<T, bool>> predicateT, T t, K k)
         {
-            if (selectPpredicateT == null)
+            if (predicateT == null)
                 throw new Exception("更新筛选条件不能为空！");
             if (t == null)
                 throw new Exception("更新值不能为空！");
@@ -453,7 +402,7 @@ namespace HSQL
             var columnListT = ExpressionBase.GetColumnListWithOutNull<T>(t);
             var columnListK = ExpressionBase.GetColumnList<K>(k);
 
-            var sqlT = Store.BuildUpdateSQL(ExpressionBase.GetTableName(typeof(T)), columnListT, ExpressionToWhereSql.ToWhereString(selectPpredicateT));
+            var sqlT = Store.BuildUpdateSQL(ExpressionBase.GetTableName(typeof(T)), columnListT, ExpressionToWhereSql.ToWhereString(predicateT));
             var sqlK = Store.BuildInsertSQL(ExpressionBase.GetTableName(typeof(K)), columnListK);
 
             switch (_dialect)
@@ -509,23 +458,18 @@ namespace HSQL
         /// <returns>是否删除成功</returns>
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
         {
+            if (predicate == null)
+                throw new ExpressionIsNullException();
+
             var where = ExpressionToWhereSql.ToWhereString(predicate);
             if (string.IsNullOrWhiteSpace(where))
-                return false;
+                throw new ExpressionIsNullException();
 
-            var type = typeof(T);
-            var tableName = ExpressionBase.GetTableName(type);
+            var tableName = ExpressionBase.GetTableName(typeof(T));
 
             var sql = Store.BuildDeleteSQL(tableName, where);
-            switch (_dialect)
-            {
-                case Dialect.MySQL:
-                    return MySQLHelper.ExecuteNonQuery(_connectionString, sql) > 0;
-                case Dialect.SQLServer:
-                    return SQLServerHelper.ExecuteNonQuery(_connectionString, sql) > 0;
-                default:
-                    throw new Exception("未选择数据库方言！");
-            }
+
+            return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, sql);
         }
 
         /// <summary>
@@ -540,25 +484,19 @@ namespace HSQL
             var whereT = ExpressionToWhereSql.ToWhereString(predicateT);
             var whereK = ExpressionToWhereSql.ToWhereString(predicateK);
             if (string.IsNullOrWhiteSpace(whereT) || string.IsNullOrWhiteSpace(whereK))
-                throw new Exception("删除时必须包含删除条件！");
+                throw new ExpressionIsNullException();
 
-            var typeT = typeof(T);
-            var tableNameT = ExpressionBase.GetTableName(typeT);
-
-            var typeK = typeof(K);
-            var tableNameK = ExpressionBase.GetTableName(typeK);
+            var tableNameT = ExpressionBase.GetTableName(typeof(T));
+            var tableNameK = ExpressionBase.GetTableName(typeof(K));
 
             var sqlT = Store.BuildDeleteSQL(tableNameT, whereT);
             var sqlK = Store.BuildDeleteSQL(tableNameK, whereK);
-            switch (_dialect)
+
+            return BaseSQLHelper.ExecuteNonQueryBatch(_dialect, _connectionString, new List<string>()
             {
-                case Dialect.MySQL:
-                    return MySQLHelper.ExecuteNonQueryBatch(_connectionString, new List<string>() { sqlT, sqlK }) > 0;
-                case Dialect.SQLServer:
-                    return SQLServerHelper.ExecuteNonQueryBatch(_connectionString, new List<string>() { sqlT, sqlK }) > 0;
-                default:
-                    throw new Exception("未选择数据库方言！");
-            }
+                sqlT,
+                sqlK
+            });
         }
 
         /// <summary>
@@ -580,6 +518,13 @@ namespace HSQL
             var queryabel = new Queryabel<T>(_connectionString, _dialect, predicate);
             return queryabel;
         }
+
+
+
+
+
+
+
     }
 
 

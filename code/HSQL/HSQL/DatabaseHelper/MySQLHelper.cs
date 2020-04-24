@@ -8,8 +8,6 @@ namespace HSQL.DatabaseHelper
 {
     class MySQLHelper
     {
-        public string a { get; set; }
-
         internal static int ExecuteNonQuery(string connectionString, string commandText)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -30,15 +28,12 @@ namespace HSQL.DatabaseHelper
             }
             return result;
         }
-
-        internal static int ExecuteNonQuery(string connectionString, string commandText, MySqlParameter[] parameters)
+        internal static int ExecuteNonQuery(string connectionString, string commandText, List<MySqlParameter> parameters)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new ArgumentNullException("连接字符串不能为空！");
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
-            if (parameters == null || parameters.Length <= 0)
-                throw new ArgumentNullException("参数不能为空");
 
             var result = 0;
             using (var connection = new MySqlConnection(connectionString))
@@ -47,14 +42,13 @@ namespace HSQL.DatabaseHelper
                 {
                     connection.Open();
                     command.CommandText = commandText;
-                    command.Parameters.AddRange(parameters);
+                    command.Parameters.AddRange(parameters.ToArray());
                     result = command.ExecuteNonQuery();
                     command.Parameters.Clear();
                 }
             }
             return result;
         }
-
         internal static int ExecuteNonQueryBatch(string connectionString, List<string> commandTextList)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -90,7 +84,6 @@ namespace HSQL.DatabaseHelper
             }
             return result;
         }
-
         internal static int ExecuteNonQueryBatch(string connectionString, List<string> commandTextList, List<MySqlParameter[]> parametersList)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -129,7 +122,6 @@ namespace HSQL.DatabaseHelper
             }
             return result;
         }
-
         internal static MySqlDataReader ExecuteReader(string connectionString, string commandText)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -146,7 +138,6 @@ namespace HSQL.DatabaseHelper
 
             return reader;
         }
-
         internal static object ExecuteScalar(string connectionString, string commandText)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
