@@ -3,6 +3,7 @@ using HSQL.Const;
 using HSQL.Model;
 using MySql.Data.MySqlClient;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -13,10 +14,10 @@ namespace HSQL.PerformanceOptimization
 {
     internal class Store
     {
-        private static Dictionary<Type, List<PropertyInfo>> _propertyInfoListStore = new Dictionary<Type, List<PropertyInfo>>();
-        private static Dictionary<Type, string> _tableNameStore = new Dictionary<Type, string>();
-        private static Dictionary<Type, List<string>> _columnNameListStore = new Dictionary<Type, List<string>>();
-        private static Dictionary<PropertyInfo, string> _columnAttributeNameStore = new Dictionary<PropertyInfo, string>();
+        private static ConcurrentDictionary<Type, List<PropertyInfo>> _propertyInfoListStore = new ConcurrentDictionary<Type, List<PropertyInfo>>();
+        private static ConcurrentDictionary<Type, string> _tableNameStore = new ConcurrentDictionary<Type, string>();
+        private static ConcurrentDictionary<Type, List<string>> _columnNameListStore = new ConcurrentDictionary<Type, List<string>>();
+        private static ConcurrentDictionary<PropertyInfo, string> _columnAttributeNameStore = new ConcurrentDictionary<PropertyInfo, string>();
 
         internal static List<PropertyInfo> GetPropertyInfoList(Type type)
         {
@@ -29,7 +30,7 @@ namespace HSQL.PerformanceOptimization
                 return count > 0;
             }).ToList();
 
-            _propertyInfoListStore.Add(type, propertyInfoList);
+            _propertyInfoListStore.TryAdd(type, propertyInfoList);
             return propertyInfoList;
         }
 
@@ -39,7 +40,7 @@ namespace HSQL.PerformanceOptimization
                 return _tableNameStore.GetValueOrDefault(type);
 
             var tableName = ((TableAttribute)type.GetCustomAttributes(TypeOfConst.TableAttribute, true)[0]).Name;
-            _tableNameStore.Add(type, tableName);
+            _tableNameStore.TryAdd(type, tableName);
             return tableName;
         }
 
@@ -56,7 +57,7 @@ namespace HSQL.PerformanceOptimization
                     columnNameList.Add(attribute.Name);
                 }
             }
-            _columnNameListStore.Add(type, columnNameList);
+            _columnNameListStore.TryAdd(type, columnNameList);
             return columnNameList;
         }
 
@@ -67,7 +68,7 @@ namespace HSQL.PerformanceOptimization
 
             var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
             var name = ((ColumnAttribute)attributes[0]).Name;
-            _columnAttributeNameStore.Add(property, name);
+            _columnAttributeNameStore.TryAdd(property, name);
 
             return name;
         }

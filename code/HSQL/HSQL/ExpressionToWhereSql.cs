@@ -234,6 +234,13 @@ namespace HSQL
 
         private static string Combining(string left, string symbol, string right)
         {
+            if (string.IsNullOrWhiteSpace(left) && string.IsNullOrWhiteSpace(right))
+                return string.Empty;
+            if (string.IsNullOrWhiteSpace(left))
+                return right;
+            if (string.IsNullOrWhiteSpace(right))
+                return left;
+
             if (symbol.Equals(">")
                 || symbol.Equals(">=")
                 || symbol.Equals("=")
