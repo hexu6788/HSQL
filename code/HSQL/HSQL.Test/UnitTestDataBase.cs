@@ -7,6 +7,7 @@ using System;
 using System.Text;
 using System.Web;
 using System.Dynamic;
+using System.Transactions;
 
 namespace HSQL.Test
 {
@@ -28,11 +29,17 @@ namespace HSQL.Test
                 SchoolId = "123"
             };
 
+
             var database = new Database(Dialect.MySQL, connnectionString);
 
-            var result = database.Insert<Student>(student);
 
-            Assert.AreEqual(true, result);
+            var transcation = new Transcation();
+            transcation.Invoke(() =>
+            {
+                var result = database.Insert<Student>(student);
+
+                Assert.AreEqual(true, result);
+            });
         }
 
         [TestMethod]
