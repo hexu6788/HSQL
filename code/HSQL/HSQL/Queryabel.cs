@@ -262,6 +262,58 @@ namespace HSQL
             return list;
         }
 
+        public T Unique()
+        {
+            var type = typeof(T);
+            var propertyInfoList = Store.GetPropertyInfoList(type);
+            var tableName = ExpressionBase.GetTableName(type);
+            var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+
+            var sqlStringBuilder = new StringBuilder();
+            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            if (!string.IsNullOrWhiteSpace(whereString))
+                sqlStringBuilder.Append($" WHERE {whereString}");
+
+            IDataReader reader = null;
+
+            switch (_dialect)
+            {
+                case Dialect.MySQL:
+
+                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+
+                    sqlStringBuilder.Append($" LIMIT 0,1;");
+                    reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
+                    break;
+                case Dialect.SQLServer:
+                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+                    else
+                        sqlStringBuilder.Append($" ORDER BY id");
+
+                    sqlStringBuilder.Append($" OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;");
+                    reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
+                    break;
+                default:
+                    throw new Exception("未选择数据库方言！");
+            }
+
+            T instance = default(T);
+            try
+            {
+                if (reader.Read())
+                    instance = InstanceFactory.CreateInstance<T>(reader, propertyInfoList);
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Dispose();
+            }
+            return instance;
+        }
+
         public T FirstOrDefault()
         {
             var type = typeof(T);
