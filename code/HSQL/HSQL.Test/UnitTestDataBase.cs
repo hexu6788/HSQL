@@ -21,7 +21,6 @@ namespace HSQL.Test
         [TestMethod]
         public void TestInsert()
         {
-
             var student = new Student()
             {
                 Name = "zhangsan",

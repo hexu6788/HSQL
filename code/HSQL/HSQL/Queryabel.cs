@@ -1,6 +1,7 @@
 ﻿using HSQL.Attribute;
 using HSQL.Const;
 using HSQL.DatabaseHelper;
+using HSQL.Exceptions;
 using HSQL.PerformanceOptimization;
 using System;
 using System.Collections.Generic;
@@ -262,42 +263,50 @@ namespace HSQL
             return list;
         }
 
-        public T Unique()
+        public T SingleOrDefault()
         {
             var type = typeof(T);
-            var propertyInfoList = Store.GetPropertyInfoList(type);
             var tableName = ExpressionBase.GetTableName(type);
             var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var propertyInfoList = Store.GetPropertyInfoList(type);
+
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var sqlStringBuilder = new StringBuilder();
-            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            var sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
+            var pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
+
             if (!string.IsNullOrWhiteSpace(whereString))
+            {
                 sqlStringBuilder.Append($" WHERE {whereString}");
+                pageStringBuilder.Append($" WHERE {whereString}");
+            }
 
             IDataReader reader = null;
 
-            switch (_dialect)
+            if (_dialect == Dialect.MySQL)
             {
-                case Dialect.MySQL:
+                pageStringBuilder.Append(";");
+                var total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
+                if (total > 1)
+                    throw new SingleOrDefaultException();
 
-                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
-                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+                sqlStringBuilder.Append($" LIMIT 0,1;");
+                reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
+            }
+            else if (_dialect == Dialect.SQLServer)
+            {
+                pageStringBuilder.Append(";");
+                var total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
+                if (total > 1)
+                    throw new SingleOrDefaultException();
 
-                    sqlStringBuilder.Append($" LIMIT 0,1;");
-                    reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
-                    break;
-                case Dialect.SQLServer:
-                    if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
-                        sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
-                    else
-                        sqlStringBuilder.Append($" ORDER BY id");
+                if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
+                    sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+                else
+                    sqlStringBuilder.Append($" ORDER BY id");
 
-                    sqlStringBuilder.Append($" OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;");
-                    reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
-                    break;
-                default:
-                    throw new Exception("未选择数据库方言！");
+                sqlStringBuilder.Append($" OFFSET 1 ROWS FETCH NEXT 1 ROWS ONLY;");
+                reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
             }
 
             T instance = default(T);
