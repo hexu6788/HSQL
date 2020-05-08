@@ -1,8 +1,8 @@
 ﻿using HSQL.Exceptions;
-using System;
-using System.Collections.Generic;
+using MySql.Data.MySqlClient;
 using System.Data.Common;
-using System.Text;
+using System.Data.SqlClient;
+using System.Linq;
 
 namespace HSQL.DatabaseHelper
 {
@@ -32,47 +32,33 @@ namespace HSQL.DatabaseHelper
 
             if (dialect == Dialect.MySQL)
             {
-                var mySqlParameter = SQLHelperExtension.ConverToMySqlParameterList(dialect, dbParameters);
-                return MySQLHelper.ExecuteNonQuery(connectionString, sql, mySqlParameter) > 0;
+                var mySqlParameterList = dbParameters.Select(x => (MySqlParameter)x).ToList();
+                return MySQLHelper.ExecuteNonQuery(connectionString, sql, mySqlParameterList) > 0;
             }
             else if (dialect == Dialect.SQLServer)
             {
-                var sqlParameter = SQLHelperExtension.ConverToSqlParameterList(dialect, dbParameters);
-                return SQLServerHelper.ExecuteNonQuery(connectionString, sql, sqlParameter) > 0;
+                var sqlParameterList = dbParameters.Select(x => (SqlParameter)x).ToList();
+                return SQLServerHelper.ExecuteNonQuery(connectionString, sql, sqlParameterList) > 0;
             }
 
             throw new NoDialectException();
         }
 
-        internal static bool ExecuteNonQueryBatch(Dialect dialect, string connectionString, List<string> sqls)
+        internal static object ExecuteScalar(Dialect dialect, string connectionString, string commandText)
         {
+            if (string.IsNullOrWhiteSpace(commandText))
+                throw new EmptySQLException();
+
             if (dialect == Dialect.MySQL)
             {
-                return MySQLHelper.ExecuteNonQueryBatch(connectionString, sqls) > 0;
+                return MySQLHelper.ExecuteScalar(connectionString, commandText);
             }
             else if (dialect == Dialect.SQLServer)
             {
-                return SQLServerHelper.ExecuteNonQueryBatch(connectionString, sqls) > 0;
+                return SQLServerHelper.ExecuteScalar(connectionString, commandText);
             }
 
             throw new NoDialectException();
         }
-
-        internal static bool ExecuteNonQueryBatch(Dialect dialect, string connectionString, List<string> sqls, List<DbParameter[]> parametersList)
-        {
-            if (dialect == Dialect.MySQL)
-            {
-                var parameter = SQLHelperExtension.ConverToMySqlParameterList(dialect, parametersList);
-                return MySQLHelper.ExecuteNonQueryBatch(connectionString, sqls, parameter) > 0;
-            }
-            else if (dialect == Dialect.SQLServer)
-            {
-                var parameter = SQLHelperExtension.ConverToSqlParameterList(dialect, parametersList);
-                return SQLServerHelper.ExecuteNonQueryBatch(connectionString, sqls, parameter) > 0;
-            }
-
-            throw new NoDialectException();
-        }
-
     }
 }

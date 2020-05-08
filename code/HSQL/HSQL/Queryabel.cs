@@ -68,20 +68,7 @@ namespace HSQL
                 countStringBuilder.Append($" WHERE {whereString}");
             }
 
-            var total = 0;
-            switch (_dialect)
-            {
-                case Dialect.MySQL:
-                    countStringBuilder.Append(";");
-                    total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, countStringBuilder.ToString()));
-                    break;
-                case Dialect.SQLServer:
-                    countStringBuilder.Append(";");
-                    total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, countStringBuilder.ToString()));
-                    break;
-                default:
-                    throw new Exception("未选择数据库方言！");
-            }
+            int total = Convert.ToInt32(BaseSQLHelper.ExecuteScalar(_dialect, _connectionString, countStringBuilder.ToString()));
             return total;
         }
 
@@ -92,7 +79,7 @@ namespace HSQL
 
         public List<T> ToList()
         {
-            var type = typeof(T);
+            Type type = typeof(T);
             var propertyInfoList = Store.GetPropertyInfoList(type);
             var tableName = ExpressionBase.GetTableName(type);
             var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
@@ -216,13 +203,14 @@ namespace HSQL
                 pageStringBuilder.Append($" WHERE {whereString}");
             }
 
+            pageStringBuilder.Append(";");
+            total = Convert.ToInt32(BaseSQLHelper.ExecuteScalar(_dialect, _connectionString, pageStringBuilder.ToString()));
+
+
             IDataReader reader = null;
             switch (_dialect)
             {
                 case Dialect.MySQL:
-                    pageStringBuilder.Append(";");
-                    total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
-                    
                     if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                         sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
@@ -230,9 +218,6 @@ namespace HSQL
                     reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 case Dialect.SQLServer:
-                    pageStringBuilder.Append(";");
-                    total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
-                    
                     if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                         sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
                     else
@@ -281,25 +266,20 @@ namespace HSQL
                 pageStringBuilder.Append($" WHERE {whereString}");
             }
 
+            pageStringBuilder.Append(";");
+            var total = Convert.ToInt32(BaseSQLHelper.ExecuteScalar(_dialect, _connectionString, pageStringBuilder.ToString()));
+            if (total > 1)
+                throw new SingleOrDefaultException();
+
             IDataReader reader = null;
 
             if (_dialect == Dialect.MySQL)
             {
-                pageStringBuilder.Append(";");
-                var total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
-                if (total > 1)
-                    throw new SingleOrDefaultException();
-
                 sqlStringBuilder.Append($" LIMIT 0,1;");
                 reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
             }
             else if (_dialect == Dialect.SQLServer)
             {
-                pageStringBuilder.Append(";");
-                var total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
-                if (total > 1)
-                    throw new SingleOrDefaultException();
-
                 if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                     sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
                 else
@@ -341,7 +321,6 @@ namespace HSQL
             switch (_dialect)
             {
                 case Dialect.MySQL:
-
                     if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                         sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 

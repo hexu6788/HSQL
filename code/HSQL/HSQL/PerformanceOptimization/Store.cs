@@ -88,18 +88,9 @@ namespace HSQL.PerformanceOptimization
             return $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {where};";
         }
 
-        internal static string BuildDeleteSQL(string tableName,string where) {
+        internal static string BuildDeleteSQL(string tableName, string where)
+        {
             return $"DELETE FROM {tableName} WHERE {where};";
-        }
-
-        internal static MySqlParameter[] BuildMySqlParameter(List<Column> columnList)
-        {
-            return columnList.Select(x => new MySqlParameter(x.Name, x.Value)).ToArray();
-        }
-
-        internal static SqlParameter[] BuildSqlParameter(List<Column> columnList)
-        {
-            return columnList.Select(x => new SqlParameter(x.Name, x.Value)).ToArray();
         }
 
         internal static DbParameter[] BuildDbParameter(Dialect _dialect, List<Column> columnList)

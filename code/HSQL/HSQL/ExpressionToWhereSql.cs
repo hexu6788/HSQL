@@ -118,7 +118,7 @@ namespace HSQL
                     throw new Exception("未处理异常");
 
                 if (string.IsNullOrWhiteSpace(right))
-                    return string.Empty;
+                    throw new Exception("IN 右侧部分不能为空");
 
                 return Combining(left, "IN", $"({right})");
             }

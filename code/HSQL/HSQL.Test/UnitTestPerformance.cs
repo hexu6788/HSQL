@@ -15,7 +15,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestInsert()
         {
-            var number = 300000;
+            var number = 30000;
 
             var database = new Database(Dialect.MySQL, connectionString);
             database.Delete<Student>(x => x.Age >= 0);
@@ -31,12 +31,17 @@ namespace HSQL.Test
                 });
             }
 
+
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            list.ForEach(x =>
+            database.Transaction(() =>
             {
-                var result = database.Insert<Student>(x);
+                list.ForEach(x =>
+                {
+                    var result = database.Insert<Student>(x);
+                });
             });
+            
             stopwatch.Stop();
 
 
@@ -91,83 +96,6 @@ namespace HSQL.Test
         }
 
         [TestMethod]
-        public void TestBatchInsert()
-        {
-            var number = 300000;
-
-            var database = new Database(Dialect.MySQL, connectionString);
-            database.Delete<Student>(x => x.Age >= 0);
-            var list = new List<Student>();
-            for (var i = 0; i < number; i++)
-            {
-                list.Add(new Student()
-                {
-                    Id = $"{i}",
-                    Name = "zhangsan",
-                    Age = 18,
-                    SchoolId = "123"
-                });
-            }
-
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            var result = database.Insert<Student>(list);
-            stopwatch.Stop();
-
-            var qps = number / (stopwatch.ElapsedMilliseconds / 1000.0);
-            var elapsedMilliseconds = $"QPS 为：{qps}";
-        }
-
-        [TestMethod]
-        public void TestAdoNetBatchInsert()
-        {
-            var number = 300000;
-
-            var database = new Database(Dialect.MySQL, connectionString);
-            database.Delete<Student>(x => x.Age >= 0);
-            var list = new List<Student>();
-            for (var i = 0; i < number; i++)
-            {
-                list.Add(new Student()
-                {
-                    Id = $"{i}",
-                    Name = "zhangsan",
-                    Age = 18,
-                    SchoolId = "123"
-                });
-            }
-
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            using (var connection = new MySqlConnection(connectionString))
-            {
-                using (var command = connection.CreateCommand())
-                {
-                    connection.Open();
-                    command.Transaction = connection.BeginTransaction();
-                    list.ForEach(x =>
-                    {
-                        command.CommandText = "INSERT INTO t_student(id,name,age,school_id,birthday) VALUES(@id,@name,@age,@school_id,@birthday);";
-                        command.Parameters.AddRange(new MySqlParameter[] {
-                            new MySqlParameter("@id",x.Id),
-                            new MySqlParameter("@name",x.Name),
-                            new MySqlParameter("@age",x.Age),
-                            new MySqlParameter("@school_id",x.SchoolId),
-                            new MySqlParameter("@birthday",x.Birthday)
-                        });
-                        command.ExecuteNonQuery();
-                        command.Parameters.Clear();
-                    });
-                    command.Transaction.Commit();
-                }
-            }
-            stopwatch.Stop();
-
-            var qps = number / (stopwatch.ElapsedMilliseconds / 1000.0);
-            var elapsedMilliseconds = $"QPS 为：{qps}";
-        }
-
-        [TestMethod]
         public void TestQuerySingle()
         {
             var database = new Database(Dialect.MySQL, connectionString);
@@ -183,14 +111,18 @@ namespace HSQL.Test
                     SchoolId = "123"
                 });
             }
-            var result = database.Insert<Student>(list);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            for (var i = 0; i < 100000; i++)
+
+            database.Transaction(() =>
             {
-                var student = database.Query<Student>(x => x.Age == 18 && x.Id.Equals($"{i}") && x.SchoolId.Equals("123")).FirstOrDefault();
-            }
+                for (var i = 0; i < 100000; i++)
+                {
+                    var student = database.Query<Student>(x => x.Age == 18 && x.Id.Equals($"{i}") && x.SchoolId.Equals("123")).FirstOrDefault();
+                }
+            });
+            
             stopwatch.Stop();
             var elapsedMilliseconds = $"查询十万条次共耗时：{stopwatch.ElapsedMilliseconds}毫秒";
         }
@@ -213,12 +145,17 @@ namespace HSQL.Test
                     SchoolId = "123"
                 });
             }
-            var result = database.Insert<Student>(list);
 
             
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var student = database.Query<Student>().ToList();
+            database.Transaction(() =>
+            {
+                list.ForEach(x =>
+                {
+                    var student = database.Query<Student>(x => x.Age == 18).ToList();
+                });
+            });
             stopwatch.Stop();
 
             var elapsedMilliseconds = $"数据量为{number}条时，耗时：{stopwatch.ElapsedMilliseconds} ms";
@@ -232,17 +169,22 @@ namespace HSQL.Test
             var database = new Database(Dialect.MySQL, connectionString);
             database.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();
-            for (var i = 0; i < number; i++)
+
+            database.Transaction(() =>
             {
-                list.Add(new Student()
+                for (var i = 0; i < number; i++)
                 {
-                    Id = $"{i}",
-                    Name = "zhangsan",
-                    Age = 18,
-                    SchoolId = "123"
-                });
-            }
-            var result = database.Insert<Student>(list);
+                    database.Insert<Student>(new Student()
+                    {
+                        Id = $"{i}",
+                        Name = "zhangsan",
+                        Age = 18,
+                        SchoolId = "123"
+                    });
+                }
+            });
+
+            
 
 
             var stopwatch = new Stopwatch();

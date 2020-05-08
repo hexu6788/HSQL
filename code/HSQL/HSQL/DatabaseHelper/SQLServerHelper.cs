@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
 using System.Data.SqlClient;
-using System.Linq;
 
 namespace HSQL.DatabaseHelper
 {
@@ -49,79 +47,6 @@ namespace HSQL.DatabaseHelper
                     result = command.ExecuteNonQuery();
                     command.Parameters.Clear();
                 }
-            }
-            return result;
-        }
-        internal static int ExecuteNonQueryBatch(string connectionString, List<string> commandTextList)
-        {
-            if (string.IsNullOrWhiteSpace(connectionString))
-                throw new ArgumentNullException("连接字符串不能为空！");
-            if (commandTextList == null || commandTextList.Count <= 0 || commandTextList.Count(x => string.IsNullOrWhiteSpace(x)) > 0)
-                throw new ArgumentNullException("执行命令不能为空");
-
-            var result = 0;
-            var connection = new SqlConnection(connectionString);
-            var command = connection.CreateCommand();
-
-            try
-            {
-                connection.Open();
-                command.Transaction = connection.BeginTransaction();
-                for (var i = 0; i < commandTextList.Count; i++)
-                {
-                    command.CommandText = commandTextList[i];
-                    result += command.ExecuteNonQuery();
-                    command.Parameters.Clear();
-                }
-                command.Transaction.Commit();
-            }
-            catch (Exception ex)
-            {
-                command.Transaction.Rollback();
-                throw ex;
-            }
-            finally
-            {
-                command.Dispose();
-                connection.Dispose();
-            }
-            return result;
-        }
-        internal static int ExecuteNonQueryBatch(string connectionString, List<string> commandTextList, List<SqlParameter[]> parametersList)
-        {
-            if (string.IsNullOrWhiteSpace(connectionString))
-                throw new ArgumentNullException("连接字符串不能为空！");
-            if (commandTextList == null || commandTextList.Count <= 0 || commandTextList.Count(x => string.IsNullOrWhiteSpace(x)) > 0)
-                throw new ArgumentNullException("执行命令不能为空");
-            if (parametersList == null || parametersList.Count <= 0 || parametersList.Count(x => x == null) > 0)
-                throw new ArgumentNullException("参数不能为空");
-
-            var result = 0;
-            var connection = new SqlConnection(connectionString);
-            var command = connection.CreateCommand();
-
-            try
-            {
-                connection.Open();
-                command.Transaction = connection.BeginTransaction();
-                for (var i = 0; i < commandTextList.Count; i++)
-                {
-                    command.CommandText = commandTextList[i];
-                    command.Parameters.AddRange(parametersList[i]);
-                    result += command.ExecuteNonQuery();
-                    command.Parameters.Clear();
-                }
-                command.Transaction.Commit();
-            }
-            catch (Exception ex)
-            {
-                command.Transaction.Rollback();
-                throw ex;
-            }
-            finally
-            {
-                command.Dispose();
-                connection.Dispose();
             }
             return result;
         }
