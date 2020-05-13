@@ -190,5 +190,16 @@ namespace HSQL.Test
 
             Assert.AreEqual(true, result);
         }
+
+
+        [TestMethod]
+        public void TestQuerySQL()
+        {
+            var database = new Database(Dialect.MySQL, connnectionString);
+
+            var list = database.Query("SELECT * FROM t_student;");
+
+            Assert.AreNotEqual(list, null);
+        }
     }
 }

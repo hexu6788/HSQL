@@ -1,43 +1,30 @@
 ﻿using HSQL.Attribute;
 using HSQL.Const;
 using HSQL.Model;
-using HSQL.PerformanceOptimization;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 
 namespace HSQL
 {
     internal class ExpressionBase
     {
-        internal static string GetTableName(Type type)
-        {
-            return Store.GetTableName(type);
-        }
-
-        internal static List<string> GetColumnNameList(Type type)
-        {
-            return Store.GetColumnNameList(type);
-        }
-
-        internal static List<Column> GetColumnList<T>(T t)
+        internal static List<Column> GetColumnList<T>(T instance)
         {
             var list = new List<Column>();
 
-            foreach (var property in t.GetType().GetProperties())
+            foreach (PropertyInfo property in instance.GetType().GetProperties())
             {
                 foreach (ColumnAttribute attribute in property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true))
                 {
-                    var value = property.GetValue(t, null);
+                    var value = property.GetValue(instance, null);
+
                     if (property.PropertyType == TypeOfConst.String)
                     {
-                        list.Add(new Column(attribute.Name, value == null ? "" : value));
+                        list.Add(new Column(attribute.Name, value == null ? string.Empty : value));
                     }
                     else if (property.PropertyType == TypeOfConst.Int
+                        || property.PropertyType == TypeOfConst.UInt
                         || property.PropertyType == TypeOfConst.Long
                         || property.PropertyType == TypeOfConst.Float
                         || property.PropertyType == TypeOfConst.Double
@@ -45,10 +32,13 @@ namespace HSQL
                     {
                         list.Add(new Column(attribute.Name, value == null ? 0 : value));
                     }
-                    else if (property.PropertyType == TypeOfConst.ByteArray)
+                    else if (property.PropertyType == TypeOfConst.ByteArray
+                        || property.PropertyType == TypeOfConst.DateTime)
                     {
-                        if (value != null)
-                            list.Add(new Column(attribute.Name, value));
+                        list.Add(new Column(attribute.Name, value));
+                    }
+                    else {
+                        list.Add(new Column(attribute.Name, value));
                     }
                 }
             }
@@ -61,30 +51,28 @@ namespace HSQL
         {
             var list = new List<Column>();
 
-            foreach (var property in instance.GetType().GetProperties())
+            foreach (PropertyInfo property in instance.GetType().GetProperties())
             {
                 foreach (ColumnAttribute attribute in property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true))
                 {
                     var value = property.GetValue(instance, null);
+                    if (value == null)
+                        continue;
+
                     if (property.PropertyType == TypeOfConst.String
-                        || property.PropertyType == TypeOfConst.ByteArray)
+                        || property.PropertyType == TypeOfConst.ByteArray
+                        || property.PropertyType == TypeOfConst.DateTime)
                     {
-                        if (value != null)
-                            list.Add(new Column(attribute.Name, value));
+                        list.Add(new Column(attribute.Name, value));
                     }
-                    else if (property.PropertyType == TypeOfConst.Int)
+                    else if (property.PropertyType == TypeOfConst.Int
+                        || property.PropertyType == TypeOfConst.UInt
+                        || property.PropertyType == TypeOfConst.Long
+                        || property.PropertyType == TypeOfConst.Float
+                        || property.PropertyType == TypeOfConst.Double
+                        || property.PropertyType == TypeOfConst.Decimal)
                     {
                         if (Convert.ToInt32(value) != 0)
-                            list.Add(new Column(attribute.Name, value));
-                    }
-                    else if (property.PropertyType == TypeOfConst.Long)
-                    {
-                        if (Convert.ToInt64(value) != 0)
-                            list.Add(new Column(attribute.Name, value));
-                    }
-                    else if (property.PropertyType == TypeOfConst.Decimal)
-                    {
-                        if (Convert.ToDecimal(value) != 0)
                             list.Add(new Column(attribute.Name, value));
                     }
                 }

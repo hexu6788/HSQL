@@ -1,9 +1,10 @@
 ﻿using HSQL.DatabaseHelper;
 using HSQL.Exceptions;
-using HSQL.Model;
 using HSQL.PerformanceOptimization;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
 using System.Transactions;
 
@@ -27,18 +28,17 @@ namespace HSQL
         /// 执行新增操作
         /// </summary>
         /// <typeparam name="T">类型</typeparam>
-        /// <param name="t">要新增的实例</param>
+        /// <param name="instance">要新增的实例</param>
         /// <returns>是否新增成功</returns>
-        public bool Insert<T>(T t)
+        public bool Insert<T>(T instance)
         {
-            if (t == null)
+            if (instance == null)
                 throw new DataIsNullException();
 
-            List<Column> columnList = ExpressionBase.GetColumnList<T>(t);
+            string sql = Store.BuildInsertSQL(instance);
+            DbParameter[] parameters = Store.BuildDbParameter(_dialect, ExpressionBase.GetColumnList(instance));
 
-            string sql = Store.BuildInsertSQL(ExpressionBase.GetTableName(typeof(T)), columnList);
-
-            return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, sql, Store.BuildDbParameter(_dialect, columnList));
+            return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, sql, parameters);
         }
 
         /// <summary>
@@ -55,13 +55,9 @@ namespace HSQL
             if (instance == null)
                 throw new DataIsNullException();
 
-            string tableName = ExpressionBase.GetTableName(typeof(T));
-            List<Column> columnList = ExpressionBase.GetColumnListWithOutNull<T>(instance);
-            string where = ExpressionToWhereSql.ToWhereString(expression);
+            Tuple<string, DbParameter[]> result = Store.BuildUpdateSQLAndParameter(_dialect, expression, instance);
 
-            string sql = Store.BuildUpdateSQL(tableName, columnList, where);
-
-            return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, sql, Store.BuildDbParameter(_dialect, columnList));
+            return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, result.Item1, result.Item2);
         }
 
         /// <summary>
@@ -75,11 +71,7 @@ namespace HSQL
             if (predicate == null)
                 throw new ExpressionIsNullException();
 
-            string where = ExpressionToWhereSql.ToWhereString(predicate);
-            if (string.IsNullOrWhiteSpace(where))
-                throw new ExpressionIsNullException();
-
-            string sql = Store.BuildDeleteSQL(ExpressionBase.GetTableName(typeof(T)), where);
+            string sql = Store.BuildDeleteSQL(predicate);
 
             return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, sql);
         }
@@ -102,6 +94,34 @@ namespace HSQL
         {
             Queryabel<T> queryabel = new Queryabel<T>(_connectionString, _dialect, predicate);
             return queryabel;
+        }
+
+        /// <summary>
+        /// 使用SQL语句查询，并得到结果集
+        /// </summary>
+        /// <param name="sql">SQL语句</param>
+        public dynamic Query(string sql)
+        {
+            if (string.IsNullOrWhiteSpace(sql))
+                throw new EmptySQLException(message: "异常原因：SQL语句为空！");
+
+            IDataReader reader = BaseSQLHelper.ExecuteReader(_dialect, _connectionString, sql);
+
+            List<dynamic> list = new List<dynamic>();
+            try
+            {
+                while (reader.Read())
+                {
+                    list.Add(InstanceFactory.CreateInstance(reader));
+                }
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Dispose();
+            }
+
+            return list;
         }
 
 

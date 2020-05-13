@@ -1,5 +1,6 @@
 ﻿using HSQL.Attribute;
 using HSQL.Const;
+using HSQL.Exceptions;
 using HSQL.Model;
 using MySql.Data.MySqlClient;
 using System;
@@ -8,6 +9,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace HSQL.PerformanceOptimization
@@ -26,7 +28,7 @@ namespace HSQL.PerformanceOptimization
 
             var propertyInfoList = type.GetProperties().Where(property =>
             {
-                var count = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true).Count();
+                int count = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true).Count();
                 return count > 0;
             }).ToList();
 
@@ -39,7 +41,7 @@ namespace HSQL.PerformanceOptimization
             if (_tableNameStore.ContainsKey(type))
                 return _tableNameStore.GetValueOrDefault(type);
 
-            var tableName = ((TableAttribute)type.GetCustomAttributes(TypeOfConst.TableAttribute, true)[0]).Name;
+            string tableName = ((TableAttribute)type.GetCustomAttributes(TypeOfConst.TableAttribute, true)[0]).Name;
             _tableNameStore.TryAdd(type, tableName);
             return tableName;
         }
@@ -49,8 +51,8 @@ namespace HSQL.PerformanceOptimization
             if (_columnNameListStore.ContainsKey(type))
                 return _columnNameListStore.GetValueOrDefault(type);
 
-            var columnNameList = new List<string>();
-            foreach (var property in type.GetProperties())
+            List<string> columnNameList = new List<string>();
+            foreach (PropertyInfo property in type.GetProperties())
             {
                 foreach (ColumnAttribute attribute in property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true))
                 {
@@ -73,23 +75,37 @@ namespace HSQL.PerformanceOptimization
             return name;
         }
 
-        internal static string BuildInsertSQL(string tableName, List<Column> columnList)
+        internal static string BuildInsertSQL<T>(T instance)
         {
-            return $"INSERT INTO {tableName}({string.Join(",", columnList.Select(x => x.Name))}) VALUES({string.Join(",", columnList.Select(x => string.Format("@{0}", x.Name)))});";
+            Type type = instance.GetType();
+
+            string tableName = GetTableName(type);
+            List<string> columnNameList = GetColumnNameList(type);
+
+            return $"INSERT INTO {tableName}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(columnName => string.Format("@{0}", columnName)))});";
         }
 
-        internal static string BuildInsertSQL(string tableName, List<string> columnNameList)
+        internal static Tuple<string,DbParameter[]> BuildUpdateSQLAndParameter<T>(Dialect dialect,Expression<Func<T, bool>> expression, T instance)
         {
-            return $"INSERT INTO {tableName}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(x => $"@{x}"))});";
+            string where = ExpressionToWhereSql.ToWhereString(expression);
+
+            List<Column> columnList = ExpressionBase.GetColumnListWithOutNull(instance);
+
+            string tableName = GetTableName(instance.GetType());
+
+            string sql = $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {where};";
+            
+            return new Tuple<string, DbParameter[]>(sql, BuildDbParameter(dialect, columnList));
         }
 
-        internal static string BuildUpdateSQL(string tableName,List<Column> columnList,string where)
+        internal static string BuildDeleteSQL<T>(Expression<Func<T, bool>> predicate)
         {
-            return $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {where};";
-        }
+            string tableName = GetTableName(typeof(T));
 
-        internal static string BuildDeleteSQL(string tableName, string where)
-        {
+            string where = ExpressionToWhereSql.ToWhereString(predicate);
+            if (string.IsNullOrWhiteSpace(where))
+                throw new ExpressionIsNullException();
+
             return $"DELETE FROM {tableName} WHERE {where};";
         }
 

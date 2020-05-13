@@ -61,7 +61,7 @@ namespace HSQL
         {
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var countStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {ExpressionBase.GetTableName(typeof(T))}");
+            var countStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {Store.GetTableName(typeof(T))}");
 
             if (!string.IsNullOrWhiteSpace(whereString))
             {
@@ -81,8 +81,8 @@ namespace HSQL
         {
             Type type = typeof(T);
             var propertyInfoList = Store.GetPropertyInfoList(type);
-            var tableName = ExpressionBase.GetTableName(type);
-            var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var tableName = Store.GetTableName(type);
+            var columnJoinString = string.Join(",", Store.GetColumnNameList(type));
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
             var sqlStringBuilder = new StringBuilder();
@@ -113,7 +113,7 @@ namespace HSQL
                     throw new Exception("未选择数据库方言！");
             }
 
-            var list = new List<T>();
+            List<T> list = new List<T>();
             try
             {
                 while (reader.Read())
@@ -133,8 +133,8 @@ namespace HSQL
         public List<T> ToList(int pageIndex, int pageSize)
         {
             var type = typeof(T);
-            var tableName = ExpressionBase.GetTableName(type);
-            var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var tableName = Store.GetTableName(type);
+            var columnJoinString = string.Join(",", Store.GetColumnNameList(type));
             var propertyInfoList = Store.GetPropertyInfoList(type);
             var pageStart = (pageIndex - 1) * pageSize;
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
@@ -168,7 +168,7 @@ namespace HSQL
                     throw new Exception("未选择数据库方言！");
             }
 
-            var list = new List<T>();
+            List<T> list = new List<T>();
             try
             {
                 while (reader.Read())
@@ -187,8 +187,8 @@ namespace HSQL
         public List<T> ToList(int pageIndex, int pageSize,out int total,out int totalPage)
         {
             var type = typeof(T);
-            var tableName = ExpressionBase.GetTableName(type);
-            var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var tableName = Store.GetTableName(type);
+            var columnJoinString = string.Join(",", Store.GetColumnNameList(type));
             var propertyInfoList = Store.GetPropertyInfoList(type);
             var pageStart = (pageIndex - 1) * pageSize;
 
@@ -231,7 +231,7 @@ namespace HSQL
             }
             totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
 
-            var list = new List<T>();
+            List<T> list = new List<T>();
             try
             {
                 while (reader.Read())
@@ -251,8 +251,8 @@ namespace HSQL
         public T SingleOrDefault()
         {
             var type = typeof(T);
-            var tableName = ExpressionBase.GetTableName(type);
-            var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var tableName = Store.GetTableName(type);
+            var columnJoinString = string.Join(",", Store.GetColumnNameList(type));
             var propertyInfoList = Store.GetPropertyInfoList(type);
 
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
@@ -307,8 +307,8 @@ namespace HSQL
         {
             var type = typeof(T);
             var propertyInfoList = Store.GetPropertyInfoList(type);
-            var tableName = ExpressionBase.GetTableName(type);
-            var columnJoinString = string.Join(",", ExpressionBase.GetColumnNameList(type));
+            var tableName = Store.GetTableName(type);
+            var columnJoinString = string.Join(",", Store.GetColumnNameList(type));
             var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
             var sqlStringBuilder = new StringBuilder();
