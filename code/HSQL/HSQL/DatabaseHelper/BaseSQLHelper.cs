@@ -11,23 +11,8 @@ namespace HSQL.DatabaseHelper
 {
     internal class BaseSQLHelper
     {
-        internal static bool ExecuteNonQuery(Dialect dialect, string connectionString, string sql)
-        {
-            if (string.IsNullOrWhiteSpace(sql))
-                throw new EmptySQLException();
 
-            if (dialect == Dialect.MySQL)
-            {
-                return MySQLHelper.ExecuteNonQuery(connectionString, sql) > 0;
-            }
-            else if (dialect == Dialect.SQLServer)
-            {
-                return SQLServerHelper.ExecuteNonQuery(connectionString, sql) > 0;
-            }
-
-            throw new NoDialectException();
-        }
-        internal static bool ExecuteNonQuery(Dialect dialect, string connectionString, string sql, List<DbParameter> parameters)
+        internal static bool ExecuteNonQuery(Dialect dialect, string connectionString, string sql, params DbParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(sql))
                 throw new EmptySQLException();
@@ -59,23 +44,7 @@ namespace HSQL.DatabaseHelper
 
             throw new NoDialectException();
         }
-        internal static IDataReader ExecuteReader(Dialect dialect, string connectionString, string sql)
-        {
-            if (string.IsNullOrWhiteSpace(sql))
-                throw new EmptySQLException();
-
-            if (dialect == Dialect.MySQL)
-            {
-                return MySQLHelper.ExecuteReader(connectionString, sql);
-            }
-            else if (dialect == Dialect.SQLServer)
-            {
-                return SQLServerHelper.ExecuteReader(connectionString, sql);
-            }
-
-            throw new NoDialectException();
-        }
-        internal static IDataReader ExecuteReader(Dialect dialect, string connectionString, string sql, List<DbParameter> parameters)
+        internal static IDataReader ExecuteReader(Dialect dialect, string connectionString, string sql, params DbParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(sql))
                 throw new EmptySQLException();

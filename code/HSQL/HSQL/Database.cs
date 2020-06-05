@@ -36,7 +36,7 @@ namespace HSQL
                 throw new DataIsNullException();
 
             string sql = Store.BuildInsertSQL(instance);
-            List<DbParameter> parameters = Store.BuildDbParameter(_dialect, ExpressionBase.GetColumnList(instance));
+            DbParameter[] parameters = Store.BuildDbParameter(_dialect, ExpressionBase.GetColumnList(instance));
 
             return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, sql, parameters);
         }
@@ -55,7 +55,7 @@ namespace HSQL
             if (instance == null)
                 throw new DataIsNullException();
 
-            Tuple<string, List<DbParameter>> result = Store.BuildUpdateSQLAndParameter(_dialect, expression, instance);
+            Tuple<string, DbParameter[]> result = Store.BuildUpdateSQLAndParameter(_dialect, expression, instance);
 
             return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, result.Item1, result.Item2);
         }
@@ -132,16 +132,15 @@ namespace HSQL
         /// 使用SQL语句查询，并得到结果集
         /// </summary>
         /// <param name="sql">SQL语句</param>
-        /// <param name="parameters">参数</param>
-        public List<dynamic> Query(string sql, dynamic parameters)
+        /// <param name="parameter">参数</param>
+        public List<dynamic> Query(string sql, dynamic parameter)
         {
             if (string.IsNullOrWhiteSpace(sql))
                 throw new EmptySQLException();
 
+            DbParameter[] dbParameters = Store.DynamicToDbParameters(_dialect, parameter);
 
-            List<DbParameter> dbParameterList = Store.DynamicToDbParameters(_dialect, parameters);
-
-            IDataReader reader = BaseSQLHelper.ExecuteReader(_dialect, _connectionString, sql, dbParameterList);
+            IDataReader reader = BaseSQLHelper.ExecuteReader(_dialect, _connectionString, sql, dbParameters);
 
             List<dynamic> list = new List<dynamic>();
             try

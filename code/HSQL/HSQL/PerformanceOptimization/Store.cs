@@ -86,7 +86,7 @@ namespace HSQL.PerformanceOptimization
             return $"INSERT INTO {tableName}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(columnName => string.Format("@{0}", columnName)))});";
         }
 
-        internal static Tuple<string,List<DbParameter>> BuildUpdateSQLAndParameter<T>(Dialect dialect,Expression<Func<T, bool>> expression, T instance)
+        internal static Tuple<string,DbParameter[]> BuildUpdateSQLAndParameter<T>(Dialect dialect,Expression<Func<T, bool>> expression, T instance)
         {
             string where = ExpressionToWhereSql.ToWhereString(expression);
 
@@ -96,7 +96,7 @@ namespace HSQL.PerformanceOptimization
 
             string sql = $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {where};";
             
-            return new Tuple<string, List<DbParameter>>(sql, BuildDbParameter(dialect, columnList));
+            return new Tuple<string, DbParameter[]>(sql, BuildDbParameter(dialect, columnList));
         }
 
         internal static string BuildDeleteSQL<T>(Expression<Func<T, bool>> predicate)
@@ -110,28 +110,28 @@ namespace HSQL.PerformanceOptimization
             return $"DELETE FROM {tableName} WHERE {where};";
         }
 
-        internal static List<DbParameter> BuildDbParameter(Dialect _dialect, List<Column> columnList)
+        internal static DbParameter[] BuildDbParameter(Dialect _dialect, List<Column> columnList)
         {
             if (_dialect == Dialect.MySQL)
-                return columnList.Select(x => (DbParameter)new MySqlParameter(x.Name, x.Value)).ToList();
+                return columnList.Select(x => (DbParameter)new MySqlParameter(x.Name, x.Value)).ToArray();
             else if (_dialect == Dialect.SQLServer)
-                return columnList.Select(x => (DbParameter)new SqlParameter(x.Name, x.Value)).ToList();
-            else
-                return new List<DbParameter>();
+                return columnList.Select(x => (DbParameter)new SqlParameter(x.Name, x.Value)).ToArray();
+
+            throw new NoDialectException();
         }
 
-        internal static List<DbParameter> DynamicToDbParameters(Dialect dialect, object parameters)
+        internal static DbParameter[] DynamicToDbParameters(Dialect dialect, object parameters)
         {
             if (parameters == null)
                 throw new EmptyParameterException();
 
             if (dialect == Dialect.MySQL)
             {
-                return parameters.GetType().GetProperties().Select(property => (DbParameter)new MySqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToList();
+                return parameters.GetType().GetProperties().Select(property => (DbParameter)new MySqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToArray();
             }
             else if (dialect == Dialect.SQLServer)
             {
-                return parameters.GetType().GetProperties().Select(property => (DbParameter)new SqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToList();
+                return parameters.GetType().GetProperties().Select(property => (DbParameter)new SqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToArray();
             }
 
             throw new NoDialectException();
