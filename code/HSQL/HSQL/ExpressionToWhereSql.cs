@@ -15,7 +15,7 @@ namespace HSQL
                 return string.Empty;
 
             string where = Resolve(expression);
-            return RemoveBeginEndBracket(where);
+            return where;
         }
 
         private static string Resolve(Expression expression)
@@ -282,22 +282,6 @@ namespace HSQL
 
             bool isNormal = count == 1;
             return isNormal;
-        }
-
-        private static string RemoveBeginEndBracket(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return text;
-
-            if (!text.Contains("(") || !text.Contains(")"))
-                return text;
-
-            //if (text.IndexOf("(") == 0 && text.LastIndexOf(")") == text.Length - 1)
-            //{
-            //    return text.Substring(1, text.Length - 2);
-            //}
-            return text;
-
         }
 
     }

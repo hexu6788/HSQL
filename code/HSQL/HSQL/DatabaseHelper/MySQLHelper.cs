@@ -1,6 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
-using System.Collections.Generic;
 using System.Data;
 
 namespace HSQL.DatabaseHelper
@@ -34,6 +33,7 @@ namespace HSQL.DatabaseHelper
                 throw new ArgumentNullException("连接字符串不能为空！");
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
+
 
             MySqlConnection connection = new MySqlConnection(connectionString);
             MySqlCommand command = connection.CreateCommand();

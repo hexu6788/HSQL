@@ -110,7 +110,7 @@ namespace HSQL
                     reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 default:
-                    throw new Exception("未选择数据库方言！");
+                    throw new NoDialectException();
             }
 
             List<T> list = new List<T>();
@@ -165,7 +165,7 @@ namespace HSQL
                     reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 default:
-                    throw new Exception("未选择数据库方言！");
+                    throw new NoDialectException();
             }
 
             List<T> list = new List<T>();
@@ -227,7 +227,7 @@ namespace HSQL
                     reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 default:
-                    throw new Exception("未选择数据库方言！");
+                    throw new NoDialectException();
             }
             totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
 
@@ -288,6 +288,9 @@ namespace HSQL
                 sqlStringBuilder.Append($" OFFSET 1 ROWS FETCH NEXT 1 ROWS ONLY;");
                 reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
             }
+            else {
+                throw new NoDialectException();
+            }
 
             T instance = default(T);
             try
@@ -337,7 +340,7 @@ namespace HSQL
                     reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
                     break;
                 default:
-                    throw new Exception("未选择数据库方言！");
+                    throw new NoDialectException();
             }
 
             T instance = default(T);
