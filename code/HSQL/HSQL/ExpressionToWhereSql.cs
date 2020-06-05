@@ -207,6 +207,8 @@ namespace HSQL
                 return Expression.Lambda<Func<float>>(Expression.Convert(expression, TypeOfConst.Float)).Compile().Invoke().ToString();
             else if (expression.Type == TypeOfConst.Double)
                 return Expression.Lambda<Func<double>>(Expression.Convert(expression, TypeOfConst.Double)).Compile().Invoke().ToString();
+            if (expression.Type == TypeOfConst.DateTime)
+                return $"'{Expression.Lambda<Func<DateTime>>(Expression.Convert(expression, TypeOfConst.DateTime)).Compile().Invoke().ToString()}'";
             else if (expression.Type == TypeOfConst.String)
             {
                 return onlyValue ?
