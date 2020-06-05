@@ -35,7 +35,7 @@ namespace HSQL.Test
                     Age = 18,
                     SchoolId = "123"
                 });
-                //throw new Exception("fsd");
+                throw new Exception("fsd");
             });
         }
 

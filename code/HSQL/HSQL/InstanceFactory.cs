@@ -1,6 +1,4 @@
-﻿using HSQL.Attribute;
-using HSQL.Const;
-using HSQL.PerformanceOptimization;
+﻿using HSQL.PerformanceOptimization;
 using System;
 using System.Collections.Generic;
 using System.Data;

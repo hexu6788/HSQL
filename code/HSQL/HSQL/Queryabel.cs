@@ -59,9 +59,9 @@ namespace HSQL
 
         public int Count()
         {
-            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var countStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {Store.GetTableName(typeof(T))}");
+            StringBuilder countStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {Store.GetTableName(typeof(T))}");
 
             if (!string.IsNullOrWhiteSpace(whereString))
             {
@@ -80,12 +80,12 @@ namespace HSQL
         public List<T> ToList()
         {
             Type type = typeof(T);
-            var propertyInfoList = Store.GetPropertyInfoList(type);
-            var tableName = Store.GetTableName(type);
-            var columnJoinString = string.Join(",", Store.GetColumnNameList(type));
-            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
+            string tableName = Store.GetTableName(type);
+            string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
+            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var sqlStringBuilder = new StringBuilder();
+            StringBuilder sqlStringBuilder = new StringBuilder();
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
             if (!string.IsNullOrWhiteSpace(whereString))
                 sqlStringBuilder.Append($" WHERE {whereString}");
@@ -132,14 +132,14 @@ namespace HSQL
 
         public List<T> ToList(int pageIndex, int pageSize)
         {
-            var type = typeof(T);
-            var tableName = Store.GetTableName(type);
-            var columnJoinString = string.Join(",", Store.GetColumnNameList(type));
-            var propertyInfoList = Store.GetPropertyInfoList(type);
-            var pageStart = (pageIndex - 1) * pageSize;
-            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            Type type = typeof(T);
+            string tableName = Store.GetTableName(type);
+            string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
+            List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
+            int pageStart = (pageIndex - 1) * pageSize;
+            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var sqlStringBuilder = new StringBuilder();
+            StringBuilder sqlStringBuilder = new StringBuilder();
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
             if (!string.IsNullOrWhiteSpace(whereString))
                 sqlStringBuilder.Append($" WHERE {whereString}");
@@ -186,16 +186,16 @@ namespace HSQL
 
         public List<T> ToList(int pageIndex, int pageSize,out int total,out int totalPage)
         {
-            var type = typeof(T);
-            var tableName = Store.GetTableName(type);
-            var columnJoinString = string.Join(",", Store.GetColumnNameList(type));
-            var propertyInfoList = Store.GetPropertyInfoList(type);
-            var pageStart = (pageIndex - 1) * pageSize;
+            Type type = typeof(T);
+            string tableName = Store.GetTableName(type);
+            string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
+            List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
+            int pageStart = (pageIndex - 1) * pageSize;
 
-            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
-            var pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
+            StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
+            StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
 
             if (!string.IsNullOrWhiteSpace(whereString))
             {
@@ -250,15 +250,15 @@ namespace HSQL
 
         public T SingleOrDefault()
         {
-            var type = typeof(T);
-            var tableName = Store.GetTableName(type);
-            var columnJoinString = string.Join(",", Store.GetColumnNameList(type));
-            var propertyInfoList = Store.GetPropertyInfoList(type);
+            Type type = typeof(T);
+            string tableName = Store.GetTableName(type);
+            string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
+            List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
 
-            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
-            var pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
+            StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
+            StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
 
             if (!string.IsNullOrWhiteSpace(whereString))
             {
@@ -267,7 +267,7 @@ namespace HSQL
             }
 
             pageStringBuilder.Append(";");
-            var total = Convert.ToInt32(BaseSQLHelper.ExecuteScalar(_dialect, _connectionString, pageStringBuilder.ToString()));
+            int total = Convert.ToInt32(BaseSQLHelper.ExecuteScalar(_dialect, _connectionString, pageStringBuilder.ToString()));
             if (total > 1)
                 throw new SingleOrDefaultException();
 
@@ -305,13 +305,13 @@ namespace HSQL
 
         public T FirstOrDefault()
         {
-            var type = typeof(T);
-            var propertyInfoList = Store.GetPropertyInfoList(type);
-            var tableName = Store.GetTableName(type);
-            var columnJoinString = string.Join(",", Store.GetColumnNameList(type));
-            var whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            Type type = typeof(T);
+            List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
+            string tableName = Store.GetTableName(type);
+            string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
+            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
 
-            var sqlStringBuilder = new StringBuilder();
+            StringBuilder sqlStringBuilder = new StringBuilder();
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
             if (!string.IsNullOrWhiteSpace(whereString))
                 sqlStringBuilder.Append($" WHERE {whereString}");

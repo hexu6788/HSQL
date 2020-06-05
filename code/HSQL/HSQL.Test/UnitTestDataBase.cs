@@ -1,5 +1,8 @@
 using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
 
 namespace HSQL.Test
 {
@@ -191,13 +194,26 @@ namespace HSQL.Test
             Assert.AreEqual(true, result);
         }
 
-
         [TestMethod]
         public void TestQuerySQL()
         {
             var database = new Database(Dialect.MySQL, connnectionString);
 
             var list = database.Query("SELECT * FROM t_student;");
+
+            Assert.AreNotEqual(list, null);
+        }
+
+        [TestMethod]
+        public void TestQuerySQLByParameters()
+        {
+            var database = new Database(Dialect.MySQL, connnectionString);
+
+            var list = database.Query("SELECT * FROM t_student WHERE id = @id AND age > @age;", new
+            {
+                id = "123",
+                age = 1
+            });
 
             Assert.AreNotEqual(list, null);
         }

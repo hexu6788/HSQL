@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -26,7 +27,7 @@ namespace HSQL.PerformanceOptimization
             if (_propertyInfoListStore.ContainsKey(type))
                 return _propertyInfoListStore.GetValueOrDefault(type);
 
-            var propertyInfoList = type.GetProperties().Where(property =>
+            List<PropertyInfo> propertyInfoList = type.GetProperties().Where(property =>
             {
                 int count = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true).Count();
                 return count > 0;
@@ -69,7 +70,7 @@ namespace HSQL.PerformanceOptimization
                 return _columnAttributeNameStore.GetValueOrDefault(property);
 
             var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-            var name = ((ColumnAttribute)attributes[0]).Name;
+            string name = ((ColumnAttribute)attributes[0]).Name;
             _columnAttributeNameStore.TryAdd(property, name);
 
             return name;
@@ -85,7 +86,7 @@ namespace HSQL.PerformanceOptimization
             return $"INSERT INTO {tableName}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(columnName => string.Format("@{0}", columnName)))});";
         }
 
-        internal static Tuple<string,DbParameter[]> BuildUpdateSQLAndParameter<T>(Dialect dialect,Expression<Func<T, bool>> expression, T instance)
+        internal static Tuple<string,List<DbParameter>> BuildUpdateSQLAndParameter<T>(Dialect dialect,Expression<Func<T, bool>> expression, T instance)
         {
             string where = ExpressionToWhereSql.ToWhereString(expression);
 
@@ -95,7 +96,7 @@ namespace HSQL.PerformanceOptimization
 
             string sql = $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {where};";
             
-            return new Tuple<string, DbParameter[]>(sql, BuildDbParameter(dialect, columnList));
+            return new Tuple<string, List<DbParameter>>(sql, BuildDbParameter(dialect, columnList));
         }
 
         internal static string BuildDeleteSQL<T>(Expression<Func<T, bool>> predicate)
@@ -109,14 +110,31 @@ namespace HSQL.PerformanceOptimization
             return $"DELETE FROM {tableName} WHERE {where};";
         }
 
-        internal static DbParameter[] BuildDbParameter(Dialect _dialect, List<Column> columnList)
+        internal static List<DbParameter> BuildDbParameter(Dialect _dialect, List<Column> columnList)
         {
             if (_dialect == Dialect.MySQL)
-                return columnList.Select(x => new MySqlParameter(x.Name, x.Value)).ToArray();
+                return columnList.Select(x => (DbParameter)new MySqlParameter(x.Name, x.Value)).ToList();
             else if (_dialect == Dialect.SQLServer)
-                return columnList.Select(x => new SqlParameter(x.Name, x.Value)).ToArray();
+                return columnList.Select(x => (DbParameter)new SqlParameter(x.Name, x.Value)).ToList();
             else
-                return new List<DbParameter>().ToArray();
+                return new List<DbParameter>();
+        }
+
+        internal static List<DbParameter> DynamicToDbParameters(Dialect dialect, object parameters)
+        {
+            if (parameters == null)
+                throw new EmptyParameterException();
+
+            if (dialect == Dialect.MySQL)
+            {
+                return parameters.GetType().GetProperties().Select(property => (DbParameter)new MySqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToList();
+            }
+            else if (dialect == Dialect.SQLServer)
+            {
+                return parameters.GetType().GetProperties().Select(property => (DbParameter)new SqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToList();
+            }
+
+            throw new NoDialectException();
         }
     }
 }

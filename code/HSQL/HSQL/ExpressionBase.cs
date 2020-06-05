@@ -11,7 +11,7 @@ namespace HSQL
     {
         internal static List<Column> GetColumnList<T>(T instance)
         {
-            var list = new List<Column>();
+            List<Column> list = new List<Column>();
 
             foreach (PropertyInfo property in instance.GetType().GetProperties())
             {
@@ -49,7 +49,7 @@ namespace HSQL
 
         internal static List<Column> GetColumnListWithOutNull<T>(T instance)
         {
-            var list = new List<Column>();
+            List<Column> list = new List<Column>();
 
             foreach (PropertyInfo property in instance.GetType().GetProperties())
             {

@@ -14,10 +14,10 @@ namespace HSQL.DatabaseHelper
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
 
-            var result = 0;
-            using (var connection = new MySqlConnection(connectionString))
+            int result = 0;
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                using (var command = connection.CreateCommand())
+                using (MySqlCommand command = connection.CreateCommand())
                 {
                     connection.Open();
                     command.CommandText = commandText;
@@ -27,21 +27,21 @@ namespace HSQL.DatabaseHelper
             }
             return result;
         }
-        internal static int ExecuteNonQuery(string connectionString, string commandText, List<MySqlParameter> parameters)
+        internal static int ExecuteNonQuery(string connectionString, string commandText, MySqlParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new ArgumentNullException("连接字符串不能为空！");
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
 
-            var result = 0;
-            using (var connection = new MySqlConnection(connectionString))
+            int result = 0;
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                using (var command = connection.CreateCommand())
+                using (MySqlCommand command = connection.CreateCommand())
                 {
                     connection.Open();
                     command.CommandText = commandText;
-                    command.Parameters.AddRange(parameters.ToArray());
+                    command.Parameters.AddRange(parameters);
                     result = command.ExecuteNonQuery();
                     command.Parameters.Clear();
                 }
@@ -55,11 +55,28 @@ namespace HSQL.DatabaseHelper
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
 
-            var connection = new MySqlConnection(connectionString);
-            var command = connection.CreateCommand();
+            MySqlConnection connection = new MySqlConnection(connectionString);
+            MySqlCommand command = connection.CreateCommand();
             connection.Open();
             command.CommandText = commandText;
-            var reader = command.ExecuteReader(CommandBehavior.CloseConnection);
+            MySqlDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
+            command.Parameters.Clear();
+
+            return reader;
+        }
+        internal static MySqlDataReader ExecuteReader(string connectionString, string commandText, MySqlParameter[] parameters)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new ArgumentNullException("连接字符串不能为空！");
+            if (string.IsNullOrWhiteSpace(commandText))
+                throw new ArgumentNullException("执行命令不能为空");
+
+            MySqlConnection connection = new MySqlConnection(connectionString);
+            MySqlCommand command = connection.CreateCommand();
+            connection.Open();
+            command.CommandText = commandText;
+            command.Parameters.AddRange(parameters);
+            MySqlDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
             command.Parameters.Clear();
 
             return reader;
@@ -72,9 +89,9 @@ namespace HSQL.DatabaseHelper
                 throw new ArgumentNullException("执行命令不能为空");
 
             object result = null;
-            using (var connection = new MySqlConnection(connectionString))
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
-                using (var command = connection.CreateCommand())
+                using (MySqlCommand command = connection.CreateCommand())
                 {
                     connection.Open();
                     command.CommandText = commandText;

@@ -14,7 +14,7 @@ namespace HSQL
             if (expression == null)
                 return string.Empty;
 
-            var where = Resolve(expression);
+            string where = Resolve(expression);
             return RemoveBeginEndBracket(where);
         }
 
@@ -29,15 +29,15 @@ namespace HSQL
             {
                 var binaryExpression = (BinaryExpression)expression;
 
-                var symbol = ExpressionTypeSymbol(expression.NodeType);
+                string symbol = ExpressionTypeSymbol(expression.NodeType);
 
                 switch (expression.NodeType)
                 {
                     case ExpressionType.AndAlso:
                     case ExpressionType.OrElse:
                         {
-                            var left = Resolve(binaryExpression.Left);
-                            var right = Resolve(binaryExpression.Right);
+                            string left = Resolve(binaryExpression.Left);
+                            string right = Resolve(binaryExpression.Right);
                             return Combining(left, symbol, right);
                         }
                     case ExpressionType.Equal:
@@ -47,14 +47,14 @@ namespace HSQL
                     case ExpressionType.LessThanOrEqual:
                     case ExpressionType.LessThan:
                         {
-                            var left = Resolve(binaryExpression.Left);
-                            var right = "";
+                            string left = Resolve(binaryExpression.Left);
+                            string right = "";
 
                             if (binaryExpression.Right.NodeType == ExpressionType.MemberAccess)
                                 right = ResolveMemberValue((MemberExpression)binaryExpression.Right, false);
                             else if (binaryExpression.Right.NodeType == ExpressionType.Constant)
                             {
-                                var value = ResolveConstant((ConstantExpression)binaryExpression.Right);
+                                string value = ResolveConstant((ConstantExpression)binaryExpression.Right);
                                 if (binaryExpression.Right.Type == TypeOfConst.Int
                                     || binaryExpression.Right.Type == TypeOfConst.UInt
                                     || binaryExpression.Right.Type == TypeOfConst.Long
@@ -105,8 +105,8 @@ namespace HSQL
             }
             else if (expression.Object.Type.IsGenericType && expression.Method.Name.Equals("Contains"))
             {
-                var left = ResolveMemberName((MemberExpression)expression.Arguments[0]);
-                var right = "";
+                string left = ResolveMemberName((MemberExpression)expression.Arguments[0]);
+                string right = "";
                 if (expression.Object.NodeType == ExpressionType.MemberAccess)
                     right = ResolveMemberValue((MemberExpression)expression.Object);
                 else if (expression.Object.NodeType == ExpressionType.Call)
@@ -121,8 +121,8 @@ namespace HSQL
             }
             else
             {
-                var left = ResolveMemberName((MemberExpression)expression.Object);
-                var right = "";
+                string left = ResolveMemberName((MemberExpression)expression.Object);
+                string right = "";
                 if (expression.Arguments[0] is MemberExpression)
                     right = Eval((MemberExpression)expression.Arguments[0]);
                 else if (expression.Arguments[0] is ConstantExpression)
@@ -164,7 +164,7 @@ namespace HSQL
         {
             if (expression.NodeType == ExpressionType.Not)
             {
-                var value = ResolveMethodCall((MethodCallExpression)expression.Operand).Replace(" = ", " != ");
+                string value = ResolveMethodCall((MethodCallExpression)expression.Operand).Replace(" = ", " != ");
                 return value;
             }
             throw new Exception("未处理异常");
@@ -269,7 +269,7 @@ namespace HSQL
             if (text.IndexOf("(") == 0 && text.LastIndexOf(")") == text.Length - 1)
                 return true;
 
-            var count = 0;
+            int count = 0;
 
             count += text.IndexOf(" > ") > -1 ? 1 : 0;
             count += text.IndexOf(" >= ") > -1 ? 1 : 0;
@@ -280,7 +280,7 @@ namespace HSQL
             count += text.IndexOf(" IN ") > -1 ? 1 : 0;
             count += text.IndexOf(" LIKE ") > -1 ? 1 : 0;
 
-            var isNormal = count == 1;
+            bool isNormal = count == 1;
             return isNormal;
         }
 

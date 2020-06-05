@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -15,10 +14,10 @@ namespace HSQL.DatabaseHelper
                 throw new ArgumentNullException("执行命令不能为空");
 
 
-            var result = 0;
-            using (var connection = new SqlConnection(connectionString))
+            int result = 0;
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                using (var command = connection.CreateCommand())
+                using (SqlCommand command = connection.CreateCommand())
                 {
                     connection.Open();
                     command.CommandText = commandText;
@@ -28,7 +27,7 @@ namespace HSQL.DatabaseHelper
             }
             return result;
         }
-        internal static int ExecuteNonQuery(string connectionString, string commandText, List<SqlParameter> parameters)
+        internal static int ExecuteNonQuery(string connectionString, string commandText, SqlParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new ArgumentNullException("连接字符串不能为空！");
@@ -36,14 +35,14 @@ namespace HSQL.DatabaseHelper
                 throw new ArgumentNullException("执行命令不能为空");
 
 
-            var result = 0;
-            using (var connection = new SqlConnection(connectionString))
+            int result = 0;
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                using (var command = connection.CreateCommand())
+                using (SqlCommand command = connection.CreateCommand())
                 {
                     connection.Open();
                     command.CommandText = commandText;
-                    command.Parameters.AddRange(parameters.ToArray());
+                    command.Parameters.AddRange(parameters);
                     result = command.ExecuteNonQuery();
                     command.Parameters.Clear();
                 }
@@ -57,11 +56,28 @@ namespace HSQL.DatabaseHelper
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
 
-            var connection = new SqlConnection(connectionString);
-            var command = connection.CreateCommand();
+            SqlConnection connection = new SqlConnection(connectionString);
+            SqlCommand command = connection.CreateCommand();
             connection.Open();
             command.CommandText = commandText;
-            var reader = command.ExecuteReader(CommandBehavior.CloseConnection);
+            SqlDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
+            command.Parameters.Clear();
+
+            return reader;
+        }
+        internal static SqlDataReader ExecuteReader(string connectionString, string commandText, SqlParameter[] parameters)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new ArgumentNullException("连接字符串不能为空！");
+            if (string.IsNullOrWhiteSpace(commandText))
+                throw new ArgumentNullException("执行命令不能为空");
+
+            SqlConnection connection = new SqlConnection(connectionString);
+            SqlCommand command = connection.CreateCommand();
+            connection.Open();
+            command.CommandText = commandText;
+            command.Parameters.AddRange(parameters);
+            SqlDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
             command.Parameters.Clear();
 
             return reader;
@@ -74,9 +90,9 @@ namespace HSQL.DatabaseHelper
                 throw new ArgumentNullException("执行命令不能为空");
 
             object result = null;
-            using (var connection = new SqlConnection(connectionString))
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                using (var command = connection.CreateCommand())
+                using (SqlCommand command = connection.CreateCommand())
                 {
                     connection.Open();
                     command.CommandText = commandText;

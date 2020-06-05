@@ -36,7 +36,7 @@ namespace HSQL
                 throw new DataIsNullException();
 
             string sql = Store.BuildInsertSQL(instance);
-            DbParameter[] parameters = Store.BuildDbParameter(_dialect, ExpressionBase.GetColumnList(instance));
+            List<DbParameter> parameters = Store.BuildDbParameter(_dialect, ExpressionBase.GetColumnList(instance));
 
             return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, sql, parameters);
         }
@@ -55,7 +55,7 @@ namespace HSQL
             if (instance == null)
                 throw new DataIsNullException();
 
-            Tuple<string, DbParameter[]> result = Store.BuildUpdateSQLAndParameter(_dialect, expression, instance);
+            Tuple<string, List<DbParameter>> result = Store.BuildUpdateSQLAndParameter(_dialect, expression, instance);
 
             return BaseSQLHelper.ExecuteNonQuery(_dialect, _connectionString, result.Item1, result.Item2);
         }
@@ -100,10 +100,10 @@ namespace HSQL
         /// 使用SQL语句查询，并得到结果集
         /// </summary>
         /// <param name="sql">SQL语句</param>
-        public dynamic Query(string sql)
+        public List<dynamic> Query(string sql)
         {
             if (string.IsNullOrWhiteSpace(sql))
-                throw new EmptySQLException(message: "异常原因：SQL语句为空！");
+                throw new EmptySQLException();
 
             IDataReader reader = BaseSQLHelper.ExecuteReader(_dialect, _connectionString, sql);
 
@@ -115,6 +115,10 @@ namespace HSQL
                     list.Add(InstanceFactory.CreateInstance(reader));
                 }
             }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
             finally
             {
                 if (reader != null)
@@ -124,6 +128,41 @@ namespace HSQL
             return list;
         }
 
+        /// <summary>
+        /// 使用SQL语句查询，并得到结果集
+        /// </summary>
+        /// <param name="sql">SQL语句</param>
+        /// <param name="parameters">参数</param>
+        public List<dynamic> Query(string sql, dynamic parameters)
+        {
+            if (string.IsNullOrWhiteSpace(sql))
+                throw new EmptySQLException();
+
+
+            List<DbParameter> dbParameterList = Store.DynamicToDbParameters(_dialect, parameters);
+
+            IDataReader reader = BaseSQLHelper.ExecuteReader(_dialect, _connectionString, sql, dbParameterList);
+
+            List<dynamic> list = new List<dynamic>();
+            try
+            {
+                while (reader.Read())
+                {
+                    list.Add(InstanceFactory.CreateInstance(reader));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                if (reader != null)
+                    reader.Dispose();
+            }
+
+            return list;
+        }
 
         /// <summary>
         /// 事务调用
@@ -131,7 +170,7 @@ namespace HSQL
         /// <param name="action"></param>
         public void Transaction(Action action)
         {
-            using (var scope = new TransactionScope())
+            using (TransactionScope scope = new TransactionScope())
             {
                 try
                 {
