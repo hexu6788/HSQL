@@ -24,6 +24,8 @@ namespace HSQL
             _connectionString = connectionString;
         }
 
+        
+
         /// <summary>
         /// 执行新增操作
         /// </summary>
@@ -162,6 +164,8 @@ namespace HSQL
 
             return list;
         }
+
+        
 
         /// <summary>
         /// 事务调用

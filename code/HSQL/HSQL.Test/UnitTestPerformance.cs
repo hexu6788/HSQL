@@ -219,5 +219,11 @@ namespace HSQL.Test
 
             var elapsedMilliseconds = $"数据量为{number}条时，耗时：{stopwatch.ElapsedMilliseconds} ms";
         }
+
+        [TestMethod]
+        public void Test()
+        {
+
+        }
     }
 }

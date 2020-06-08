@@ -1,8 +1,5 @@
 using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
 
 namespace HSQL.Test
 {
@@ -217,5 +214,6 @@ namespace HSQL.Test
 
             Assert.AreNotEqual(list, null);
         }
+        
     }
 }

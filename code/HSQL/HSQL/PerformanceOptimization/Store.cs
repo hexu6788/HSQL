@@ -8,7 +8,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
-using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -69,7 +68,7 @@ namespace HSQL.PerformanceOptimization
             if (_columnAttributeNameStore.ContainsKey(property))
                 return _columnAttributeNameStore.GetValueOrDefault(property);
 
-            var attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
+            object[] attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
             string name = ((ColumnAttribute)attributes[0]).Name;
             _columnAttributeNameStore.TryAdd(property, name);
 
@@ -88,7 +87,7 @@ namespace HSQL.PerformanceOptimization
 
         internal static Tuple<string,DbParameter[]> BuildUpdateSQLAndParameter<T>(Dialect dialect,Expression<Func<T, bool>> expression, T instance)
         {
-            string where = ExpressionToWhereSql.ToWhereString(expression);
+            string where = ExpressionToSql.ToWhereSql(expression);
 
             List<Column> columnList = ExpressionBase.GetColumnListWithOutNull(instance);
 
@@ -103,7 +102,7 @@ namespace HSQL.PerformanceOptimization
         {
             string tableName = GetTableName(typeof(T));
 
-            string where = ExpressionToWhereSql.ToWhereString(predicate);
+            string where = ExpressionToSql.ToWhereSql(predicate);
             if (string.IsNullOrWhiteSpace(where))
                 throw new ExpressionIsNullException();
 

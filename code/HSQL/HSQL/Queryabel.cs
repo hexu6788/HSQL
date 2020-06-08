@@ -1,12 +1,9 @@
-﻿using HSQL.Attribute;
-using HSQL.Const;
-using HSQL.DatabaseHelper;
+﻿using HSQL.DatabaseHelper;
 using HSQL.Exceptions;
 using HSQL.PerformanceOptimization;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -24,11 +21,11 @@ namespace HSQL
 
         internal void SetOrderField(string field)
         {
-            this._orderField = field;
+            _orderField = field;
         }
         internal void SetOrderBy(string orderBy)
         {
-            this._orderBy = orderBy;
+            _orderBy = orderBy;
         }
 
         public Queryabel(string connectionString, Dialect dialect, Expression<Func<T, bool>> predicate)
@@ -59,16 +56,16 @@ namespace HSQL
 
         public int Count()
         {
-            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            string whereString = ExpressionToSql.ToWhereSql(_predicate);
 
-            StringBuilder countStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {Store.GetTableName(typeof(T))}");
+            StringBuilder stringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {Store.GetTableName(typeof(T))}");
 
             if (!string.IsNullOrWhiteSpace(whereString))
             {
-                countStringBuilder.Append($" WHERE {whereString}");
+                stringBuilder.Append($" WHERE {whereString}");
             }
 
-            int total = Convert.ToInt32(BaseSQLHelper.ExecuteScalar(_dialect, _connectionString, countStringBuilder.ToString()));
+            int total = Convert.ToInt32(BaseSQLHelper.ExecuteScalar(_dialect, _connectionString, stringBuilder.ToString()));
             return total;
         }
 
@@ -83,7 +80,7 @@ namespace HSQL
             List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
             string tableName = Store.GetTableName(type);
             string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
-            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            string whereString = ExpressionToSql.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
@@ -137,7 +134,7 @@ namespace HSQL
             string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
             List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
             int pageStart = (pageIndex - 1) * pageSize;
-            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            string whereString = ExpressionToSql.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
@@ -192,7 +189,7 @@ namespace HSQL
             List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
             int pageStart = (pageIndex - 1) * pageSize;
 
-            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            string whereString = ExpressionToSql.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
             StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
@@ -255,7 +252,7 @@ namespace HSQL
             string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
             List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
 
-            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            string whereString = ExpressionToSql.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
             StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
@@ -312,7 +309,7 @@ namespace HSQL
             List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
             string tableName = Store.GetTableName(type);
             string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
-            string whereString = ExpressionToWhereSql.ToWhereString(_predicate);
+            string whereString = ExpressionToSql.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");

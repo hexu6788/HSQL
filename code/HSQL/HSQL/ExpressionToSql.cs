@@ -1,5 +1,6 @@
 ﻿using HSQL.Attribute;
 using HSQL.Const;
+using HSQL.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,27 +8,27 @@ using System.Linq.Expressions;
 
 namespace HSQL
 {
-    public class ExpressionToWhereSql
+    internal class ExpressionToSql
     {
-        public static string ToWhereString(Expression expression)
+        internal static string ToWhereSql(Expression expression)
         {
             if (expression == null)
                 return string.Empty;
 
-            string where = Resolve(expression);
+            string where = ResolveWhereSql(expression);
             return where;
         }
 
-        private static string Resolve(Expression expression)
+        private static string ResolveWhereSql(Expression expression)
         {
             if (expression == null)
-                throw new Exception("未处理异常");
+                throw new ExpressionException();
 
             if (expression is LambdaExpression)
-                return Resolve(((LambdaExpression)expression).Body);
+                return ResolveWhereSql(((LambdaExpression)expression).Body);
             else if (expression is BinaryExpression)
             {
-                var binaryExpression = (BinaryExpression)expression;
+                BinaryExpression binaryExpression = (BinaryExpression)expression;
 
                 string symbol = ExpressionTypeSymbol(expression.NodeType);
 
@@ -36,8 +37,8 @@ namespace HSQL
                     case ExpressionType.AndAlso:
                     case ExpressionType.OrElse:
                         {
-                            string left = Resolve(binaryExpression.Left);
-                            string right = Resolve(binaryExpression.Right);
+                            string left = ResolveWhereSql(binaryExpression.Left);
+                            string right = ResolveWhereSql(binaryExpression.Right);
                             return Combining(left, symbol, right);
                         }
                     case ExpressionType.Equal:
@@ -47,7 +48,7 @@ namespace HSQL
                     case ExpressionType.LessThanOrEqual:
                     case ExpressionType.LessThan:
                         {
-                            string left = Resolve(binaryExpression.Left);
+                            string left = ResolveWhereSql(binaryExpression.Left);
                             string right = "";
 
                             if (binaryExpression.Right.NodeType == ExpressionType.MemberAccess)
@@ -65,17 +66,17 @@ namespace HSQL
                                 else if (binaryExpression.Right.Type == TypeOfConst.String)
                                     right = $"'{value}'";
                                 else
-                                    throw new Exception("未处理异常");
+                                    throw new ExpressionException();
                             }
                             else if (binaryExpression.Right.NodeType == ExpressionType.Call)
                                 right = ResolveMethodCall((MethodCallExpression)binaryExpression.Right);
                             else
-                                throw new Exception("未处理异常");
+                                throw new ExpressionException();
 
                             return Combining(left, symbol, right);
                         }
                     default:
-                        throw new Exception("未处理异常");
+                        throw new ExpressionException();
                 }
             }
             else if (expression is MethodCallExpression)
@@ -94,7 +95,7 @@ namespace HSQL
             {
                 return ResolveUnary((UnaryExpression)expression);
             }
-            throw new Exception("未处理异常");
+            throw new ExpressionException();
         }
 
         private static string ResolveMethodCall(MethodCallExpression expression)
@@ -112,7 +113,7 @@ namespace HSQL
                 else if (expression.Object.NodeType == ExpressionType.Call)
                     right = ResolveMethodCall((MethodCallExpression)expression.Object);
                 else
-                    throw new Exception("未处理异常");
+                    throw new ExpressionException();
 
                 if (string.IsNullOrWhiteSpace(right))
                     throw new Exception("IN 右侧部分不能为空");
@@ -130,7 +131,7 @@ namespace HSQL
                 else if (expression.Arguments[0] is MethodCallExpression)
                     right = ResolveMethodCall((MethodCallExpression)expression.Arguments[0]);
                 else
-                    throw new Exception("未处理异常");
+                    throw new ExpressionException();
 
                 switch (expression.Method.Name)
                 {
@@ -139,10 +140,10 @@ namespace HSQL
                     case "Contains":
                         return Combining(left, "LIKE", $"'%{right}%'");
                     default:
-                        throw new Exception("未处理异常");
+                        throw new ExpressionException();
                 }
             }
-            throw new Exception("未处理异常");
+            throw new ExpressionException();
         }
 
         private static string ResolveMemberName(MemberExpression expression)
@@ -167,7 +168,7 @@ namespace HSQL
                 string value = ResolveMethodCall((MethodCallExpression)expression.Operand).Replace(" = ", " != ");
                 return value;
             }
-            throw new Exception("未处理异常");
+            throw new ExpressionException();
         }
 
         private static string ExpressionTypeSymbol(ExpressionType nodeType)
@@ -191,7 +192,7 @@ namespace HSQL
                 case ExpressionType.LessThan:
                     return "<";
                 default:
-                    throw new Exception("未处理异常");
+                    throw new ExpressionException();
             }
         }
 
@@ -228,7 +229,7 @@ namespace HSQL
             else if (expression.Type == TypeOfConst.ListString)
                 return string.Join(",", Expression.Lambda<Func<List<string>>>(Expression.Convert(expression, TypeOfConst.ListString)).Compile().Invoke().Select(x => string.Format("'{0}'", x)));
 
-            throw new Exception("未处理异常");
+            throw new ExpressionException();
         }
 
         private static string Combining(string left, string symbol, string right)
