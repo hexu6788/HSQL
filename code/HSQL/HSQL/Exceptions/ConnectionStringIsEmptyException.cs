@@ -4,7 +4,7 @@ namespace HSQL.Exceptions
 {
     public class ConnectionStringIsEmptyException : Exception
     {
-        public ConnectionStringIsEmptyException(string message = "异常原因：连接字符串为空！") : base(message)
+        public ConnectionStringIsEmptyException(string message = "异常原因：连接字符串为空或错误！") : base(message)
         { 
         
         }

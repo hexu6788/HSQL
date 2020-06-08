@@ -8,7 +8,6 @@ namespace HSQL.Test
     [TestClass]
     public class UnitTestDataBase
     {
-        string connnectionString = $"Server=127.0.0.1;Database=test;Uid=root;Pwd=123456;";
 
         [TestMethod]
         public void TestInsert()
@@ -21,21 +20,21 @@ namespace HSQL.Test
             };
 
 
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
 
-            var result = database.Insert<Student>(student);
+            var result = database.Insert(student);
             Assert.IsTrue(result);
         }
 
         [TestMethod]
         public void TestUpdate()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
             database.Delete<Student>(x => x.Id.Contains("test_update_list"));
 
-            database.Insert<Student>(new Student()
+            database.Insert(new Student()
             {
                 Id = $"test_update_list",
                 Name = "zhangsan",
@@ -43,7 +42,7 @@ namespace HSQL.Test
                 SchoolId = "123"
             });
 
-            var result = database.Update<Student>(x => x.Id.Contains("test_update_list"), new Student() { Age = 19 });
+            var result = database.Update(x => x.Id.Contains("test_update_list"), new Student() { Age = 19 });
 
             database.Delete<Student>(x => x.Id.Contains("test_update_list"));
 
@@ -53,11 +52,11 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQuerySingle()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
             database.Delete<Student>(x => x.Id.Equals("test_query_single"));
 
-            var result = database.Insert<Student>(new Student()
+            var result = database.Insert(new Student()
             {
                 Id = "test_query_single",
                 Name = "zhangsan",
@@ -67,8 +66,6 @@ namespace HSQL.Test
 
             var student = database.Query<Student>(x => x.Id.Equals("test_query_single")).FirstOrDefault();
 
-            //var student = database.Query<Student>(x => x.Age == 19 && x.Id.Equals("test_query_single")).AddCondition(x => x.Name == "zhangsan").FirstOrDefault();
-
             Assert.AreEqual(19, student.Age);
             Assert.AreEqual("test_query_single", student.Id);
             Assert.AreEqual("zhangsan", student.Name);
@@ -77,7 +74,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQueryOrderBy()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
             var list = database.Query<Student>();
 
@@ -87,15 +84,22 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQueryAll()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
             database.Query<Student>().OrderBy(x => x.Id).ToList();
 
             database.Delete<Student>(x => !x.Id.Contains(""));
 
-            database.Insert<Student>(new Student()
+
+            database.Insert(new School()
+            {
+                Id = $"test_query_list123",
+                Name = "sdf"
+            });
+            database.Insert(new Student()
             {
                 Id = $"test_query_list",
+                SchoolId = "test_query_list123",
                 Name = "zhangsan",
                 Age = 19
             });
@@ -108,11 +112,11 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQueryList()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
             database.Delete<Student>(x => x.Id.Contains("test_query_list"));
 
 
-            database.Insert<Student>(new Student()
+            database.Insert(new Student()
             {
                 Id = $"test_query_list",
                 Name = "zhangsan",
@@ -131,11 +135,11 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQueryPageList()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
             database.Delete<Student>(x => x.Id.Contains("test_query_page_list"));
 
-            database.Insert<Student>(new Student()
+            database.Insert(new Student()
             {
                 Id = $"test_query_page_list",
                 Name = "zhangsan",
@@ -156,11 +160,11 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQueryPageList2()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
             database.Delete<Student>(x => x.Id.Contains("test_query_page_2_list"));
 
-            database.Insert<Student>(new Student()
+            database.Insert(new Student()
             {
                 Id = $"test_query_page_2_list",
                 Name = "zhangsan",
@@ -184,7 +188,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestDelete()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
             var result = database.Delete<Student>(x => x.Age > 0);
 
@@ -194,7 +198,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQuerySQL()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
             var list = database.Query("SELECT * FROM t_student;");
 
@@ -204,15 +208,16 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQuerySQLByParameters()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
-            var list = database.Query("SELECT * FROM t_student WHERE id = @id AND age > @age;", new
+            var list = database.Query("SELECT t.id,t.name,s.id AS school_id FROM t_student AS t LEFT JOIN t_school AS s ON t.school_id = s.id WHERE t.id = @id AND t.age > @age;", new
             {
-                id = "123",
+                id = "test_query_list",
                 age = 1
             });
 
             Assert.AreNotEqual(list, null);
+
         }
         
     }

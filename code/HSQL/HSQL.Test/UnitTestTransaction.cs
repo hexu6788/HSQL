@@ -10,12 +10,10 @@ namespace HSQL.Test
     [TestClass]
     public class UnitTestTransaction
     {
-        string connnectionString = $"Server=127.0.0.1;Database=test;Uid=root;Pwd=123456;";
-
         [TestMethod]
         public void TestTransactionInsert()
         {
-            var database = new Database(Dialect.MySQL, connnectionString);
+            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
 
             database.Transaction(() =>

@@ -26,17 +26,19 @@ namespace HSQL
 
         internal static dynamic CreateInstance(IDataReader reader)
         {
-            dynamic expando = new ExpandoObject();
+            IDictionary<string, object> expando = new ExpandoObject();
             for (int i = 0; i < reader.FieldCount; i++)
             {
-                try
-                {
-                    ((IDictionary<string, object>)expando).Add(reader.GetName(i), reader.GetValue(i));
-                }
-                catch
-                {
-                    ((IDictionary<string, object>)expando).Add(reader.GetName(i), null);
-                }
+                var columnName = reader.GetName(i);
+
+                if (expando.ContainsKey(columnName))
+                    throw new Exception($"查询的列名{columnName}重复！");
+
+                if (reader.IsDBNull(i))
+                    expando.Add(columnName, null);
+                else
+                    expando.Add(columnName, reader.GetValue(i));
+
             }
             return expando;
         }

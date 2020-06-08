@@ -6,6 +6,7 @@ namespace HSQL.DatabaseHelper
 {
     class SQLServerHelper
     {
+        
         internal static int ExecuteNonQuery(string connectionString, string commandText, params SqlParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(connectionString))

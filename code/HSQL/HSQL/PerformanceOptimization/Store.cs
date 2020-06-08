@@ -124,13 +124,14 @@ namespace HSQL.PerformanceOptimization
             if (parameters == null)
                 throw new EmptyParameterException();
 
+            PropertyInfo[] properties = parameters.GetType().GetProperties();
             if (dialect == Dialect.MySQL)
             {
-                return parameters.GetType().GetProperties().Select(property => (DbParameter)new MySqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToArray();
+                return properties.Select(property => (DbParameter)new MySqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToArray();
             }
             else if (dialect == Dialect.SQLServer)
             {
-                return parameters.GetType().GetProperties().Select(property => (DbParameter)new SqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToArray();
+                return properties.Select(property => (DbParameter)new SqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToArray();
             }
 
             throw new NoDialectException();

@@ -15,6 +15,53 @@ namespace HSQL
         private string _connectionString;
         private Dialect _dialect;
 
+        /// <summary>
+        /// 构建数据库对象
+        /// </summary>
+        /// <param name="dialect">实例数据类型</param>
+        /// <param name="server">服务器地址</param>
+        /// <param name="database">数据库名称</param>
+        /// <param name="userId">用户名</param>
+        /// <param name="password">密码</param>
+        /// <param name="pooling">是否启用线程池</param>
+        /// <param name="maximumPoolSize">最大线程池连接数</param>
+        /// <param name="minimumPoolSize">最小线程池连接数</param>
+        public Database(Dialect dialect, string server, string database, string userId, string password, bool pooling = true, int maximumPoolSize = 100, int minimumPoolSize = 0)
+        {
+            if (string.IsNullOrWhiteSpace(server)
+                || string.IsNullOrWhiteSpace(database)
+                || string.IsNullOrWhiteSpace(userId)
+                || string.IsNullOrWhiteSpace(password))
+                throw new ConnectionStringIsEmptyException();
+
+            if (maximumPoolSize < 0)
+                throw new ConnectionStringIsEmptyException($"连接池最大数不能小于零！");
+            if (maximumPoolSize > 100)
+                throw new ConnectionStringIsEmptyException($"连接池最大数不能大于一百！");
+
+            if (minimumPoolSize < 0)
+                throw new ConnectionStringIsEmptyException($"连接池最小数不能小于零！");
+            if (minimumPoolSize > maximumPoolSize)
+                throw new ConnectionStringIsEmptyException($"连接池最小数不能大于连接池最大数！");
+
+            _dialect = dialect;
+
+            switch (dialect)
+            {
+                case Dialect.MySQL:
+                    _connectionString = ConnectionStringBuilder.BuildMySqlConnectionString(server, database, userId, password, pooling, maximumPoolSize, minimumPoolSize);
+                    break;
+                case Dialect.SQLServer:
+                    _connectionString = ConnectionStringBuilder.BuildSqlConnectionString(server, database, userId, password, pooling, maximumPoolSize, minimumPoolSize);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// 构建数据库对象
+        /// </summary>
+        /// <param name="dialect">实例数据类型</param>
+        /// <param name="connectionString">连接字符串</param>
         public Database(Dialect dialect, string connectionString)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
@@ -24,7 +71,6 @@ namespace HSQL
             _connectionString = connectionString;
         }
 
-        
 
         /// <summary>
         /// 执行新增操作
@@ -165,7 +211,7 @@ namespace HSQL
             return list;
         }
 
-        
+
 
         /// <summary>
         /// 事务调用
