@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HSQL.Const;
+using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -11,7 +12,7 @@ namespace HSQL
             foreach (CustomAttributeData attribute in (keySelector.Body as MemberExpression).Member.CustomAttributes)
             {
                 string field = attribute.ConstructorArguments[0].Value as string;
-                source.SetOrderBy("ASC");
+                source.SetOrderBy(KeywordConst.ASC);
                 source.SetOrderField(field);
 
                 break;
@@ -24,7 +25,7 @@ namespace HSQL
             foreach (CustomAttributeData attribute in (keySelector.Body as MemberExpression).Member.CustomAttributes)
             {
                 string field = attribute.ConstructorArguments[0].Value as string;
-                source.SetOrderBy("DESC");
+                source.SetOrderBy(KeywordConst.DESC);
                 source.SetOrderField(field);
 
                 break;

@@ -63,6 +63,12 @@ namespace HSQL.PerformanceOptimization
             return columnNameList;
         }
 
+        internal static string GetColumnJoinString(Type type)
+        {
+            string columnJoinString = string.Join(",", GetColumnNameList(type));
+            return columnJoinString;
+        }
+
         internal static string GetPropertyColumnAttributeName(PropertyInfo property)
         {
             if (_columnAttributeNameStore.ContainsKey(property))

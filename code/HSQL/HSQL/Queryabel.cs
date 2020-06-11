@@ -7,6 +7,7 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace HSQL
 {
@@ -79,14 +80,14 @@ namespace HSQL
             Type type = typeof(T);
             List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
             string tableName = Store.GetTableName(type);
-            string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
+            string columnJoinString = Store.GetColumnJoinString(type);
             string whereString = ExpressionToSql.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
             if (!string.IsNullOrWhiteSpace(whereString))
                 sqlStringBuilder.Append($" WHERE {whereString}");
-            
+
             IDataReader reader = null;
             switch (_dialect)
             {
@@ -131,7 +132,7 @@ namespace HSQL
         {
             Type type = typeof(T);
             string tableName = Store.GetTableName(type);
-            string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
+            string columnJoinString = Store.GetColumnJoinString(type);
             List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
             int pageStart = (pageIndex - 1) * pageSize;
             string whereString = ExpressionToSql.ToWhereSql(_predicate);
@@ -181,15 +182,15 @@ namespace HSQL
             return list;
         }
 
-        public List<T> ToList(int pageIndex, int pageSize,out int total,out int totalPage)
+        public List<T> ToList(int pageIndex, int pageSize, out int total, out int totalPage)
         {
             Type type = typeof(T);
-            string tableName = Store.GetTableName(type);
-            string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
             List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
-            int pageStart = (pageIndex - 1) * pageSize;
-
+            string tableName = Store.GetTableName(type);
+            string columnJoinString = Store.GetColumnJoinString(type);
             string whereString = ExpressionToSql.ToWhereSql(_predicate);
+            
+            int pageStart = (pageIndex - 1) * pageSize;
 
             StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
             StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
@@ -248,10 +249,9 @@ namespace HSQL
         public T SingleOrDefault()
         {
             Type type = typeof(T);
-            string tableName = Store.GetTableName(type);
-            string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
             List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
-
+            string tableName = Store.GetTableName(type);
+            string columnJoinString = Store.GetColumnJoinString(type);
             string whereString = ExpressionToSql.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
@@ -285,7 +285,8 @@ namespace HSQL
                 sqlStringBuilder.Append($" OFFSET 1 ROWS FETCH NEXT 1 ROWS ONLY;");
                 reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
             }
-            else {
+            else
+            {
                 throw new NoDialectException();
             }
 
@@ -308,7 +309,7 @@ namespace HSQL
             Type type = typeof(T);
             List<PropertyInfo> propertyInfoList = Store.GetPropertyInfoList(type);
             string tableName = Store.GetTableName(type);
-            string columnJoinString = string.Join(",", Store.GetColumnNameList(type));
+            string columnJoinString = Store.GetColumnJoinString(type);
             string whereString = ExpressionToSql.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
@@ -317,7 +318,7 @@ namespace HSQL
                 sqlStringBuilder.Append($" WHERE {whereString}");
 
             IDataReader reader = null;
-            
+
             switch (_dialect)
             {
                 case Dialect.MySQL:

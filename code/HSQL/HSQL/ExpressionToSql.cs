@@ -104,7 +104,7 @@ namespace HSQL
             {
                 return Eval((Expression)expression);
             }
-            else if (expression.Object.Type.IsGenericType && expression.Method.Name.Equals("Contains"))
+            else if (expression.Object.Type.IsGenericType && expression.Method.Name.Equals(KeywordConst.Contains))
             {
                 string left = ResolveMemberName((MemberExpression)expression.Arguments[0]);
                 string right = "";
@@ -118,7 +118,7 @@ namespace HSQL
                 if (string.IsNullOrWhiteSpace(right))
                     throw new Exception("IN 右侧部分不能为空");
 
-                return Combining(left, "IN", $"({right})");
+                return Combining(left, KeywordConst.IN, $"({right})");
             }
             else
             {
@@ -135,10 +135,10 @@ namespace HSQL
 
                 switch (expression.Method.Name)
                 {
-                    case "Equals":
+                    case KeywordConst.Equals:
                         return Combining(left, "=", $"'{right}'");
-                    case "Contains":
-                        return Combining(left, "LIKE", $"'%{right}%'");
+                    case KeywordConst.Contains:
+                        return Combining(left, KeywordConst.LIKE, $"'%{right}%'");
                     default:
                         throw new ExpressionException();
                 }
@@ -176,9 +176,9 @@ namespace HSQL
             switch (nodeType)
             {
                 case ExpressionType.AndAlso:
-                    return "AND";
+                    return KeywordConst.AND;
                 case ExpressionType.OrElse:
-                    return "OR";
+                    return KeywordConst.OR;
                 case ExpressionType.Equal:
                     return "=";
                 case ExpressionType.NotEqual:
@@ -247,13 +247,13 @@ namespace HSQL
                 || symbol.Equals("!=")
                 || symbol.Equals("<")
                 || symbol.Equals("<=")
-                || symbol.Equals("IN")
-                || symbol.Equals("LIKE")
-                || symbol.Equals("AND"))
+                || symbol.Equals(KeywordConst.IN)
+                || symbol.Equals(KeywordConst.LIKE)
+                || symbol.Equals(KeywordConst.AND))
             {
                 return $"{left} {symbol} {right}";
             }
-            else if (symbol.Equals("OR"))
+            else if (symbol.Equals(KeywordConst.OR))
             {
                 if (!IsNormalExpression(left))
                     left = $"({left})";

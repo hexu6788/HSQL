@@ -36,6 +36,9 @@ namespace HSQL.Test
             });
         }
 
-        
+        public void a() {
+            string value = "";
+
+        }
     }
 }
