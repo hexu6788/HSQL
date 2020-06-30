@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace HSQL
 {
-    static class ExpressionExtensions
+    public static class ExpressionExtensions
     {
 
         private static Expression<T> Compose<T>(this Expression<T> first, Expression<T> second, Func<Expression, Expression, Expression> merge)

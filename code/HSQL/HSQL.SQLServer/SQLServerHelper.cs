@@ -2,11 +2,10 @@
 using System.Data;
 using System.Data.SqlClient;
 
-namespace HSQL.DatabaseHelper
+namespace HSQL.MSSQLServer
 {
-    class SQLServerHelper
+    internal class SQLServerHelper
     {
-        
         internal static int ExecuteNonQuery(string connectionString, string commandText, params SqlParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(connectionString))

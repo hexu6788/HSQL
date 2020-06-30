@@ -1,4 +1,5 @@
-﻿using HSQL.Const;
+﻿using HSQL.Base;
+using HSQL.Const;
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -7,30 +8,35 @@ namespace HSQL
 {
     public static class QueryabelExtensions
     {
-        public static Queryabel<TSource> OrderBy<TSource, TKey>(this Queryabel<TSource> source, Expression<Func<TSource, TKey>> keySelector)
+        public static IQueryabel<TSource> OrderBy<TSource, TKey>(this IQueryabel<TSource> source, Expression<Func<TSource, TKey>> keySelector)
         {
+            QueryabelBase<TSource> queryabel = (QueryabelBase<TSource>)source;
+
             foreach (CustomAttributeData attribute in (keySelector.Body as MemberExpression).Member.CustomAttributes)
             {
                 string field = attribute.ConstructorArguments[0].Value as string;
-                source.SetOrderBy(KeywordConst.ASC);
-                source.SetOrderField(field);
+                queryabel.SetOrderBy(KeywordConst.ASC);
+                queryabel.SetOrderField(field);
 
                 break;
             }
-            return source;
+            return (IQueryabel<TSource>)queryabel;
         }
 
-        public static Queryabel<TSource> OrderByDescending<TSource, TKey>(this Queryabel<TSource> source, Expression<Func<TSource, TKey>> keySelector)
+        public static IQueryabel<TSource> OrderByDescending<TSource, TKey>(this IQueryabel<TSource> source, Expression<Func<TSource, TKey>> keySelector)
         {
+            QueryabelBase<TSource> queryabel = (QueryabelBase<TSource>)source;
+
             foreach (CustomAttributeData attribute in (keySelector.Body as MemberExpression).Member.CustomAttributes)
             {
                 string field = attribute.ConstructorArguments[0].Value as string;
-                source.SetOrderBy(KeywordConst.DESC);
-                source.SetOrderField(field);
+                queryabel.SetOrderBy(KeywordConst.DESC);
+                queryabel.SetOrderField(field);
 
                 break;
             }
-            return source;
+            return (IQueryabel<TSource>)queryabel;
         }
+
     }
 }

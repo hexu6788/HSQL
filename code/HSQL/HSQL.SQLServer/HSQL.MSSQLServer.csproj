@@ -3,16 +3,20 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.0.6</Version>
     <Authors>何旭</Authors>
-    <Company />
+    <Company>何旭</Company>
+    <Product>HSQL</Product>
     <Description>HSQL 是一种轻量级的基于 .NET 的ORM框架</Description>
     <PackageProjectUrl>https://github.com/hexu6788/HSQL</PackageProjectUrl>
-    <Version>1.0.0.6</Version>
-    <SignAssembly>false</SignAssembly>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageId>HSQL-Standard</PackageId>
-    <AssemblyVersion>1.0.0.6</AssemblyVersion>
-    <FileVersion>1.0.0.6</FileVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HSQL\HSQL.csproj" />
+  </ItemGroup>
 
 </Project>

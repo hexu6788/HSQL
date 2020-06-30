@@ -1,27 +1,24 @@
 ﻿using HSQL.Attribute;
 using HSQL.Const;
 using HSQL.Exceptions;
-using HSQL.Model;
-using MySql.Data.MySqlClient;
+using HSQL.Factory;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace HSQL.PerformanceOptimization
+namespace HSQL.Base
 {
-    internal class Store
+    public class StoreBase
     {
         private static ConcurrentDictionary<Type, List<PropertyInfo>> _propertyInfoListStore = new ConcurrentDictionary<Type, List<PropertyInfo>>();
         private static ConcurrentDictionary<Type, string> _tableNameStore = new ConcurrentDictionary<Type, string>();
         private static ConcurrentDictionary<Type, List<string>> _columnNameListStore = new ConcurrentDictionary<Type, List<string>>();
         private static ConcurrentDictionary<PropertyInfo, string> _columnAttributeNameStore = new ConcurrentDictionary<PropertyInfo, string>();
 
-        internal static List<PropertyInfo> GetPropertyInfoList(Type type)
+        public static List<PropertyInfo> GetPropertyInfoList(Type type)
         {
             if (_propertyInfoListStore.ContainsKey(type))
                 return _propertyInfoListStore.GetValueOrDefault(type);
@@ -36,7 +33,7 @@ namespace HSQL.PerformanceOptimization
             return propertyInfoList;
         }
 
-        internal static string GetTableName(Type type)
+        public static string GetTableName(Type type)
         {
             if (_tableNameStore.ContainsKey(type))
                 return _tableNameStore.GetValueOrDefault(type);
@@ -63,7 +60,7 @@ namespace HSQL.PerformanceOptimization
             return columnNameList;
         }
 
-        internal static string GetColumnJoinString(Type type)
+        public static string GetColumnJoinString(Type type)
         {
             string columnJoinString = string.Join(",", GetColumnNameList(type));
             return columnJoinString;
@@ -81,7 +78,7 @@ namespace HSQL.PerformanceOptimization
             return name;
         }
 
-        internal static string BuildInsertSQL<T>(T instance)
+        public static string BuildInsertSQL<T>(T instance)
         {
             Type type = instance.GetType();
 
@@ -91,56 +88,17 @@ namespace HSQL.PerformanceOptimization
             return $"INSERT INTO {tableName}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(columnName => string.Format("@{0}", columnName)))});";
         }
 
-        internal static Tuple<string,DbParameter[]> BuildUpdateSQLAndParameter<T>(Dialect dialect,Expression<Func<T, bool>> expression, T instance)
-        {
-            string where = ExpressionToSql.ToWhereSql(expression);
-
-            List<Column> columnList = ExpressionBase.GetColumnListWithOutNull(instance);
-
-            string tableName = GetTableName(instance.GetType());
-
-            string sql = $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {where};";
-            
-            return new Tuple<string, DbParameter[]>(sql, BuildDbParameter(dialect, columnList));
-        }
-
-        internal static string BuildDeleteSQL<T>(Expression<Func<T, bool>> predicate)
+        public static string BuildDeleteSQL<T>(Expression<Func<T, bool>> predicate)
         {
             string tableName = GetTableName(typeof(T));
 
-            string where = ExpressionToSql.ToWhereSql(predicate);
+            string where = ExpressionFactory.ToWhereSql(predicate);
             if (string.IsNullOrWhiteSpace(where))
                 throw new ExpressionIsNullException();
 
             return $"DELETE FROM {tableName} WHERE {where};";
         }
 
-        internal static DbParameter[] BuildDbParameter(Dialect _dialect, List<Column> columnList)
-        {
-            if (_dialect == Dialect.MySQL)
-                return columnList.Select(x => (DbParameter)new MySqlParameter(x.Name, x.Value)).ToArray();
-            else if (_dialect == Dialect.SQLServer)
-                return columnList.Select(x => (DbParameter)new SqlParameter(x.Name, x.Value)).ToArray();
-
-            throw new NoDialectException();
-        }
-
-        internal static DbParameter[] DynamicToDbParameters(Dialect dialect, object parameters)
-        {
-            if (parameters == null)
-                throw new EmptyParameterException();
-
-            PropertyInfo[] properties = parameters.GetType().GetProperties();
-            if (dialect == Dialect.MySQL)
-            {
-                return properties.Select(property => (DbParameter)new MySqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToArray();
-            }
-            else if (dialect == Dialect.SQLServer)
-            {
-                return properties.Select(property => (DbParameter)new SqlParameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToArray();
-            }
-
-            throw new NoDialectException();
-        }
+        
     }
 }

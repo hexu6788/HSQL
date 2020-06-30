@@ -7,9 +7,17 @@
 HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操作的一种框架，通过简单的语法，使数据库操作不再成为难事。目前支持的数据库有 MySql、SQLServer。
 
 ### 安装方法
-
+核心
 ```csharp
-Install-Package HSQL-Standard
+Install-Package HSQL-standard -Version 1.0.0.6
+```
+MySQL
+```csharp
+Install-Package HSQL.MySQL -Version 1.0.0.6
+```
+MSSQLServer
+```csharp
+Install-Package HSQL.MSSQLServer -Version 1.0.0.6
 ```
 
 ### 使用方法
@@ -48,7 +56,7 @@ public class Student
     public long Birthday { get; set; }
 }
 ```
-> Table 标记一个表对象。如：[Table("t_student")] 代表 Student 类将映射为数据库表 t_student<br/>Column 标记一个列对象。如：[Column("id")] 代表 Id 属性将映射为数据库列 id
+Table 标记一个表对象。如：[Table("t_student")] 代表 Student 类将映射为数据库表 t_student<br/>Column 标记一个列对象。如：[Column("id")] 代表 Id 属性将映射为数据库列 id
 
 
 
@@ -57,12 +65,13 @@ public class Student
 
 > 连接字符串方式创建
 ```csharp
-var database = new Database(Dialect.MySQL, $"Server=127.0.0.1;Database=test;Uid=root;Pwd=123456;");
+var database = new MySQLDatabase("server=127.0.0.1;database=test;user id=root;password=123456;
+pooling=True;maxpoolsize=100;minpoolsize=0");
 ```
 
 > 参数方式创建，可设置连接池，默认开启线程池，线程池最大连接数为100，最小连接数为0
 ```csharp
-var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
+var database = new MySQLDatabase("127.0.0.1", "test", "root", "123456");
 ```
 
 
@@ -101,7 +110,9 @@ var result = database.Delete<Student>(x => x.Age > 0);
 
 <a id="查询">查询：</a>
 ```csharp
-var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query_list")).ToList();
+var list = database.Query<Student>(x => x.Age == 19 
+&& x.Id.Contains("test_query_list"))
+.ToList();
 ```
 > Query => ToList 方法表示查询操作。最终被解释为 SQL 语句：<br/>SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id LIKE '%test_query_list%';
 
@@ -110,7 +121,9 @@ var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query
 
 <a id="单实例查询">单实例查询：</a>
 ```csharp
-var student = database.Query<Student>(x => x.Age == 19 && x.Id.Equals("test_query_single")).FirstOrDefault();
+var student = database.Query<Student>(x => x.Age == 19 
+&& x.Id.Equals("test_query_single"))
+.FirstOrDefault();
 ```
 > Query => ToList 方法表示查询操作：<br/>当 Dialect 为 MySQL 时 最终被解释为 SQL 语句：<br/>SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id = 'test_query_single' LIMIT 0,1;<br/>当 Dialect 为 SQLServer 时 最终被解释为 SQL 语句：<br/>SELECT TOP 1 id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id = 'test_query_single';
 
@@ -119,7 +132,9 @@ var student = database.Query<Student>(x => x.Age == 19 && x.Id.Equals("test_quer
 
 <a id="分页查询">分页查询：</a>
 ```csharp
-var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query_page_list")).ToList(2, 10);
+var list = database.Query<Student>(x => x.Age == 19 
+&& x.Id.Contains("test_query_page_list"))
+.ToList(2, 10);
 ```
 > Query => ToList(2,10) 方法表示分页查询操作，pageIndex 为第几页，pageSize 为每页记录条数。<br/>最终被解释为 SQL 语句：<br/>SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id LIKE '%test_query_page_list%' LIMIT 10,10;
 
@@ -128,13 +143,20 @@ var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query
 
 <a id="灵活条件查询">灵活条件查询：</a>
 ```csharp
-var list = database.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query_page_list")).AddCondition(x => x.Name == "zhangsan").ToList(2, 10);
+var list = database.Query<Student>(x => x.Age == 19 
+&& x.Id.Contains("test_query_page_list"))
+.ConditionAnd(x => x.Name == "zhangsan")
+.ToList(2, 10);
 ```
->  AddCondition 方法可以对查询进行动态增加条件。<br/>最终解释的 SQL 的 WHERE 部分会包含 AND name = 'zhangsan'
+>  ConditionAnd 方法可以对查询进行动态增加条件。<br/>最终解释的 SQL 的 WHERE 部分会包含 AND name = 'zhangsan'
 
 <a id="SQL语句方式查询">SQL语句方式查询：</a>
 ```csharp
-var list = database.Query("SELECT t.id,t.name,s.id AS school_id FROM t_student AS t LEFT JOIN t_school AS s ON t.school_id = s.id WHERE t.id = @id AND t.age > @age;", new
+var list = database.Query("SELECT t.id,t.name,s.id AS school_id 
+FROM t_student AS t 
+LEFT JOIN t_school AS s ON t.school_id = s.id 
+WHERE t.id = @id AND t.age > @age;", 
+new
 {
     id = "test_query_list",
     age = 1
@@ -144,15 +166,17 @@ var list = database.Query("SELECT t.id,t.name,s.id AS school_id FROM t_student A
 
 <a id="事务">事务：</a>
 ```csharp
-database.Transaction(() => {
-    var result1 = database.Insert(new Student()
-    {
-        Id = "1",
-        Name = "zhangsan",
-        Age = 18,
-        SchoolId = "123"
-    });
-    var result2 = database.Update(x=>x.Id == "2", new Student()
+var stu1 = new Student()
+{
+    Id = "1",
+    Name = "zhangsan",
+    Age = 18,
+    SchoolId = "123"
+};
+database.Transaction(() => 
+{
+    var result1 = database.Insert(stu1);
+    var result2 = database.Update(x=> x.Id == "2", new Student()
     {
         Name = "zhangsan",
         Age = 18,

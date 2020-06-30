@@ -4,15 +4,15 @@ using System.Text;
 
 namespace HSQL.Model
 {
-    internal class Column
+    public class Column
     {
-        internal Column() { }
-        internal Column(string name, object value)
+        public Column() { }
+        public Column(string name, object value)
         {
             Name = name;
             Value = value;
         }
-        internal string Name { get; set; }
-        internal object Value { get; set; }
+        public string Name { get; set; }
+        public object Value { get; set; }
     }
 }

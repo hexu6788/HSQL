@@ -1,3 +1,4 @@
+using HSQL.MySQL;
 using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
@@ -10,12 +11,12 @@ namespace HSQL.Test
     [TestClass]
     public class UnitTestPerformance
     {
+        IDatabase database = new MySQLDatabase("127.0.0.1", "test", "root", "123456");
+
         [TestMethod]
         public void TestInsert()
         {
             var number = 30000;
-
-            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
             database.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();
@@ -37,7 +38,7 @@ namespace HSQL.Test
             {
                 list.ForEach(x =>
                 {
-                    var result = database.Insert<Student>(x);
+                    var result = database.Insert(x);
                 });
             });
 
@@ -53,7 +54,6 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQuerySingle()
         {
-            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
             //database.Delete<Student>(x => x.Age >= 0);
 
             int number = 1000;
@@ -87,8 +87,6 @@ namespace HSQL.Test
         public void TestQueryAll()
         {
             var number = 2000000;
-
-            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
 
             database.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();

@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HSQL.Test", "HSQL.Test\HSQL
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HSQL", "HSQL\HSQL.csproj", "{AC3561DE-2E0A-466D-B0CF-A09B65CC8051}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HSQL.MySQL", "HSQL.MySQL\HSQL.MySQL.csproj", "{DA3A0FFA-EA7E-49F2-8147-50F28800471C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HSQL.MSSQLServer", "HSQL.SQLServer\HSQL.MSSQLServer.csproj", "{AAC4C15D-F906-4F36-B6ED-F21F9F30328E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{AC3561DE-2E0A-466D-B0CF-A09B65CC8051}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC3561DE-2E0A-466D-B0CF-A09B65CC8051}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC3561DE-2E0A-466D-B0CF-A09B65CC8051}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA3A0FFA-EA7E-49F2-8147-50F28800471C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA3A0FFA-EA7E-49F2-8147-50F28800471C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA3A0FFA-EA7E-49F2-8147-50F28800471C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA3A0FFA-EA7E-49F2-8147-50F28800471C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAC4C15D-F906-4F36-B6ED-F21F9F30328E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAC4C15D-F906-4F36-B6ED-F21F9F30328E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAC4C15D-F906-4F36-B6ED-F21F9F30328E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAC4C15D-F906-4F36-B6ED-F21F9F30328E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

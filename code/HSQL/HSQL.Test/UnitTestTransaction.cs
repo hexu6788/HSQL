@@ -1,3 +1,4 @@
+using HSQL.MySQL;
 using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -12,15 +13,14 @@ namespace HSQL.Test
     [TestClass]
     public class UnitTestTransaction
     {
+        IDatabase database = new MySQLDatabase("127.0.0.1", "test", "root", "123456");
+
         [TestMethod]
         public void TestTransactionInsert()
         {
-            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
-
-
             database.Transaction(() =>
             {
-                var result1 = database.Insert<Student>(new Student()
+                var result1 = database.Insert(new Student()
                 {
                     Id = "1",
                     Name = "zhangsan",
@@ -28,7 +28,7 @@ namespace HSQL.Test
                     SchoolId = "123"
                 });
 
-                var result2 = database.Insert<Student>(new Student()
+                var result2 = database.Insert(new Student()
                 {
                     Id = "2",
                     Name = "zhangsan",
@@ -42,7 +42,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestTransactionManyTask()
         {
-            var database = new Database(Dialect.MySQL, "127.0.0.1", "test", "root", "123456");
+            var database = new MySQLDatabase("127.0.0.1", "test", "root", "123456");
 
             List<Task> list = new List<Task>();
             for (var i = 0; i < 1000; i++)
@@ -53,7 +53,7 @@ namespace HSQL.Test
                     {
                         for (var i = 0; i < 100; i++)
                         {
-                            database.Insert<Student>(new Student()
+                            database.Insert(new Student()
                             {
                                 Id = Guid.NewGuid().ToString(),
                                 Name = "zhangsan",

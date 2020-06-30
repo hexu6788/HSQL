@@ -2,9 +2,9 @@
 using System;
 using System.Data;
 
-namespace HSQL.DatabaseHelper
+namespace HSQL.MySQL
 {
-    class MySQLHelper
+    internal class MySQLHelper
     {
         internal static int ExecuteNonQuery(string connectionString, string commandText, params MySqlParameter[] parameters)
         {
