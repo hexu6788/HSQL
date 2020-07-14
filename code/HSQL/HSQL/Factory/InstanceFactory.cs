@@ -84,7 +84,8 @@ namespace HSQL.Factory
             {
                 while (reader.Read())
                 {
-                    list.Add(Create(reader));
+                    dynamic a = Create(reader);
+                    list.Add(a);
                 }
             }
             catch (Exception ex)

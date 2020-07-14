@@ -1,18 +1,19 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Version>1.0.0.6</Version>
-    <PackageProjectUrl>https://github.com/hexu6788/HSQL</PackageProjectUrl>
-    <Description>HSQL 是一种轻量级的基于 .NET 的ORM框架</Description>
-    <Product>HSQL</Product>
-    <Company>何旭</Company>
-    <Authors>何旭</Authors>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Description>HSQL 是一种轻量级的基于 .NET 的ORM框架</Description>
+    <Authors>何旭</Authors>
+    <Company>何旭</Company>
+    <Product>HSQL</Product>
+    <RepositoryUrl>https://github.com/hexu6788/HSQL</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/hexu6788/HSQL</PackageProjectUrl>
+    <Version>1.0.0.7</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MySql.Data" Version="8.0.20" />
+    <PackageReference Include="MySql.Data" Version="8.0.21" />
   </ItemGroup>
 
   <ItemGroup>
