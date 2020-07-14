@@ -11,14 +11,14 @@ namespace HSQL.Test
     [TestClass]
     public class UnitTestPerformance
     {
-        IDatabase database = new MySQLDatabase("127.0.0.1", "test", "root", "123456");
+        IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
 
         [TestMethod]
         public void TestInsert()
         {
             var number = 30000;
 
-            database.Delete<Student>(x => x.Age >= 0);
+            dbContext.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();
             for (var i = 0; i < number; i++)
             {
@@ -34,11 +34,11 @@ namespace HSQL.Test
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            database.Transaction(() =>
+            dbContext.Transaction(() =>
             {
                 list.ForEach(x =>
                 {
-                    var result = database.Insert(x);
+                    var result = dbContext.Insert(x);
                 });
             });
 
@@ -76,7 +76,7 @@ namespace HSQL.Test
 
             for (var j = 0; j < number; j++)
             {
-                var student = database.Query<Student>(x => x.Age == 18 && x.Id.Equals($"{j}") && x.SchoolId.Equals("123")).SingleOrDefault();
+                var student = dbContext.Query<Student>(x => x.Age == 18 && x.Id.Equals($"{j}") && x.SchoolId.Equals("123")).SingleOrDefault();
             }
 
             stopwatch.Stop();
@@ -88,7 +88,7 @@ namespace HSQL.Test
         {
             var number = 2000000;
 
-            database.Delete<Student>(x => x.Age >= 0);
+            dbContext.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();
             for (var i = 0; i < number; i++)
             {
@@ -104,11 +104,11 @@ namespace HSQL.Test
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            database.Transaction(() =>
+            dbContext.Transaction(() =>
             {
                 list.ForEach(x =>
                 {
-                    var student = database.Query<Student>(x => x.Age == 18).ToList();
+                    var student = dbContext.Query<Student>(x => x.Age == 18).ToList();
                 });
             });
             stopwatch.Stop();

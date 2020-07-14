@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace HSQL
 {
-    public interface IDatabase
+    public interface IDbContext
     {
         /// <summary>
         /// 执行新增操作

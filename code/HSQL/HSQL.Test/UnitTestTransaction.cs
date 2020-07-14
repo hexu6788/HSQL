@@ -3,7 +3,6 @@ using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace HSQL.Test
@@ -13,14 +12,14 @@ namespace HSQL.Test
     [TestClass]
     public class UnitTestTransaction
     {
-        IDatabase database = new MySQLDatabase("127.0.0.1", "test", "root", "123456");
+        IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
 
         [TestMethod]
         public void TestTransactionInsert()
         {
-            database.Transaction(() =>
+            dbContext.Transaction(() =>
             {
-                var result1 = database.Insert(new Student()
+                var result1 = dbContext.Insert(new Student()
                 {
                     Id = "1",
                     Name = "zhangsan",
@@ -28,7 +27,7 @@ namespace HSQL.Test
                     SchoolId = "123"
                 });
 
-                var result2 = database.Insert(new Student()
+                var result2 = dbContext.Insert(new Student()
                 {
                     Id = "2",
                     Name = "zhangsan",
@@ -42,7 +41,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestTransactionManyTask()
         {
-            var database = new MySQLDatabase("127.0.0.1", "test", "root", "123456");
+            var database = new DbContext("127.0.0.1", "test", "root", "123456");
 
             List<Task> list = new List<Task>();
             for (var i = 0; i < 1000; i++)

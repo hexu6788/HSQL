@@ -3,7 +3,7 @@ using System.Transactions;
 
 namespace HSQL.Base
 {
-    public class DatabaseBase
+    public class DbContextBase
     {
         protected string _connectionString;
 

@@ -9,14 +9,14 @@ using System.Linq.Expressions;
 
 namespace HSQL.MySQL
 {
-    public class MySQLDatabase : DatabaseBase, IDatabase
+    public class DbContext : DbContextBase, IDbContext
     {
         /// <summary>
         /// 构建数据库对象
         /// </summary>
         /// <param name="dialect">实例数据类型</param>
         /// <param name="connectionString">连接字符串</param>
-        public MySQLDatabase(string connectionString)
+        public DbContext(string connectionString)
         {
             if (string.IsNullOrWhiteSpace(connectionString))
                 throw new ConnectionStringIsEmptyException();
@@ -34,7 +34,7 @@ namespace HSQL.MySQL
         /// <param name="pooling">是否启用线程池</param>
         /// <param name="maximumPoolSize">最大线程池连接数</param>
         /// <param name="minimumPoolSize">最小线程池连接数</param>
-        public MySQLDatabase(string server, string database, string userId, string password, bool pooling = true, int maximumPoolSize = 100, int minimumPoolSize = 0)
+        public DbContext(string server, string database, string userId, string password, bool pooling = true, int maximumPoolSize = 100, int minimumPoolSize = 0)
         {
             if (string.IsNullOrWhiteSpace(server)
                 || string.IsNullOrWhiteSpace(database)
