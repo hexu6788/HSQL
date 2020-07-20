@@ -14,8 +14,10 @@ namespace HSQL.Factory
             T instance = default(T);
             try
             {
-                if (reader.Read())
+                while (reader.Read())
+                {
                     instance = Create<T>(reader, propertyInfoList);
+                }
             }
             finally
             {

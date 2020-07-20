@@ -6,6 +6,7 @@ using HSQL.MySQL;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -51,7 +52,7 @@ namespace HSQL.MySQL
                 stringBuilder.Append($" WHERE {whereString}");
             }
 
-            int total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, stringBuilder.ToString()));
+            int total = Convert.ToInt32(MySQLHelper.ExecuteScalar(stringBuilder.ToString()));
             return total;
         }
 
@@ -77,9 +78,8 @@ namespace HSQL.MySQL
                 sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
             sqlStringBuilder.Append(";");
-            IDataReader reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
 
-            List<T> list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
+            List<T> list = MySQLHelper.ExecuteReader<T>(propertyInfoList, sqlStringBuilder.ToString());
             return list;
         }
 
@@ -101,9 +101,8 @@ namespace HSQL.MySQL
                 sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
             sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
-            IDataReader reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
 
-            List<T> list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
+            List<T> list = MySQLHelper.ExecuteReader<T>(propertyInfoList, sqlStringBuilder.ToString());
             return list;
         }
 
@@ -127,16 +126,15 @@ namespace HSQL.MySQL
             }
 
             pageStringBuilder.Append(";");
-            total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
+            total = Convert.ToInt32(MySQLHelper.ExecuteScalar(pageStringBuilder.ToString()));
             totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
 
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                 sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
             sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
-            IDataReader reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
 
-            List<T> list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
+            List<T> list = MySQLHelper.ExecuteReader<T>(propertyInfoList, sqlStringBuilder.ToString());
             return list;
         }
 
@@ -158,14 +156,13 @@ namespace HSQL.MySQL
             }
 
             pageStringBuilder.Append(";");
-            int total = Convert.ToInt32(MySQLHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
+            int total = Convert.ToInt32(MySQLHelper.ExecuteScalar(pageStringBuilder.ToString()));
             if (total > 1)
                 throw new SingleOrDefaultException();
 
             sqlStringBuilder.Append($" LIMIT 0,1;");
-            IDataReader reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
 
-            T instance = InstanceFactory.CreateSingleAndDisposeReader<T>(reader, propertyInfoList);
+            T instance = MySQLHelper.ExecuteReader<T>(propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
             return instance;
         }
 
@@ -186,9 +183,8 @@ namespace HSQL.MySQL
                 sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
             sqlStringBuilder.Append($" LIMIT 0,1;");
-            IDataReader reader = MySQLHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
 
-            T instance = InstanceFactory.CreateSingleAndDisposeReader<T>(reader, propertyInfoList);
+            T instance = MySQLHelper.ExecuteReader<T>(propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
             return instance;
         }
     }

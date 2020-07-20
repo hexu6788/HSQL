@@ -3,7 +3,7 @@ using System.Transactions;
 
 namespace HSQL.Base
 {
-    public class DbContextBase
+    public abstract class DbContextBase
     {
         protected string _connectionString;
 
@@ -14,15 +14,8 @@ namespace HSQL.Base
         /// <param name="database">数据库</param>
         /// <param name="userID">用户名</param>
         /// <param name="password">密码</param>
-        /// <param name="pooling">是否启用连接池</param>
-        /// <param name="maximumPoolSize">连接池最大数</param>
-        /// <param name="minimumPoolSize">连接池最小数</param>
         /// <returns>连接字符串</returns>
-        public virtual string BuildConnectionString(string server, string database, string userID, string password, bool pooling, int maximumPoolSize, int minimumPoolSize)
-        {
-            throw new Exception("BuildConnectionString Exception");
-        }
-
+        public abstract string BuildConnectionString(string server, string database, string userID, string password);
 
         /// <summary>
         /// 事务调用

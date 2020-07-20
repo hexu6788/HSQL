@@ -4,8 +4,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace HSQL.Test
 {
-
-
     [TestClass]
     public class UnitTestDataBase
     {
@@ -14,14 +12,13 @@ namespace HSQL.Test
         [TestMethod]
         public void TestInsert()
         {
-            var student = new Student()
+            var result = dbContext.Insert(new Student()
             {
                 Name = "zhangsan",
                 Age = 18,
                 SchoolId = "123"
-            };
+            });
 
-            var result = dbContext.Insert(student);
             Assert.IsTrue(result);
         }
 
@@ -68,7 +65,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQueryOrderBy()
         {
-            var list = dbContext.Query<Student>();
+            var list = dbContext.Query<Student>().ToList();
         }
 
         [TestMethod]
@@ -204,7 +201,5 @@ namespace HSQL.Test
             Assert.AreNotEqual(list, null);
 
         }
-
-
     }
 }

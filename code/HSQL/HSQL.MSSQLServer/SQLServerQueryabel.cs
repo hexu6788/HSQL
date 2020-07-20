@@ -3,7 +3,7 @@ using HSQL.Exceptions;
 using HSQL.Factory;
 using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -49,7 +49,7 @@ namespace HSQL.MSSQLServer
                 stringBuilder.Append($" WHERE {whereString}");
             }
 
-            int total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, stringBuilder.ToString()));
+            int total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(stringBuilder.ToString()));
             return total;
         }
 
@@ -77,9 +77,8 @@ namespace HSQL.MSSQLServer
                 sqlStringBuilder.Append($" ORDER BY id");
 
             sqlStringBuilder.Append($" OFFSET 1 ROWS FETCH NEXT 9999999 ROWS ONLY;");
-            IDataReader reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
 
-            List<T> list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
+            List<T> list = SQLServerHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString());
             return list;
         }
 
@@ -103,9 +102,8 @@ namespace HSQL.MSSQLServer
                 sqlStringBuilder.Append($" ORDER BY id");
 
             sqlStringBuilder.Append($" OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
-            IDataReader reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
 
-            List<T> list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
+            List<T> list = SQLServerHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString());
             return list;
         }
 
@@ -129,7 +127,7 @@ namespace HSQL.MSSQLServer
             }
 
             pageStringBuilder.Append(";");
-            total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
+            total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(pageStringBuilder.ToString()));
             totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
 
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
@@ -138,9 +136,8 @@ namespace HSQL.MSSQLServer
                 sqlStringBuilder.Append($" ORDER BY id");
 
             sqlStringBuilder.Append($" OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
-            IDataReader reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
 
-            List<T> list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
+            List<T> list = SQLServerHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString());
 
             return list;
         }
@@ -163,7 +160,7 @@ namespace HSQL.MSSQLServer
             }
 
             pageStringBuilder.Append(";");
-            int total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(_connectionString, pageStringBuilder.ToString()));
+            int total = Convert.ToInt32(SQLServerHelper.ExecuteScalar(pageStringBuilder.ToString()));
             if (total > 1)
                 throw new SingleOrDefaultException();
 
@@ -173,9 +170,8 @@ namespace HSQL.MSSQLServer
                 sqlStringBuilder.Append($" ORDER BY id");
 
             sqlStringBuilder.Append($" OFFSET 1 ROWS FETCH NEXT 1 ROWS ONLY;");
-            IDataReader reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
 
-            T instance = InstanceFactory.CreateSingleAndDisposeReader<T>(reader, propertyInfoList);
+            T instance = SQLServerHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
             return instance;
         }
 
@@ -198,9 +194,8 @@ namespace HSQL.MSSQLServer
                 sqlStringBuilder.Append($" ORDER BY id");
 
             sqlStringBuilder.Append($" OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;");
-            IDataReader reader = SQLServerHelper.ExecuteReader(_connectionString, sqlStringBuilder.ToString());
 
-            T instance = InstanceFactory.CreateSingleAndDisposeReader<T>(reader, propertyInfoList);
+            T instance = SQLServerHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
             return instance;
         }
     }
