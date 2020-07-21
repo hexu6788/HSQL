@@ -7,9 +7,9 @@ using System.Reflection;
 
 namespace HSQL.MySQL
 {
-    internal class MySQLHelper
+    internal class MySQLHelper : IDbSQLHelper
     {
-        public static int ExecuteNonQuery(string commandText, params IDbDataParameter[] parameters)
+        public int ExecuteNonQuery(string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -30,47 +30,7 @@ namespace HSQL.MySQL
             return result;
         }
 
-        public static List<dynamic> ExecuteReader(string commandText, params IDbDataParameter[] parameters)
-        {
-            if (string.IsNullOrWhiteSpace(commandText))
-                throw new ArgumentNullException("执行命令不能为空");
-
-            List<dynamic> list = new List<dynamic>();
-            using (IConnector connector = MySQLConnectionPools.GetConnector())
-            {
-                IDbCommand command = connector.GetConnection().CreateCommand();
-                command.CommandText = commandText;
-                foreach (IDbDataParameter parameter in parameters)
-                {
-                    command.Parameters.Add(parameter);
-                }
-                IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
-                list = InstanceFactory.CreateListAndDisposeReader(reader);
-            }
-            return list;
-        }
-
-        public static List<T> ExecuteReader<T>(List<PropertyInfo> propertyInfoList, string commandText, params IDbDataParameter[] parameters)
-        {
-            if (string.IsNullOrWhiteSpace(commandText))
-                throw new ArgumentNullException("执行命令不能为空");
-
-            List<T> list = new List<T>();
-            using (IConnector connector = MySQLConnectionPools.GetConnector())
-            {
-                IDbCommand command = connector.GetConnection().CreateCommand();
-                command.CommandText = commandText;
-                foreach (IDbDataParameter parameter in parameters)
-                {
-                    command.Parameters.Add(parameter);
-                }
-                IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
-                list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
-            }
-            return list;
-        }
-
-        public static object ExecuteScalar(string commandText, params IDbDataParameter[] parameters)
+        public object ExecuteScalar(string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -90,5 +50,46 @@ namespace HSQL.MySQL
             }
             return result;
         }
+
+        public List<dynamic> ExecuteList(string commandText, params IDbDataParameter[] parameters)
+        {
+            if (string.IsNullOrWhiteSpace(commandText))
+                throw new ArgumentNullException("执行命令不能为空");
+
+            List<dynamic> list = new List<dynamic>();
+            using (IConnector connector = MySQLConnectionPools.GetConnector())
+            {
+                IDbCommand command = connector.GetConnection().CreateCommand();
+                command.CommandText = commandText;
+                foreach (IDbDataParameter parameter in parameters)
+                {
+                    command.Parameters.Add(parameter);
+                }
+                IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
+                list = InstanceFactory.CreateListAndDisposeReader(reader);
+            }
+            return list;
+        }
+
+        public List<T> ExecuteList<T>(List<PropertyInfo> propertyInfoList, string commandText, params IDbDataParameter[] parameters)
+        {
+            if (string.IsNullOrWhiteSpace(commandText))
+                throw new ArgumentNullException("执行命令不能为空");
+
+            List<T> list = new List<T>();
+            using (IConnector connector = MySQLConnectionPools.GetConnector())
+            {
+                IDbCommand command = connector.GetConnection().CreateCommand();
+                command.CommandText = commandText;
+                foreach (IDbDataParameter parameter in parameters)
+                {
+                    command.Parameters.Add(parameter);
+                }
+                IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
+                list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
+            }
+            return list;
+        }
+
     }
 }

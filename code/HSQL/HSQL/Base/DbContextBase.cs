@@ -5,7 +5,7 @@ namespace HSQL.Base
 {
     public abstract class DbContextBase
     {
-        protected string _connectionString;
+        protected IDbSQLHelper _dbSQLHelper;
 
         /// <summary>
         /// 构建连接字符串

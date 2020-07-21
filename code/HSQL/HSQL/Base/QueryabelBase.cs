@@ -5,7 +5,7 @@ namespace HSQL.Base
 {
     public class QueryabelBase<T>
     {
-        protected string _connectionString;
+        protected IDbSQLHelper _dbSQLHelper;
         protected Expression<Func<T, bool>> _predicate;
         protected string _orderField = string.Empty;
         protected string _orderBy = string.Empty;

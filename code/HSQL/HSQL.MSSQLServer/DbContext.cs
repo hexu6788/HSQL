@@ -3,7 +3,6 @@ using HSQL.Exceptions;
 using HSQL.Factory;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
 using System.Linq.Expressions;
 
@@ -11,18 +10,6 @@ namespace HSQL.MSSQLServer
 {
     public class DbContext : DbContextBase, IDbContext
     {
-        /// <summary>
-        /// 构建数据库对象
-        /// </summary>
-        /// <param name="connectionString">连接字符串</param>
-        public DbContext(string connectionString)
-        {
-            if (string.IsNullOrWhiteSpace(connectionString))
-                throw new ConnectionStringIsEmptyException();
-
-            _connectionString = connectionString;
-        }
-
         /// <summary>
         /// 构建数据库对象
         /// </summary>
@@ -42,9 +29,10 @@ namespace HSQL.MSSQLServer
             if (poolSize <= 0)
                 throw new ConnectionStringIsEmptyException($"连接数最小为一个！");
 
-            _connectionString = BuildConnectionString(server, database, userId, password);
+            string connectionString = BuildConnectionString(server, database, userId, password);
+            SQLServerConnectionPools.Init(connectionString, poolSize);
 
-            SQLServerConnectionPools.Init(_connectionString, poolSize);
+            _dbSQLHelper = new SQLServerHelper();
         }
 
         public override string BuildConnectionString(string server, string database, string userID, string password)
@@ -67,7 +55,7 @@ namespace HSQL.MSSQLServer
             string sql = StoreBase.BuildInsertSQL(instance);
             SqlParameter[] parameters = SQLServerStore.BuildSqlParameters(ExpressionFactory.GetColumnList(instance));
 
-            return SQLServerHelper.ExecuteNonQuery(sql, parameters) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(sql, parameters) > 0;
         }
 
         public bool Update<T>(Expression<Func<T, bool>> expression, T instance)
@@ -79,7 +67,7 @@ namespace HSQL.MSSQLServer
 
             Tuple<string, SqlParameter[]> result = SQLServerStore.BuildUpdateSQLAndParameters(expression, instance);
 
-            return SQLServerHelper.ExecuteNonQuery(result.Item1, result.Item2) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(result.Item1, result.Item2) > 0;
         }
 
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
@@ -89,7 +77,7 @@ namespace HSQL.MSSQLServer
 
             string sql = StoreBase.BuildDeleteSQL(predicate);
 
-            return SQLServerHelper.ExecuteNonQuery(sql) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(sql) > 0;
         }
 
         public IQueryabel<T> Query<T>()
@@ -99,7 +87,7 @@ namespace HSQL.MSSQLServer
 
         public IQueryabel<T> Query<T>(Expression<Func<T, bool>> predicate)
         {
-            IQueryabel<T> queryabel = new SQLServerQueryabel<T>(_connectionString, predicate);
+            IQueryabel<T> queryabel = new SQLServerQueryabel<T>(_dbSQLHelper, predicate);
             return queryabel;
         }
 
@@ -108,7 +96,7 @@ namespace HSQL.MSSQLServer
             if (string.IsNullOrWhiteSpace(sql))
                 throw new EmptySQLException();
 
-            List<dynamic> list = SQLServerHelper.ExecuteList(sql);
+            List<dynamic> list = _dbSQLHelper.ExecuteList(sql);
             return list;
         }
 
@@ -119,7 +107,7 @@ namespace HSQL.MSSQLServer
 
             SqlParameter[] dbParameters = SQLServerStore.DynamicToSqlParameters(parameter);
 
-            List<dynamic> list = SQLServerHelper.ExecuteList(sql, dbParameters);
+            List<dynamic> list = _dbSQLHelper.ExecuteList(sql, dbParameters);
             return list;
         }
     }

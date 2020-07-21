@@ -29,9 +29,10 @@ namespace HSQL.MySQL
             if (poolSize <= 0)
                 throw new ConnectionStringIsEmptyException($"连接数最小为一个！");
 
-            _connectionString = BuildConnectionString(server, database, userId, password);
+            string connectionString = BuildConnectionString(server, database, userId, password);
+            MySQLConnectionPools.Init(connectionString, poolSize);
 
-            MySQLConnectionPools.Init(_connectionString, poolSize);
+            _dbSQLHelper = new MySQLHelper();
         }
 
         public override string BuildConnectionString(string server, string database, string userID, string password)
@@ -54,7 +55,7 @@ namespace HSQL.MySQL
             string sql = StoreBase.BuildInsertSQL(instance);
             MySqlParameter[] parameters = MySQLStore.BuildMySqlParameters(ExpressionFactory.GetColumnList(instance));
 
-            return MySQLHelper.ExecuteNonQuery(sql, parameters) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(sql, parameters) > 0;
         }
 
         public bool Update<T>(Expression<Func<T, bool>> expression, T instance)
@@ -66,7 +67,7 @@ namespace HSQL.MySQL
 
             Tuple<string, MySqlParameter[]> result = MySQLStore.BuildUpdateSQLAndParameters(expression, instance);
 
-            return MySQLHelper.ExecuteNonQuery(result.Item1, result.Item2) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(result.Item1, result.Item2) > 0;
         }
 
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
@@ -76,7 +77,7 @@ namespace HSQL.MySQL
 
             string sql = StoreBase.BuildDeleteSQL(predicate);
 
-            return MySQLHelper.ExecuteNonQuery(sql) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(sql) > 0;
         }
 
         public IQueryabel<T> Query<T>()
@@ -86,7 +87,7 @@ namespace HSQL.MySQL
 
         public IQueryabel<T> Query<T>(Expression<Func<T, bool>> predicate)
         {
-            IQueryabel<T> queryabel = new MySQLQueryabel<T>(_connectionString, predicate);
+            IQueryabel<T> queryabel = new MySQLQueryabel<T>(_dbSQLHelper, predicate);
             return queryabel;
         }
 
@@ -95,7 +96,7 @@ namespace HSQL.MySQL
             if (string.IsNullOrWhiteSpace(sql))
                 throw new EmptySQLException();
 
-            List<dynamic> list = MySQLHelper.ExecuteReader(sql);
+            List<dynamic> list = _dbSQLHelper.ExecuteList(sql);
             return list;
         }
 
@@ -105,7 +106,7 @@ namespace HSQL.MySQL
                 throw new EmptySQLException();
 
             MySqlParameter[] dbParameters = MySQLStore.DynamicToMySqlParameters(parameter);
-            List<dynamic> list = MySQLHelper.ExecuteReader(sql, dbParameters);
+            List<dynamic> list = _dbSQLHelper.ExecuteList(sql, dbParameters);
             return list;
         }
     }
