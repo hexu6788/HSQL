@@ -7,17 +7,13 @@
 HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操作的一种框架，通过简单的语法，使数据库操作不再成为难事。目前支持的数据库有 MySql、SQLServer。
 
 ### 安装方法
-核心
-```csharp
-Install-Package HSQL-standard -Version 1.0.0.6
-```
 MySQL
 ```csharp
-Install-Package HSQL.MySQL -Version 1.0.0.6
+Install-Package HSQL.MySQL -Version 1.0.0.8
 ```
 MSSQLServer
 ```csharp
-Install-Package HSQL.MSSQLServer -Version 1.0.0.6
+Install-Package HSQL.MSSQLServer -Version 1.0.0.8
 ```
 
 ### 使用方法
@@ -63,21 +59,15 @@ Table 标记一个表对象。如：[Table("t_student")] 代表 Student 类将�
 
 <a id="创建数据库操作实例">创建数据库操作实例：</a>
 
-> 连接字符串方式创建
+> 参数方式创建，可设置连接池，默认开启连接池，连接池默认数量为3
 ```csharp
-var database = new MySQLDatabase("server=127.0.0.1;database=test;user id=root;password=123456;
-pooling=True;maxpoolsize=100;minpoolsize=0");
-```
-
-> 参数方式创建，可设置连接池，默认开启线程池，线程池最大连接数为100，最小连接数为0
-```csharp
-var database = new MySQLDatabase("127.0.0.1", "test", "root", "123456");
+IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
 ```
 
 
 <a id="新增">新增：</a>
 ```csharp
-var result = database.Insert(new Student()
+var result = dbContext.Insert(new Student()
 {
     Name = "zhangsan",
     Age = 18,
@@ -91,7 +81,7 @@ var result = database.Insert(new Student()
 
 <a id="修改">修改：</a>
 ```csharp
-var result = database.Update(x => x.Id.Contains("test_update_list"), new Student() { Age = 19 });
+var result = dbContext.Update(x => x.Id.Contains("test_update_list"), new Student() { Age = 19 });
 ```
 > Update 方法表示更新操作。如：<br/>参数1：x => x.Id.Contains("test_update_list") 被解释为 WHERE id LIKE '%test_update_list%' <br/>参数2：new Student() { Age = 19 } 被解释为 SET age = @age <br/>最终SQL语句为：<br/>UPDATE t_student SET age = @age WHERE id LIKE '%test_update_list%';
 
@@ -101,7 +91,7 @@ var result = database.Update(x => x.Id.Contains("test_update_list"), new Student
 
 <a id="删除">删除：</a>
 ```csharp
-var result = database.Delete<Student>(x => x.Age > 0);
+var result = dbContext.Delete<Student>(x => x.Age > 0);
 ```
 > Delete 方法表示删除操作。最终被解释为 SQL 语句：<br/>DELETE FROM t_student WHERE age > 0;
 
@@ -110,7 +100,7 @@ var result = database.Delete<Student>(x => x.Age > 0);
 
 <a id="查询">查询：</a>
 ```csharp
-var list = database.Query<Student>(x => x.Age == 19 
+var list = dbContext.Query<Student>(x => x.Age == 19 
 && x.Id.Contains("test_query_list"))
 .ToList();
 ```
@@ -121,7 +111,7 @@ var list = database.Query<Student>(x => x.Age == 19
 
 <a id="单实例查询">单实例查询：</a>
 ```csharp
-var student = database.Query<Student>(x => x.Age == 19 
+var student = dbContext.Query<Student>(x => x.Age == 19 
 && x.Id.Equals("test_query_single"))
 .FirstOrDefault();
 ```
@@ -132,7 +122,7 @@ var student = database.Query<Student>(x => x.Age == 19
 
 <a id="分页查询">分页查询：</a>
 ```csharp
-var list = database.Query<Student>(x => x.Age == 19 
+var list = dbContext.Query<Student>(x => x.Age == 19 
 && x.Id.Contains("test_query_page_list"))
 .ToList(2, 10);
 ```
@@ -143,7 +133,7 @@ var list = database.Query<Student>(x => x.Age == 19
 
 <a id="灵活条件查询">灵活条件查询：</a>
 ```csharp
-var list = database.Query<Student>(x => x.Age == 19 
+var list = dbContext.Query<Student>(x => x.Age == 19 
 && x.Id.Contains("test_query_page_list"))
 .ConditionAnd(x => x.Name == "zhangsan")
 .ToList(2, 10);
@@ -152,7 +142,7 @@ var list = database.Query<Student>(x => x.Age == 19
 
 <a id="SQL语句方式查询">SQL语句方式查询：</a>
 ```csharp
-var list = database.Query("SELECT t.id,t.name,s.id AS school_id 
+var list = dbContext.Query("SELECT t.id,t.name,s.id AS school_id 
 FROM t_student AS t 
 LEFT JOIN t_school AS s ON t.school_id = s.id 
 WHERE t.id = @id AND t.age > @age;", 
@@ -173,10 +163,10 @@ var stu1 = new Student()
     Age = 18,
     SchoolId = "123"
 };
-database.Transaction(() => 
+dbContext.Transaction(() => 
 {
-    var result1 = database.Insert(stu1);
-    var result2 = database.Update(x=> x.Id == "2", new Student()
+    var result1 = dbContext.Insert(stu1);
+    var result2 = dbContext.Update(x=> x.Id == "2", new Student()
     {
         Name = "zhangsan",
         Age = 18,
