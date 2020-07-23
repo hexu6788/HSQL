@@ -1,5 +1,7 @@
-﻿using HSQL.ConnectionPools;
+﻿using HSQL.Base;
+using HSQL.ConnectionPools;
 using HSQL.Factory;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -7,24 +9,33 @@ using System.Reflection;
 
 namespace HSQL.MySQL
 {
-    internal class MySQLHelper : IDbSQLHelper
+    internal class MySQLHelper : DbHelperBase, IDbSQLHelper
     {
-        public int ExecuteNonQuery(string commandText, params IDbDataParameter[] parameters)
+        private string _connectionString;
+        public MySQLHelper(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
+        public int ExecuteNonQuery(bool isNewConnection, string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
 
             int result = 0;
-            using (IConnector connector = MySQLConnectionPools.GetConnector())
+            if (isNewConnection == true)
             {
-                using (IDbCommand command = connector.GetConnection().CreateCommand())
+                using (IDbConnection connection = new MySqlConnection(_connectionString))
                 {
-                    command.CommandText = commandText;
-                    foreach (IDbDataParameter parameter in parameters)
-                    {
-                        command.Parameters.Add(parameter);
-                    }
-                    result = command.ExecuteNonQuery();
+                    connection.Open();
+                    result = ExecuteNonQuery(connection, commandText, parameters);
+                }
+            }
+            else
+            {
+                using (IConnector connector = MySQLConnectionPools.GetConnector())
+                {
+                    result = ExecuteNonQuery(connector.GetConnection(), commandText, parameters);
                 }
             }
             return result;

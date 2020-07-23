@@ -3,6 +3,7 @@ using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HSQL.Test
@@ -17,45 +18,82 @@ namespace HSQL.Test
         [TestMethod]
         public void TestTransactionInsert()
         {
+            dbContext.Delete<Student>(x => x.Name.Contains("transaction_"));
+
             dbContext.Transaction(() =>
             {
                 var result1 = dbContext.Insert(new Student()
                 {
                     Id = "1",
-                    Name = "zhangsan",
+                    Name = "transaction_1",
                     Age = 18,
                     SchoolId = "123"
                 });
-
                 var result2 = dbContext.Insert(new Student()
                 {
                     Id = "2",
-                    Name = "zhangsan",
+                    Name = "transaction_2",
                     Age = 18,
                     SchoolId = "123"
                 });
             });
+
+            var countYes = dbContext.Query<Student>(x => x.Name == "transaction_1" || x.Name == "transaction_2").ToList().Count;
+            Assert.IsTrue(countYes == 2);
+
+            try
+            {
+                dbContext.Transaction(() =>
+                {
+                    var result1 = dbContext.Insert(new Student()
+                    {
+                        Id = "3",
+                        Name = "transaction_3",
+                        Age = 18,
+                        SchoolId = "123"
+                    });
+
+                    throw new Exception("asdf");
+
+                    var result2 = dbContext.Insert(new Student()
+                    {
+                        Id = "4",
+                        Name = "transaction_4",
+                        Age = 18,
+                        SchoolId = "123"
+                    });
+                });
+            }
+            catch (Exception ex)
+            { 
+            
+            }
+
+            var countNo = dbContext.Query<Student>(x => x.Name == "transaction_1" || x.Name == "transaction_2" || x.Name == "transaction_3" || x.Name == "transaction_4").ToList().Count;
+            Assert.IsTrue(countNo == 2);
         }
 
 
         [TestMethod]
         public void TestTransactionManyTask()
         {
-            var database = new DbContext("127.0.0.1", "test", "root", "123456");
+            var dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
+
+            dbContext.Delete<Student>(x => x.Name.Contains("TransactionManyTask_"));
 
             List<Task> list = new List<Task>();
-            for (var i = 0; i < 1000; i++)
+            for (var i = 0; i < 50; i++)
             {
                 var task = new Task(() =>
                 {
-                    database.Transaction(() =>
+                    dbContext.Transaction(() =>
                     {
-                        for (var i = 0; i < 100; i++)
+                        for (var j = 0; j < 10; j++)
                         {
-                            database.Insert(new Student()
+                            dbContext.Insert(new Student()
                             {
                                 Id = Guid.NewGuid().ToString(),
-                                Name = "zhangsan",
+                                Name = $"TransactionManyTask_{i}_{j}",
                                 Age = 18,
                                 SchoolId = "123"
                             });
@@ -70,11 +108,9 @@ namespace HSQL.Test
                 x.Start();
             });
 
-            list.ForEach(x =>
-            {
-                if (!x.IsCompleted)
-                    x.Wait();
-            });
+            Task.WaitAll(list.ToArray());
+            var count = dbContext.Query<Student>(x => x.Name.Contains("TransactionManyTask_")).ToList().Count;
+            Assert.IsTrue(500 == count);
         }
 
     }

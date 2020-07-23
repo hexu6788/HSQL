@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Threading;
 using System.Transactions;
 
 namespace HSQL.Base
 {
     public abstract class DbContextBase
     {
+        /// <summary>
+        /// 是否开启事务
+        /// </summary>
+        public ThreadLocal<bool> TransactionIsOpen = new ThreadLocal<bool>(() => false);
         protected IDbSQLHelper _dbSQLHelper;
 
         /// <summary>
@@ -23,22 +28,13 @@ namespace HSQL.Base
         /// <param name="action">方法体</param>
         public void Transaction(Action action)
         {
+            TransactionIsOpen.Value = true;
             using (TransactionScope scope = new TransactionScope())
             {
-                try
-                {
-                    action();
-                    scope.Complete();
-                }
-                catch (Exception ex)
-                {
-                    throw ex;
-                }
-                finally
-                {
-                    scope.Dispose();
-                }
+                action();
+                scope.Complete();
             }
+            TransactionIsOpen.Value = false;
         }
     }
 

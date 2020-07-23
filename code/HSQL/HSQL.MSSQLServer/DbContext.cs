@@ -18,7 +18,7 @@ namespace HSQL.MSSQLServer
         /// <param name="userId">用户名</param>
         /// <param name="password">密码</param>
         /// <param name="poolSize">连接池连接数</param>
-        public DbContext(string server, string database, string userId, string password, int poolSize = 1)
+        public DbContext(string server, string database, string userId, string password, int poolSize = 3)
         {
             if (string.IsNullOrWhiteSpace(server)
                 || string.IsNullOrWhiteSpace(database)
@@ -31,8 +31,7 @@ namespace HSQL.MSSQLServer
 
             string connectionString = BuildConnectionString(server, database, userId, password);
             SQLServerConnectionPools.Init(connectionString, poolSize);
-
-            _dbSQLHelper = new SQLServerHelper();
+            _dbSQLHelper = new SQLServerHelper(connectionString);
         }
 
         public override string BuildConnectionString(string server, string database, string userID, string password)
@@ -55,7 +54,8 @@ namespace HSQL.MSSQLServer
             string sql = StoreBase.BuildInsertSQL(instance);
             SqlParameter[] parameters = SQLServerStore.BuildSqlParameters(ExpressionFactory.GetColumnList(instance));
 
-            return _dbSQLHelper.ExecuteNonQuery(sql, parameters) > 0;
+            bool isNewConnection = TransactionIsOpen.Value;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, sql, parameters) > 0;
         }
 
         public bool Update<T>(Expression<Func<T, bool>> expression, T instance)
@@ -67,7 +67,8 @@ namespace HSQL.MSSQLServer
 
             Tuple<string, SqlParameter[]> result = SQLServerStore.BuildUpdateSQLAndParameters(expression, instance);
 
-            return _dbSQLHelper.ExecuteNonQuery(result.Item1, result.Item2) > 0;
+            bool isNewConnection = TransactionIsOpen.Value;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, result.Item1, result.Item2) > 0;
         }
 
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
@@ -77,7 +78,8 @@ namespace HSQL.MSSQLServer
 
             string sql = StoreBase.BuildDeleteSQL(predicate);
 
-            return _dbSQLHelper.ExecuteNonQuery(sql) > 0;
+            bool isNewConnection = TransactionIsOpen.Value;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, sql) > 0;
         }
 
         public IQueryabel<T> Query<T>()
@@ -87,6 +89,7 @@ namespace HSQL.MSSQLServer
 
         public IQueryabel<T> Query<T>(Expression<Func<T, bool>> predicate)
         {
+            bool isNewConnection = TransactionIsOpen.Value;
             IQueryabel<T> queryabel = new SQLServerQueryabel<T>(_dbSQLHelper, predicate);
             return queryabel;
         }

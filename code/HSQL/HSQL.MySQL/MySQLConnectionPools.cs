@@ -1,7 +1,6 @@
 ﻿using HSQL.ConnectionPools;
 using MySql.Data.MySqlClient;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading;
 
@@ -12,7 +11,7 @@ namespace HSQL.MySQL
     /// </summary>
     internal class MySQLConnectionPools
     {
-        private static int _size = 1;
+        private static int _size;
         private static readonly object _lockConnector = new object();
         private static List<Connector> _connectorList = new List<Connector>();
 
@@ -21,7 +20,7 @@ namespace HSQL.MySQL
 
         }
 
-        internal static void Init(string connectionString, int size = 1)
+        internal static void Init(string connectionString, int size = 3)
         {
             _size = size;
 

@@ -11,7 +11,7 @@ namespace HSQL.MSSQLServer
     /// </summary>
     internal class SQLServerConnectionPools
     {
-        private static int _size = 1;
+        private static int _size;
         private static readonly object _lockConnector = new object();
         private static List<Connector> _connectorList = new List<Connector>();
 
@@ -20,7 +20,7 @@ namespace HSQL.MSSQLServer
 
         }
 
-        internal static void Init(string connectionString, int size = 1)
+        internal static void Init(string connectionString, int size = 3)
         {
             _size = size;
 

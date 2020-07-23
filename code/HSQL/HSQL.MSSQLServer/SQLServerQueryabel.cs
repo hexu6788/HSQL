@@ -114,7 +114,7 @@ namespace HSQL.MSSQLServer
             string tableName = StoreBase.GetTableName(type);
             string columnJoinString = StoreBase.GetColumnJoinString(type);
             string whereString = ExpressionFactory.ToWhereSql(_predicate);
-            
+
             int pageStart = (pageIndex - 1) * pageSize;
 
             StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");

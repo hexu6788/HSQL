@@ -4,6 +4,7 @@ namespace HSQL.ConnectionPools
 {
     public class Connector : IConnector
     {
+        
         private ConnectorState _state;
         private IDbConnection _connection;
 
