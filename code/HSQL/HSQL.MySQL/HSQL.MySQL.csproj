@@ -9,7 +9,7 @@
     <Product>HSQL</Product>
     <RepositoryUrl>https://github.com/hexu6788/HSQL</RepositoryUrl>
     <PackageProjectUrl>https://github.com/hexu6788/HSQL</PackageProjectUrl>
-    <Version>1.0.0.7</Version>
+    <Version>1.0.0.8</Version>
   </PropertyGroup>
 
   <ItemGroup>
