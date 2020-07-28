@@ -1,4 +1,4 @@
-using HSQL.MySQL;
+using HSQL.MSSQLServer;
 using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -7,7 +7,7 @@ namespace HSQL.Test
     [TestClass]
     public class UnitTestDataBase
     {
-        private IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
+        private IDbContext dbContext = new DbContext("127.0.0.1", "test", "sa", "123");
 
         [TestMethod]
         public void TestInsert()
@@ -133,7 +133,7 @@ namespace HSQL.Test
             var list = dbContext.Query<Student>(x => x.Age == 19 && x.Id.Contains("test_query_page_list"))
                 .ConditionAnd(x => x.Name == "zhangsan")
                 .OrderBy(x => x.Age)
-                .ToList(2, 10);
+                .ToList(1, 10);
 
             list.ForEach(x =>
             {

@@ -42,7 +42,7 @@ namespace HSQL.MSSQLServer
         {
             string whereString = ExpressionFactory.ToWhereSql(_predicate);
 
-            StringBuilder stringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {StoreBase.GetTableName(typeof(T))}");
+            StringBuilder stringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {StoreBase.GetTableName(typeof(T))} WITH(NOLOCK)");
 
             if (!string.IsNullOrWhiteSpace(whereString))
             {
@@ -67,7 +67,7 @@ namespace HSQL.MSSQLServer
             string whereString = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
-            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName} WITH(NOLOCK)");
             if (!string.IsNullOrWhiteSpace(whereString))
                 sqlStringBuilder.Append($" WHERE {whereString}");
 
@@ -76,7 +76,7 @@ namespace HSQL.MSSQLServer
             else
                 sqlStringBuilder.Append($" ORDER BY id");
 
-            sqlStringBuilder.Append($" OFFSET 1 ROWS FETCH NEXT 9999999 ROWS ONLY;");
+            sqlStringBuilder.Append($" OFFSET 0 ROWS FETCH NEXT 9999999 ROWS ONLY;");
 
             List<T> list = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString());
             return list;
@@ -92,7 +92,7 @@ namespace HSQL.MSSQLServer
             string whereString = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
-            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName} WITH(NOLOCK)");
             if (!string.IsNullOrWhiteSpace(whereString))
                 sqlStringBuilder.Append($" WHERE {whereString}");
 
@@ -117,8 +117,8 @@ namespace HSQL.MSSQLServer
 
             int pageStart = (pageIndex - 1) * pageSize;
 
-            StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
-            StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
+            StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName} WITH(NOLOCK)");
+            StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName} WITH(NOLOCK)");
 
             if (!string.IsNullOrWhiteSpace(whereString))
             {
@@ -150,8 +150,8 @@ namespace HSQL.MSSQLServer
             string columnJoinString = StoreBase.GetColumnJoinString(type);
             string whereString = ExpressionFactory.ToWhereSql(_predicate);
 
-            StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
-            StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
+            StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName} WITH(NOLOCK)");
+            StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName} WITH(NOLOCK)");
 
             if (!string.IsNullOrWhiteSpace(whereString))
             {
@@ -184,7 +184,7 @@ namespace HSQL.MSSQLServer
             string whereString = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
-            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
+            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName} WITH(NOLOCK)");
             if (!string.IsNullOrWhiteSpace(whereString))
                 sqlStringBuilder.Append($" WHERE {whereString}");
 
