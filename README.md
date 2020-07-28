@@ -115,7 +115,7 @@ var student = dbContext.Query<Student>(x => x.Age == 19
 && x.Id.Equals("test_query_single"))
 .FirstOrDefault();
 ```
-> Query => ToList 方法表示查询操作：<br/>当 Dialect 为 MySQL 时 最终被解释为 SQL 语句：<br/>SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id = 'test_query_single' LIMIT 0,1;<br/>当 Dialect 为 SQLServer 时 最终被解释为 SQL 语句：<br/>SELECT TOP 1 id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id = 'test_query_single';
+> Query => ToList 方法表示查询操作：<br/>当 Dialect 为 MySQL 时 最终被解释为 SQL 语句：<br/>SELECT id,name,age,school_id,birthday FROM t_student WHERE age = 19 AND id = 'test_query_single' LIMIT 0,1;<br/>当 Dialect 为 SQLServer 时 最终被解释为 SQL 语句：<br/>SELECT TOP 1 id,name,age,school_id,birthday FROM t_student WITH(NOLOCK) WHERE age = 19 AND id = 'test_query_single';
 
 
 
