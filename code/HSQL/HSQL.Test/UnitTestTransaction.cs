@@ -12,7 +12,11 @@ namespace HSQL.Test
     [TestClass]
     public class UnitTestTransaction
     {
-        IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
+        //MYSQL
+        //IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
+
+        //SQLSERVER
+        IDbContext dbContext = new DbContext("127.0.0.1", "test", "sa", "123");
 
         [TestMethod]
         public void TestTransactionInsert()
@@ -76,13 +80,13 @@ namespace HSQL.Test
         [TestMethod]
         public void TestTransactionManyTask()
         {
-            var dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
 
             dbContext.Delete<Student>(x => x.Name.Contains("TransactionManyTask_"));
 
             List<Task> list = new List<Task>();
             for (var i = 0; i < 50; i++)
             {
+                var taskIndex = i;
                 var task = new Task(() =>
                 {
                     dbContext.Transaction(() =>
@@ -92,7 +96,7 @@ namespace HSQL.Test
                             dbContext.Insert(new Student()
                             {
                                 Id = Guid.NewGuid().ToString(),
-                                Name = $"TransactionManyTask_{i}_{j}",
+                                Name = $"TransactionManyTask_{taskIndex}_{j}",
                                 Age = 18,
                                 SchoolId = "123"
                             });
