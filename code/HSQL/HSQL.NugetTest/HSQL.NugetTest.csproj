@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HSQL.MySQL" Version="1.0.0.8" />
+    <PackageReference Include="HSQL.MySQL" Version="1.0.0.9" />
   </ItemGroup>
 
 </Project>
