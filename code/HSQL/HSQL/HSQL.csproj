@@ -12,6 +12,10 @@
     <Authors>何旭</Authors>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>D:\HSQL\code\HSQL\HSQL\HSQL.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>

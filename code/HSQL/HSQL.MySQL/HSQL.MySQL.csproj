@@ -12,6 +12,10 @@
     <Version>1.0.0.9</Version>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>D:\HSQL\code\HSQL\HSQL.MySQL\HSQL.MySQL.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="MySql.Data" Version="8.0.21" />
   </ItemGroup>

@@ -12,6 +12,10 @@
     <PackageProjectUrl>https://github.com/hexu6788/HSQL</PackageProjectUrl>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>D:\HSQL\code\HSQL\HSQL.MSSQLServer\HSQL.MSSQLServer.xml</DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
   </ItemGroup>
