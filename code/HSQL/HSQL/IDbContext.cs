@@ -7,6 +7,12 @@ namespace HSQL
     public interface IDbContext
     {
         /// <summary>
+        /// 设置在执行操作的时候是否将Sql语句打印到控制台
+        /// </summary>
+        /// <param name="print">True 为打印，False 为不打印</param>
+        void SetConsolePrintSql(bool print);
+
+        /// <summary>
         /// 执行新增操作
         /// </summary>
         /// <typeparam name="T">类型</typeparam>

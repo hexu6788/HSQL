@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HSQL.MSSQLServer\HSQL.MSSQLServer.csproj" />
+    <ProjectReference Include="..\HSQL.MySQL\HSQL.MySQL.csproj" />
     <ProjectReference Include="..\HSQL\HSQL.csproj" />
   </ItemGroup>
 

@@ -12,9 +12,10 @@ namespace HSQL.MySQL
 {
     public class MySQLQueryabel<T> : QueryabelBase<T>, IQueryabel<T>
     {
-        public MySQLQueryabel(IDbSQLHelper dbSQLHelper, Expression<Func<T, bool>> predicate)
+        public MySQLQueryabel(IDbSQLHelper dbSQLHelper,bool consolePrintSql, Expression<Func<T, bool>> predicate)
         {
             _dbSQLHelper = dbSQLHelper;
+            _consolePrintSql = consolePrintSql;
             _predicate = predicate;
         }
 
@@ -49,7 +50,7 @@ namespace HSQL.MySQL
                 stringBuilder.Append($" WHERE {whereString}");
             }
 
-            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(stringBuilder.ToString()));
+            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, stringBuilder.ToString()));
             return total;
         }
 
@@ -76,7 +77,7 @@ namespace HSQL.MySQL
 
             sqlStringBuilder.Append(";");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString());
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString());
             return list;
         }
 
@@ -99,7 +100,7 @@ namespace HSQL.MySQL
 
             sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString());
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString());
             return list;
         }
 
@@ -123,7 +124,7 @@ namespace HSQL.MySQL
             }
 
             pageStringBuilder.Append(";");
-            total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(pageStringBuilder.ToString()));
+            total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, pageStringBuilder.ToString()));
             totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
 
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
@@ -131,7 +132,7 @@ namespace HSQL.MySQL
 
             sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString());
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString());
             return list;
         }
 
@@ -153,13 +154,13 @@ namespace HSQL.MySQL
             }
 
             pageStringBuilder.Append(";");
-            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(pageStringBuilder.ToString()));
+            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, pageStringBuilder.ToString()));
             if (total > 1)
                 throw new SingleOrDefaultException();
 
             sqlStringBuilder.Append($" LIMIT 0,1;");
 
-            T instance = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
+            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
             return instance;
         }
 
@@ -181,7 +182,7 @@ namespace HSQL.MySQL
 
             sqlStringBuilder.Append($" LIMIT 0,1;");
 
-            T instance = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
+            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
             return instance;
         }
     }

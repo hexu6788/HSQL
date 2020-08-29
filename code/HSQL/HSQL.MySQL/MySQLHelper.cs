@@ -17,7 +17,7 @@ namespace HSQL.MySQL
             _connectionString = connectionString;
         }
 
-        public int ExecuteNonQuery(bool isNewConnection, string commandText, params IDbDataParameter[] parameters)
+        public int ExecuteNonQuery(bool isNewConnection, bool consolePrintSql, string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -28,20 +28,20 @@ namespace HSQL.MySQL
                 using (IDbConnection connection = new MySqlConnection(_connectionString))
                 {
                     connection.Open();
-                    result = ExecuteNonQuery(connection, commandText, parameters);
+                    result = ExecuteNonQuery(connection, consolePrintSql, commandText, parameters);
                 }
             }
             else
             {
                 using (IConnector connector = MySQLConnectionPools.GetConnector())
                 {
-                    result = ExecuteNonQuery(connector.GetConnection(), commandText, parameters);
+                    result = ExecuteNonQuery(connector.GetConnection(), consolePrintSql, commandText, parameters);
                 }
             }
             return result;
         }
 
-        public object ExecuteScalar(string commandText, params IDbDataParameter[] parameters)
+        public object ExecuteScalar(bool consolePrintSql, string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -59,10 +59,12 @@ namespace HSQL.MySQL
                     result = command.ExecuteScalar();
                 }
             }
+
+            PrintSql(consolePrintSql, commandText);
             return result;
         }
 
-        public List<dynamic> ExecuteList(string commandText, params IDbDataParameter[] parameters)
+        public List<dynamic> ExecuteList(bool consolePrintSql, string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -79,10 +81,12 @@ namespace HSQL.MySQL
                 IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
                 list = InstanceFactory.CreateListAndDisposeReader(reader);
             }
+
+            PrintSql(consolePrintSql, commandText);
             return list;
         }
 
-        public List<T> ExecuteList<T>(List<PropertyInfo> propertyInfoList, string commandText, params IDbDataParameter[] parameters)
+        public List<T> ExecuteList<T>(bool consolePrintSql, List<PropertyInfo> propertyInfoList, string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -99,6 +103,8 @@ namespace HSQL.MySQL
                 IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
                 list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
             }
+
+            PrintSql(consolePrintSql, commandText);
             return list;
         }
 

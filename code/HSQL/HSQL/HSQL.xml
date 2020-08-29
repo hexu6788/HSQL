@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>HSQL</name>
+    </assembly>
+    <members>
+        <member name="F:HSQL.Base.DbContextBase._consolePrintSql">
+            <summary>
+            是否在控制台输出Sql语句
+            </summary>
+        </member>
+        <member name="F:HSQL.Base.DbContextBase.TransactionIsOpen">
+            <summary>
+            是否开启事务
+            </summary>
+        </member>
+        <member name="F:HSQL.Base.DbContextBase._dbSQLHelper">
+            <summary>
+            SQL帮助对象
+            </summary>
+        </member>
+        <member name="M:HSQL.Base.DbContextBase.BuildConnectionString(System.String,System.String,System.String,System.String)">
+            <summary>
+            构建连接字符串
+            </summary>
+            <param name="server">服务器地址</param>
+            <param name="database">数据库</param>
+            <param name="userID">用户名</param>
+            <param name="password">密码</param>
+            <returns>连接字符串</returns>
+        </member>
+        <member name="M:HSQL.Base.DbContextBase.Transaction(System.Action)">
+            <summary>
+            事务调用
+            </summary>
+            <param name="action">方法体</param>
+        </member>
+        <member name="M:HSQL.Base.DbContextBase.SetConsolePrintSql(System.Boolean)">
+            <summary>
+            设置在执行操作的时候是否将Sql语句打印到控制台
+            </summary>
+            <param name="print">True 为打印，False 为不打印</param>
+        </member>
+        <member name="M:HSQL.Base.DbHelperBase.ExecuteNonQuery(System.Data.IDbConnection,System.Boolean,System.String,System.Data.IDbDataParameter[])">
+            <summary>
+            执行增删改操作
+            </summary>
+            <param name="connection">连接对象</param>
+            <param name="consolePrintSql">是否在控制台打印Sql语句</param>
+            <param name="commandText">执行命令</param>
+            <param name="parameters">参数</param>
+            <returns>执行完成后，影响行数</returns>
+        </member>
+        <member name="M:HSQL.Base.DbHelperBase.PrintSql(System.Boolean,System.String)">
+            <summary>
+            在控制台打印Sql语句
+            </summary>
+            <param name="consolePrintSql">是否要打印Sql</param>
+            <param name="commandText">将要打印的Sql语句</param>
+        </member>
+        <member name="M:HSQL.IDbContext.SetConsolePrintSql(System.Boolean)">
+            <summary>
+            设置在执行操作的时候是否将Sql语句打印到控制台
+            </summary>
+            <param name="print">True 为打印，False 为不打印</param>
+        </member>
+        <member name="M:HSQL.IDbContext.Insert``1(``0)">
+            <summary>
+            执行新增操作
+            </summary>
+            <typeparam name="T">类型</typeparam>
+            <param name="instance">要新增的实例</param>
+            <returns>是否新增成功</returns>
+        </member>
+        <member name="M:HSQL.IDbContext.Update``1(System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}},``0)">
+            <summary>
+            执行更新操作
+            </summary>
+            <typeparam name="T">类型</typeparam>
+            <param name="expression">条件表达式，可理解为 SQL 语句中的 WHERE。如：WHERE age = 16 可写为 x=> x.Age = 16</param>
+            <param name="instance">目标表达式，可理解为SQL 语句中的 SET。如：SET age = 16 , name = '张三' 可写为 new Student(){ Age = 16 , Name = "张三" }</param>
+            <returns>是否更新成功</returns>
+        </member>
+        <member name="M:HSQL.IDbContext.Delete``1(System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}})">
+            <summary>
+            执行删除操作
+            </summary>
+            <typeparam name="T">类型</typeparam>
+            <param name="predicate">条件表达式</param>
+            <returns>是否删除成功</returns>
+        </member>
+        <member name="M:HSQL.IDbContext.Transaction(System.Action)">
+            <summary>
+            事务调用
+            </summary>
+            <param name="action">方法体</param>
+        </member>
+        <member name="M:HSQL.IDbContext.Query``1">
+            <summary>
+            无条件查询
+            </summary>
+            <typeparam name="T">类型</typeparam>
+        </member>
+        <member name="M:HSQL.IDbContext.Query``1(System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}})">
+            <summary>
+            无条件查询
+            </summary>
+            <param name="predicate">查询条件表达式</param>
+            <typeparam name="T">类型</typeparam>
+        </member>
+        <member name="M:HSQL.IDbContext.Query(System.String)">
+            <summary>
+            使用SQL语句查询，并得到结果集
+            </summary>
+            <param name="sql">SQL语句</param>
+        </member>
+        <member name="M:HSQL.IDbContext.Query(System.String,System.Object)">
+            <summary>
+            使用SQL语句查询，并得到结果集
+            </summary>
+            <param name="sql">SQL语句</param>
+            <param name="parameter">参数</param>
+        </member>
+        <member name="M:HSQL.IQueryabel`1.ConditionAnd(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})">
+            <summary>
+            查询时添加 AND 条件
+            </summary>
+            <param name="condition">条件</param>
+        </member>
+        <member name="M:HSQL.IQueryabel`1.ConditionOr(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})">
+            <summary>
+            查询时添加 Or 条件
+            </summary>
+            <param name="condition">条件</param>
+        </member>
+        <member name="M:HSQL.IQueryabel`1.FirstOrDefault">
+            <summary>
+            取得符合查询条件的第一条数据
+            </summary>
+        </member>
+        <member name="M:HSQL.IQueryabel`1.SingleOrDefault">
+            <summary>
+            取得符合查询条件的第一条数据，如符合条件的数据不为1条，则抛出异常
+            </summary>
+        </member>
+        <member name="M:HSQL.IQueryabel`1.Count">
+            <summary>
+            取得符合查询条件的数据的数量
+            </summary>
+        </member>
+        <member name="M:HSQL.IQueryabel`1.Exists">
+            <summary>
+            检查符合查询条件的数据是否存在
+            </summary>
+        </member>
+        <member name="M:HSQL.IQueryabel`1.ToList">
+            <summary>
+            获取数据
+            </summary>
+        </member>
+        <member name="M:HSQL.IQueryabel`1.ToList(System.Int32,System.Int32)">
+            <summary>
+            分页获取数据
+            </summary>
+            <param name="pageIndex">页号</param>
+            <param name="pageSize">每页记录条数</param>
+        </member>
+        <member name="M:HSQL.IQueryabel`1.ToList(System.Int32,System.Int32,System.Int32@,System.Int32@)">
+            <summary>
+            分页获取数据
+            </summary>
+            <param name="pageIndex">页号</param>
+            <param name="pageSize">每页记录条数</param>
+            <param name="total">总记录条数</param>
+            <param name="totalPage">总页数</param>
+        </member>
+    </members>
+</doc>

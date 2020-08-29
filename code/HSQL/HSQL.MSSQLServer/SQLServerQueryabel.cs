@@ -12,9 +12,10 @@ namespace HSQL.MSSQLServer
 {
     public class SQLServerQueryabel<T> : QueryabelBase<T>, IQueryabel<T>
     {
-        public SQLServerQueryabel(IDbSQLHelper dbSQLHelper, Expression<Func<T, bool>> predicate)
+        public SQLServerQueryabel(IDbSQLHelper dbSQLHelper, bool consolePrintSql, Expression<Func<T, bool>> predicate)
         {
             _dbSQLHelper = dbSQLHelper;
+            _consolePrintSql = consolePrintSql;
             _predicate = predicate;
         }
 
@@ -49,7 +50,7 @@ namespace HSQL.MSSQLServer
                 stringBuilder.Append($" WHERE {whereString}");
             }
 
-            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(stringBuilder.ToString()));
+            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, stringBuilder.ToString()));
             return total;
         }
 
@@ -78,7 +79,7 @@ namespace HSQL.MSSQLServer
 
             sqlStringBuilder.Append($" OFFSET 0 ROWS FETCH NEXT 9999999 ROWS ONLY;");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString());
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString());
             return list;
         }
 
@@ -103,7 +104,7 @@ namespace HSQL.MSSQLServer
 
             sqlStringBuilder.Append($" OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString());
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString());
             return list;
         }
 
@@ -127,7 +128,7 @@ namespace HSQL.MSSQLServer
             }
 
             pageStringBuilder.Append(";");
-            total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(pageStringBuilder.ToString()));
+            total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, pageStringBuilder.ToString()));
             totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
 
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
@@ -137,7 +138,7 @@ namespace HSQL.MSSQLServer
 
             sqlStringBuilder.Append($" OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString());
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString());
 
             return list;
         }
@@ -160,7 +161,7 @@ namespace HSQL.MSSQLServer
             }
 
             pageStringBuilder.Append(";");
-            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(pageStringBuilder.ToString()));
+            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, pageStringBuilder.ToString()));
             if (total > 1)
                 throw new SingleOrDefaultException();
 
@@ -171,7 +172,7 @@ namespace HSQL.MSSQLServer
 
             sqlStringBuilder.Append($" OFFSET 1 ROWS FETCH NEXT 1 ROWS ONLY;");
 
-            T instance = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
+            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
             return instance;
         }
 
@@ -195,7 +196,7 @@ namespace HSQL.MSSQLServer
 
             sqlStringBuilder.Append($" OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;");
 
-            T instance = _dbSQLHelper.ExecuteList<T>(propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
+            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
             return instance;
         }
     }

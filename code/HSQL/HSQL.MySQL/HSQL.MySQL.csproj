@@ -9,7 +9,7 @@
     <Product>HSQL</Product>
     <RepositoryUrl>https://github.com/hexu6788/HSQL</RepositoryUrl>
     <PackageProjectUrl>https://github.com/hexu6788/HSQL</PackageProjectUrl>
-    <Version>1.0.0.9</Version>
+    <Version>1.0.0.10</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

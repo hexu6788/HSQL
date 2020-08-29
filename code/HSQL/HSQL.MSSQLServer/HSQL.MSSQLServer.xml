@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>HSQL.MSSQLServer</name>
+    </assembly>
+    <members>
+        <member name="M:HSQL.MSSQLServer.DbContext.#ctor(System.String,System.String,System.String,System.String,System.Int32,System.Boolean)">
+            <summary>
+            构建数据库对象
+            </summary>
+            <param name="server">服务器地址</param>
+            <param name="database">数据库名称</param>
+            <param name="userId">用户名</param>
+            <param name="password">密码</param>
+            <param name="poolSize">连接池连接数</param>
+            <param name="consolePrintSql">是否在控制台输出Sql语句</param>
+        </member>
+        <member name="T:HSQL.MSSQLServer.SQLServerConnectionPools">
+            <summary>
+            连接池
+            </summary>
+        </member>
+        <member name="P:HSQL.MSSQLServer.SQLServerConnector.Usable">
+            <summary>
+            是否可用
+            </summary>
+        </member>
+        <member name="M:HSQL.MSSQLServer.SQLServerConnector.GetConnection">
+            <summary>
+            获取连接对象
+            </summary>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

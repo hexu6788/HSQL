@@ -18,13 +18,17 @@ namespace HSQL.MySQL
         /// <param name="userId">用户名</param>
         /// <param name="password">密码</param>
         /// <param name="poolSize">连接池连接数</param>
-        public DbContext(string server, string database, string userId, string password, int poolSize = 3)
+        /// <param name="consolePrintSql">是否在控制台输出Sql语句</param>
+        public DbContext(string server, string database, string userId, string password, int poolSize = 3, bool consolePrintSql = false)
         {
             if (string.IsNullOrWhiteSpace(server)
                 || string.IsNullOrWhiteSpace(database)
                 || string.IsNullOrWhiteSpace(userId)
                 || string.IsNullOrWhiteSpace(password))
                 throw new ConnectionStringIsEmptyException();
+
+            if (consolePrintSql)
+                _consolePrintSql = true;
 
             if (poolSize <= 0)
                 throw new ConnectionStringIsEmptyException($"连接数最小为一个！");
@@ -55,7 +59,7 @@ namespace HSQL.MySQL
             MySqlParameter[] parameters = MySQLStore.BuildMySqlParameters(ExpressionFactory.GetColumnList(instance));
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, sql, parameters) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql, parameters) > 0;
         }
 
         public bool Update<T>(Expression<Func<T, bool>> expression, T instance)
@@ -68,7 +72,7 @@ namespace HSQL.MySQL
             Tuple<string, MySqlParameter[]> result = MySQLStore.BuildUpdateSQLAndParameters(expression, instance);
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, result.Item1, result.Item2) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, result.Item1, result.Item2) > 0;
         }
 
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
@@ -79,7 +83,7 @@ namespace HSQL.MySQL
             string sql = StoreBase.BuildDeleteSQL(predicate);
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, sql) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql) > 0;
         }
 
         public IQueryabel<T> Query<T>()
@@ -90,7 +94,7 @@ namespace HSQL.MySQL
         public IQueryabel<T> Query<T>(Expression<Func<T, bool>> predicate)
         {
             bool isNewConnection = TransactionIsOpen.Value;
-            IQueryabel<T> queryabel = new MySQLQueryabel<T>(_dbSQLHelper, predicate);
+            IQueryabel<T> queryabel = new MySQLQueryabel<T>(_dbSQLHelper, _consolePrintSql, predicate);
             return queryabel;
         }
 
@@ -99,7 +103,7 @@ namespace HSQL.MySQL
             if (string.IsNullOrWhiteSpace(sql))
                 throw new EmptySQLException();
 
-            List<dynamic> list = _dbSQLHelper.ExecuteList(sql);
+            List<dynamic> list = _dbSQLHelper.ExecuteList(_consolePrintSql, sql);
             return list;
         }
 
@@ -109,7 +113,7 @@ namespace HSQL.MySQL
                 throw new EmptySQLException();
 
             MySqlParameter[] dbParameters = MySQLStore.DynamicToMySqlParameters(parameter);
-            List<dynamic> list = _dbSQLHelper.ExecuteList(sql, dbParameters);
+            List<dynamic> list = _dbSQLHelper.ExecuteList(_consolePrintSql, sql, dbParameters);
             return list;
         }
 

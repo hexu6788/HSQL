@@ -1,4 +1,4 @@
-using HSQL.MSSQLServer;
+using HSQL.MySQL;
 using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;

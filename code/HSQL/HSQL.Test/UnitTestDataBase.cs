@@ -1,4 +1,4 @@
-using HSQL.MSSQLServer;
+using HSQL.MySQL;
 using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -7,7 +7,7 @@ namespace HSQL.Test
     [TestClass]
     public class UnitTestDataBase
     {
-        private IDbContext dbContext = new DbContext("127.0.0.1", "test", "sa", "123");
+        IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
 
         [TestMethod]
         public void TestInsert()
@@ -65,7 +65,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQueryOrderBy()
         {
-            var list = dbContext.Query<Student>().ToList();
+            var list = dbContext.Query<Student>().OrderBy(x => x.Id).ToList();
         }
 
         [TestMethod]
@@ -200,6 +200,13 @@ namespace HSQL.Test
 
             Assert.AreNotEqual(list, null);
 
+        }
+
+        [TestMethod]
+        public void TestConsolePrintSQL()
+        {
+            dbContext.SetConsolePrintSql(true);
+            var student = dbContext.Query<Student>(x => x.Id.Equals("test_query_single")).FirstOrDefault();
         }
     }
 }
