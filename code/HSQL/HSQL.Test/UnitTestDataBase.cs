@@ -7,7 +7,7 @@ namespace HSQL.Test
     [TestClass]
     public class UnitTestDataBase
     {
-        IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
+        IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456", 3, true);
 
         [TestMethod]
         public void TestInsert()
@@ -66,11 +66,14 @@ namespace HSQL.Test
         public void TestQueryOrderBy()
         {
             var list = dbContext.Query<Student>().OrderBy(x => x.Id).ToList();
+
+            dbContext.Query<Student>().OrderBy("id").ToList();
         }
 
         [TestMethod]
         public void TestQueryAll()
         {
+
             dbContext.Query<Student>().OrderBy(x => x.Id).ToList();
 
             dbContext.Delete<Student>(x => !x.Id.Contains(""));

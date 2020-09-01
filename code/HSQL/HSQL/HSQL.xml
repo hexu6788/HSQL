@@ -174,5 +174,17 @@
             <param name="total">总记录条数</param>
             <param name="totalPage">总页数</param>
         </member>
+        <member name="M:HSQL.IQueryabel`1.OrderBy(System.String)">
+            <summary>
+            正排序
+            </summary>
+            <param name="field">排序字段</param>
+        </member>
+        <member name="M:HSQL.IQueryabel`1.OrderByDescending(System.String)">
+            <summary>
+            倒排序
+            </summary>
+            <param name="field">排序字段</param>
+        </member>
     </members>
 </doc>

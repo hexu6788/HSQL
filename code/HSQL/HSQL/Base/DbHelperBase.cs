@@ -38,7 +38,7 @@ namespace HSQL.Base
         public void PrintSql(bool consolePrintSql, string commandText)
         {
             if (consolePrintSql && !string.IsNullOrWhiteSpace(commandText))
-                System.Diagnostics.Debug.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} 执行的Sql语句为：{commandText}");
+                System.Diagnostics.Trace.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} 执行的Sql语句为：{commandText}");
         }
     }
 }

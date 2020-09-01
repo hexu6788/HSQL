@@ -1,4 +1,5 @@
 ﻿using HSQL.Base;
+using HSQL.Const;
 using HSQL.Exceptions;
 using HSQL.Factory;
 using System;
@@ -198,6 +199,20 @@ namespace HSQL.MSSQLServer
 
             T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
             return instance;
+        }
+
+        public IQueryabel<T> OrderBy(string field)
+        {
+            _orderBy = KeywordConst.ASC;
+            _orderField = field;
+            return this;
+        }
+
+        public IQueryabel<T> OrderByDescending(string field)
+        {
+            _orderBy = KeywordConst.DESC;
+            _orderField = field;
+            return this;
         }
     }
 }

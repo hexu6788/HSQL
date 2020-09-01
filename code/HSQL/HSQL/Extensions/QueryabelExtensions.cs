@@ -15,9 +15,8 @@ namespace HSQL
             foreach (CustomAttributeData attribute in (keySelector.Body as MemberExpression).Member.CustomAttributes)
             {
                 string field = attribute.ConstructorArguments[0].Value as string;
-                queryabel.SetOrderBy(KeywordConst.ASC);
-                queryabel.SetOrderField(field);
-
+                queryabel._orderBy = KeywordConst.ASC;
+                queryabel._orderField = field;
                 break;
             }
             return (IQueryabel<TSource>)queryabel;
@@ -30,13 +29,11 @@ namespace HSQL
             foreach (CustomAttributeData attribute in (keySelector.Body as MemberExpression).Member.CustomAttributes)
             {
                 string field = attribute.ConstructorArguments[0].Value as string;
-                queryabel.SetOrderBy(KeywordConst.DESC);
-                queryabel.SetOrderField(field);
-
+                queryabel._orderBy = KeywordConst.DESC;
+                queryabel._orderField = field;
                 break;
             }
             return (IQueryabel<TSource>)queryabel;
         }
-
     }
 }

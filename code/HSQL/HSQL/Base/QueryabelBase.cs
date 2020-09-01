@@ -8,19 +8,7 @@ namespace HSQL.Base
         protected bool _consolePrintSql;
         protected IDbSQLHelper _dbSQLHelper;
         protected Expression<Func<T, bool>> _predicate;
-        protected string _orderField = string.Empty;
-        protected string _orderBy = string.Empty;
-
-        internal void SetOrderField(string field)
-        {
-            _orderField = field;
-        }
-        internal void SetOrderBy(string orderBy)
-        {
-            _orderBy = orderBy;
-        }
-
-
-        
+        public string _orderField = string.Empty;
+        public string _orderBy = string.Empty;
     }
 }
