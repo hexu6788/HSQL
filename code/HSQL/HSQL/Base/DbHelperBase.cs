@@ -24,8 +24,8 @@ namespace HSQL.Base
                 {
                     command.Parameters.Add(parameter);
                 }
-                if (consolePrintSql)
-                    PrintSql(commandText);
+
+                PrintSql(consolePrintSql, commandText);
                 result = command.ExecuteNonQuery();
             }
             return result;
@@ -34,15 +34,16 @@ namespace HSQL.Base
         /// <summary>
         /// 在控制台打印Sql语句
         /// </summary>
+        /// <param name="consolePrintSql">是否打印SQL语句</param>
         /// <param name="commandText">将要打印的Sql语句</param>
-        public Task PrintSql(string commandText)
+        public void PrintSql(bool consolePrintSql, string commandText)
         {
-            var task = Task.Run(() =>
+            if (consolePrintSql)
             {
                 if (!string.IsNullOrWhiteSpace(commandText))
                     System.Diagnostics.Trace.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} 执行的Sql语句为：{commandText}");
-            });
-            return task;
+
+            }
         }
     }
 }

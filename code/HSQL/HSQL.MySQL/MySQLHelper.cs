@@ -58,8 +58,7 @@ namespace HSQL.MySQL
                     {
                         command.Parameters.Add(parameter);
                     }
-                    if (consolePrintSql)
-                        PrintSql(commandText);
+                    PrintSql(consolePrintSql, commandText);
                     result = command.ExecuteScalar();
                 }
             }
@@ -80,8 +79,7 @@ namespace HSQL.MySQL
                 {
                     command.Parameters.Add(parameter);
                 }
-                if (consolePrintSql)
-                    PrintSql(commandText);
+                PrintSql(consolePrintSql, commandText);
                 IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
                 list = InstanceFactory.CreateListAndDisposeReader(reader);
             }
@@ -102,8 +100,7 @@ namespace HSQL.MySQL
                 {
                     command.Parameters.Add(parameter);
                 }
-                if (consolePrintSql)
-                    PrintSql(commandText);
+                PrintSql(consolePrintSql, commandText);
                 IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
                 list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
             }
