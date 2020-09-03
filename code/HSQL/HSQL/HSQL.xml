@@ -51,11 +51,10 @@
             <param name="parameters">参数</param>
             <returns>执行完成后，影响行数</returns>
         </member>
-        <member name="M:HSQL.Base.DbHelperBase.PrintSql(System.Boolean,System.String)">
+        <member name="M:HSQL.Base.DbHelperBase.PrintSql(System.String)">
             <summary>
             在控制台打印Sql语句
             </summary>
-            <param name="consolePrintSql">是否要打印Sql</param>
             <param name="commandText">将要打印的Sql语句</param>
         </member>
         <member name="M:HSQL.IDbContext.SetConsolePrintSql(System.Boolean)">
