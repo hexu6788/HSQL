@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HSQL.Test", "HSQL.Test\HSQL
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HSQL.MSSQLServer", "HSQL.MSSQLServer\HSQL.MSSQLServer.csproj", "{F494EC02-39B7-420E-A8DE-521D071F67AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HSQL.NugetTest", "HSQL.NugetTest\HSQL.NugetTest.csproj", "{2565FCC2-BD97-4FEE-BC2C-7249B3881436}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HSQL.NugetTest", "HSQL.NugetTest\HSQL.NugetTest.csproj", "{2565FCC2-BD97-4FEE-BC2C-7249B3881436}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

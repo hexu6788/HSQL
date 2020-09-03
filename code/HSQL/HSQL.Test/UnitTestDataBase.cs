@@ -46,17 +46,19 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQuerySingle()
         {
-            dbContext.Delete<Student>(x => x.Id.Equals("test_query_single"));
-
-            var result = dbContext.Insert(new Student()
+            var s = new Student()
             {
                 Id = "test_query_single",
                 Name = "zhangsan",
                 Age = 19
-            });
+            };
 
+            dbContext.Delete<Student>(x => x.Id == s.Id);
 
-            var student = dbContext.Query<Student>(x => x.Id.Equals("test_query_single")).FirstOrDefault();
+            var result = dbContext.Insert(s);
+
+            var student = dbContext.Query<Student>(x => x.Id == s.Id).FirstOrDefault();
+            Assert.IsNotNull(student);
 
             Assert.AreEqual(19, student.Age);
             Assert.AreEqual("test_query_single", student.Id);

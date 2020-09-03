@@ -307,9 +307,7 @@ namespace HSQL.Factory
                 return $"'{Expression.Lambda<Func<DateTime>>(Expression.Convert(expression, TypeOfConst.DateTime)).Compile().Invoke().ToString()}'";
             else if (expression.Type == TypeOfConst.String)
             {
-                return onlyValue ?
-                    Expression.Lambda<Func<string>>(Expression.Convert(expression, TypeOfConst.String)).Compile().Invoke() :
-                    $"'{Expression.Lambda<Func<string>>(Expression.Convert(expression, TypeOfConst.String)).Compile().Invoke()}'";
+                return Expression.Lambda<Func<string>>(Expression.Convert(expression, TypeOfConst.String)).Compile().Invoke();
             }
             else if (expression.Type == TypeOfConst.ListInt)
                 return string.Join(",", Expression.Lambda<Func<List<int>>>(Expression.Convert(expression, TypeOfConst.ListInt)).Compile().Invoke().Select(x => string.Format("{0}", x)));
