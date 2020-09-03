@@ -56,11 +56,11 @@ namespace HSQL.MySQL
                     {
                         command.Parameters.Add(parameter);
                     }
+                    if (consolePrintSql)
+                        PrintSql(commandText);
                     result = command.ExecuteScalar();
                 }
             }
-
-            PrintSql(consolePrintSql, commandText);
             return result;
         }
 
@@ -78,11 +78,11 @@ namespace HSQL.MySQL
                 {
                     command.Parameters.Add(parameter);
                 }
+                if (consolePrintSql)
+                    PrintSql(commandText);
                 IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
                 list = InstanceFactory.CreateListAndDisposeReader(reader);
             }
-
-            PrintSql(consolePrintSql, commandText);
             return list;
         }
 
@@ -100,11 +100,11 @@ namespace HSQL.MySQL
                 {
                     command.Parameters.Add(parameter);
                 }
+                if (consolePrintSql)
+                    PrintSql(commandText);
                 IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
                 list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
             }
-
-            PrintSql(consolePrintSql, commandText);
             return list;
         }
 

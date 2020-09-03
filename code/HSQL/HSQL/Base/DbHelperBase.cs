@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Threading.Tasks;
 
 namespace HSQL.Base
 {
@@ -23,22 +24,25 @@ namespace HSQL.Base
                 {
                     command.Parameters.Add(parameter);
                 }
+                if (consolePrintSql)
+                    PrintSql(commandText);
                 result = command.ExecuteNonQuery();
             }
-
-            PrintSql(consolePrintSql, commandText);
             return result;
         }
 
         /// <summary>
         /// 在控制台打印Sql语句
         /// </summary>
-        /// <param name="consolePrintSql">是否要打印Sql</param>
         /// <param name="commandText">将要打印的Sql语句</param>
-        public void PrintSql(bool consolePrintSql, string commandText)
+        public Task PrintSql(string commandText)
         {
-            if (consolePrintSql && !string.IsNullOrWhiteSpace(commandText))
-                System.Diagnostics.Trace.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} 执行的Sql语句为：{commandText}");
+            var task = Task.Run(() =>
+            {
+                if (!string.IsNullOrWhiteSpace(commandText))
+                    System.Diagnostics.Trace.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} 执行的Sql语句为：{commandText}");
+            });
+            return task;
         }
     }
 }

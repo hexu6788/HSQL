@@ -4,6 +4,7 @@ using HSQL.Exceptions;
 using HSQL.Model;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -95,6 +96,7 @@ namespace HSQL.Factory
             return where;
         }
 
+
         private static string ResolveWhereSql(Expression expression)
         {
             if (expression == null)
@@ -177,49 +179,54 @@ namespace HSQL.Factory
         private static string ResolveMethodCall(MethodCallExpression expression)
         {
             if (expression.Object == null)
-            {
-                return Eval((Expression)expression);
-            }
+                return Eval(expression);
             else if (expression.Object.Type.IsGenericType && expression.Method.Name.Equals(KeywordConst.Contains))
-            {
-                string left = ResolveMemberName((MemberExpression)expression.Arguments[0]);
-                string right = "";
-                if (expression.Object.NodeType == ExpressionType.MemberAccess)
-                    right = ResolveMemberValue((MemberExpression)expression.Object);
-                else if (expression.Object.NodeType == ExpressionType.Call)
-                    right = ResolveMethodCall((MethodCallExpression)expression.Object);
-                else
-                    throw new ExpressionException();
-
-                if (string.IsNullOrWhiteSpace(right))
-                    throw new Exception("IN 右侧部分不能为空");
-
-                return Combining(left, KeywordConst.IN, $"({right})");
-            }
+                return ResolveMethodCallIn(expression);
             else
-            {
-                string left = ResolveMemberName((MemberExpression)expression.Object);
-                string right = "";
-                if (expression.Arguments[0] is MemberExpression)
-                    right = Eval((MemberExpression)expression.Arguments[0]);
-                else if (expression.Arguments[0] is ConstantExpression)
-                    right = ResolveConstant((ConstantExpression)expression.Arguments[0]);
-                else if (expression.Arguments[0] is MethodCallExpression)
-                    right = ResolveMethodCall((MethodCallExpression)expression.Arguments[0]);
-                else
-                    throw new ExpressionException();
+                return ResolveMethodCallEqualsOrLike(expression);
 
-                switch (expression.Method.Name)
-                {
-                    case KeywordConst.Equals:
-                        return Combining(left, "=", $"'{right}'");
-                    case KeywordConst.Contains:
-                        return Combining(left, KeywordConst.LIKE, $"'%{right}%'");
-                    default:
-                        throw new ExpressionException();
-                }
-            }
             throw new ExpressionException();
+        }
+
+        private static string ResolveMethodCallIn(MethodCallExpression expression)
+        {
+            string left = ResolveMemberName((MemberExpression)expression.Arguments[0]);
+            string right = "";
+            if (expression.Object.NodeType == ExpressionType.MemberAccess)
+                right = ResolveMemberValue((MemberExpression)expression.Object);
+            else if (expression.Object.NodeType == ExpressionType.Call)
+                right = ResolveMethodCall((MethodCallExpression)expression.Object);
+            else
+                throw new ExpressionException();
+
+            if (string.IsNullOrWhiteSpace(right))
+                throw new Exception("IN 右侧部分不能为空");
+
+            return Combining(left, KeywordConst.IN, $"({right})");
+        }
+
+        private static string ResolveMethodCallEqualsOrLike(MethodCallExpression expression)
+        {
+            string left = ResolveMemberName((MemberExpression)expression.Object);
+            string right = "";
+            if (expression.Arguments[0] is MemberExpression)
+                right = Eval((MemberExpression)expression.Arguments[0]);
+            else if (expression.Arguments[0] is ConstantExpression)
+                right = ResolveConstant((ConstantExpression)expression.Arguments[0]);
+            else if (expression.Arguments[0] is MethodCallExpression)
+                right = ResolveMethodCall((MethodCallExpression)expression.Arguments[0]);
+            else
+                throw new ExpressionException();
+
+            switch (expression.Method.Name)
+            {
+                case KeywordConst.Equals:
+                    return Combining(left, "=", $"'{right}'");
+                case KeywordConst.Contains:
+                    return Combining(left, KeywordConst.LIKE, $"'%{right}%'");
+                default:
+                    throw new ExpressionException();
+            }
         }
 
         private static string ResolveMemberName(MemberExpression expression)
