@@ -25,21 +25,22 @@ namespace HSQL.Test
         [TestMethod]
         public void TestUpdate()
         {
-            dbContext.Delete<Student>(x => x.Id.Contains("test_update_list"));
+            dbContext.Delete<Student>(x => x.Id.Contains("test_'update_list"));
 
-            dbContext.Insert(new Student()
+            var insertResult = dbContext.Insert(new Student()
             {
-                Id = $"test_update_list",
+                Id = $"test_'update_list",
                 Name = "zhangsan",
                 Age = 18,
                 SchoolId = "123"
             });
+            Assert.AreEqual(true, insertResult);
 
-            var result = dbContext.Update(x => x.Id.Contains("test_update_list"), new Student() { Age = 19 });
+            var updateResult = dbContext.Update(x => x.Id.Contains("test_'update_list"), new Student() { Age = 19 });
+            Assert.AreEqual(true, updateResult);
 
-            dbContext.Delete<Student>(x => x.Id.Contains("test_update_list"));
-
-            Assert.AreEqual(true, result);
+            var deleteResult = dbContext.Delete<Student>(x => x.Id.Contains("test_'update_list"));
+            Assert.AreEqual(true, deleteResult);
         }
 
         [TestMethod]
@@ -119,6 +120,7 @@ namespace HSQL.Test
                 Assert.IsTrue(x.Id.Contains("test_query_list"));
                 Assert.AreEqual("zhangsan", x.Name);
             });
+            Assert.IsTrue(list.Count == 1);
         }
 
         [TestMethod]
@@ -194,7 +196,8 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQuerySQLByParameters()
         {
-           
+            var student = dbContext.Query<Student>(x => x.Id.Equals("test_query_sin'gle")).FirstOrDefault();
+
             var list = dbContext.Query("SELECT t.id,t.name,s.id AS school_id FROM t_student AS t LEFT JOIN t_school AS s ON t.school_id = s.id WHERE t.id = @id AND t.age > @age;", new
             {
                 id = "test_query_list",

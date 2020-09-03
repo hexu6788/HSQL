@@ -2,6 +2,7 @@
 using HSQL.Const;
 using HSQL.Exceptions;
 using HSQL.Factory;
+using HSQL.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,16 +43,16 @@ namespace HSQL.MySQL
 
         public int Count()
         {
-            string whereString = ExpressionFactory.ToWhereSql(_predicate);
+            Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder stringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {StoreBase.GetTableName(typeof(T))}");
 
-            if (!string.IsNullOrWhiteSpace(whereString))
+            if (!string.IsNullOrWhiteSpace(sql.CommandText))
             {
-                stringBuilder.Append($" WHERE {whereString}");
+                stringBuilder.Append($" WHERE {sql.CommandText}");
             }
 
-            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, stringBuilder.ToString()));
+            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, stringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters)));
             return total;
         }
 
@@ -66,19 +67,19 @@ namespace HSQL.MySQL
             List<PropertyInfo> propertyInfoList = StoreBase.GetPropertyInfoList(type);
             string tableName = StoreBase.GetTableName(type);
             string columnJoinString = StoreBase.GetColumnJoinString(type);
-            string whereString = ExpressionFactory.ToWhereSql(_predicate);
+            Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
-            if (!string.IsNullOrWhiteSpace(whereString))
-                sqlStringBuilder.Append($" WHERE {whereString}");
+            if (!string.IsNullOrWhiteSpace(sql.CommandText))
+                sqlStringBuilder.Append($" WHERE {sql.CommandText}");
 
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                 sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
             sqlStringBuilder.Append(";");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString());
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters));
             return list;
         }
 
@@ -89,19 +90,19 @@ namespace HSQL.MySQL
             string columnJoinString = StoreBase.GetColumnJoinString(type);
             List<PropertyInfo> propertyInfoList = StoreBase.GetPropertyInfoList(type);
             int pageStart = (pageIndex - 1) * pageSize;
-            string whereString = ExpressionFactory.ToWhereSql(_predicate);
+            Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
-            if (!string.IsNullOrWhiteSpace(whereString))
-                sqlStringBuilder.Append($" WHERE {whereString}");
+            if (!string.IsNullOrWhiteSpace(sql.CommandText))
+                sqlStringBuilder.Append($" WHERE {sql.CommandText}");
 
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                 sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
             sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString());
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters));
             return list;
         }
 
@@ -111,21 +112,22 @@ namespace HSQL.MySQL
             List<PropertyInfo> propertyInfoList = StoreBase.GetPropertyInfoList(type);
             string tableName = StoreBase.GetTableName(type);
             string columnJoinString = StoreBase.GetColumnJoinString(type);
-            string whereString = ExpressionFactory.ToWhereSql(_predicate);
+            Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
             int pageStart = (pageIndex - 1) * pageSize;
 
             StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
             StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
 
-            if (!string.IsNullOrWhiteSpace(whereString))
+            if (!string.IsNullOrWhiteSpace(sql.CommandText))
             {
-                sqlStringBuilder.Append($" WHERE {whereString}");
-                pageStringBuilder.Append($" WHERE {whereString}");
+                sqlStringBuilder.Append($" WHERE {sql.CommandText}");
+                pageStringBuilder.Append($" WHERE {sql.CommandText}");
             }
-
             pageStringBuilder.Append(";");
-            total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, pageStringBuilder.ToString()));
+
+            var parameters = _dbSQLHelper.Convert(sql.Parameters);
+            total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, pageStringBuilder.ToString(), parameters));
             totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
 
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
@@ -133,7 +135,7 @@ namespace HSQL.MySQL
 
             sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString());
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString(), parameters);
             return list;
         }
 
@@ -143,25 +145,26 @@ namespace HSQL.MySQL
             List<PropertyInfo> propertyInfoList = StoreBase.GetPropertyInfoList(type);
             string tableName = StoreBase.GetTableName(type);
             string columnJoinString = StoreBase.GetColumnJoinString(type);
-            string whereString = ExpressionFactory.ToWhereSql(_predicate);
+            Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName}");
             StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName}");
 
-            if (!string.IsNullOrWhiteSpace(whereString))
+            if (!string.IsNullOrWhiteSpace(sql.CommandText))
             {
-                sqlStringBuilder.Append($" WHERE {whereString}");
-                pageStringBuilder.Append($" WHERE {whereString}");
+                sqlStringBuilder.Append($" WHERE {sql.CommandText}");
+                pageStringBuilder.Append($" WHERE {sql.CommandText}");
             }
-
             pageStringBuilder.Append(";");
-            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, pageStringBuilder.ToString()));
+
+            var parameters = _dbSQLHelper.Convert(sql.Parameters);
+            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, pageStringBuilder.ToString(), parameters));
             if (total > 1)
                 throw new SingleOrDefaultException();
 
             sqlStringBuilder.Append($" LIMIT 0,1;");
 
-            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
+            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString(), parameters).FirstOrDefault();
             return instance;
         }
 
@@ -171,19 +174,19 @@ namespace HSQL.MySQL
             List<PropertyInfo> propertyInfoList = StoreBase.GetPropertyInfoList(type);
             string tableName = StoreBase.GetTableName(type);
             string columnJoinString = StoreBase.GetColumnJoinString(type);
-            string whereString = ExpressionFactory.ToWhereSql(_predicate);
+            Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
-            if (!string.IsNullOrWhiteSpace(whereString))
-                sqlStringBuilder.Append($" WHERE {whereString}");
+            if (!string.IsNullOrWhiteSpace(sql.CommandText))
+                sqlStringBuilder.Append($" WHERE {sql.CommandText}");
 
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                 sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
             sqlStringBuilder.Append($" LIMIT 0,1;");
 
-            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString()).FirstOrDefault();
+            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters)).FirstOrDefault();
             return instance;
         }
 
@@ -200,5 +203,8 @@ namespace HSQL.MySQL
             _orderField = field;
             return this;
         }
+
+
+
     }
 }

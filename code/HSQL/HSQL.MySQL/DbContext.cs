@@ -1,6 +1,7 @@
 ﻿using HSQL.Base;
 using HSQL.Exceptions;
 using HSQL.Factory;
+using HSQL.Model;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -56,10 +57,10 @@ namespace HSQL.MySQL
                 throw new DataIsNullException();
 
             string sql = StoreBase.BuildInsertSQL(instance);
-            MySqlParameter[] parameters = MySQLStore.BuildMySqlParameters(ExpressionFactory.GetColumnList(instance));
+            var parameters = StoreBase.BuildParameters(ExpressionFactory.GetColumnList(instance));
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql, parameters) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql, _dbSQLHelper.Convert(parameters)) > 0;
         }
 
         public bool Update<T>(Expression<Func<T, bool>> expression, T instance)
@@ -69,10 +70,10 @@ namespace HSQL.MySQL
             if (instance == null)
                 throw new DataIsNullException();
 
-            Tuple<string, MySqlParameter[]> result = MySQLStore.BuildUpdateSQLAndParameters(expression, instance);
+            var result = StoreBase.BuildUpdateSQLAndParameters(expression, instance);
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, result.Item1, result.Item2) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, result.Item1, _dbSQLHelper.Convert(result.Item2)) > 0;
         }
 
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
@@ -80,10 +81,10 @@ namespace HSQL.MySQL
             if (predicate == null)
                 throw new ExpressionIsNullException();
 
-            string sql = StoreBase.BuildDeleteSQL(predicate);
+            Sql sql = StoreBase.BuildDeleteSQL(predicate);
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql.CommandText, _dbSQLHelper.Convert(sql.Parameters)) > 0;
         }
 
         public IQueryabel<T> Query<T>()
@@ -112,8 +113,8 @@ namespace HSQL.MySQL
             if (string.IsNullOrWhiteSpace(sql))
                 throw new EmptySQLException();
 
-            MySqlParameter[] dbParameters = MySQLStore.DynamicToMySqlParameters(parameter);
-            List<dynamic> list = _dbSQLHelper.ExecuteList(_consolePrintSql, sql, dbParameters);
+            var parameters = StoreBase.DynamicToParameters(parameter);
+            List<dynamic> list = _dbSQLHelper.ExecuteList(_consolePrintSql, sql, _dbSQLHelper.Convert(parameters));
             return list;
         }
 

@@ -1,6 +1,7 @@
 ﻿using HSQL.Base;
 using HSQL.Exceptions;
 using HSQL.Factory;
+using HSQL.Model;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -58,10 +59,10 @@ namespace HSQL.MSSQLServer
                 throw new DataIsNullException();
 
             string sql = StoreBase.BuildInsertSQL(instance);
-            SqlParameter[] parameters = SQLServerStore.BuildSqlParameters(ExpressionFactory.GetColumnList(instance));
+            var parameters = StoreBase.BuildParameters(ExpressionFactory.GetColumnList(instance));
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql, parameters) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql, _dbSQLHelper.Convert(parameters)) > 0;
         }
 
         public bool Update<T>(Expression<Func<T, bool>> expression, T instance)
@@ -71,10 +72,10 @@ namespace HSQL.MSSQLServer
             if (instance == null)
                 throw new DataIsNullException();
 
-            Tuple<string, SqlParameter[]> result = SQLServerStore.BuildUpdateSQLAndParameters(expression, instance);
+            Tuple<string, List<Parameter>> result = StoreBase.BuildUpdateSQLAndParameters(expression, instance);
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, result.Item1, result.Item2) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, result.Item1, _dbSQLHelper.Convert(result.Item2)) > 0;
         }
 
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
@@ -82,10 +83,10 @@ namespace HSQL.MSSQLServer
             if (predicate == null)
                 throw new ExpressionIsNullException();
 
-            string sql = StoreBase.BuildDeleteSQL(predicate);
+            Sql sql = StoreBase.BuildDeleteSQL(predicate);
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql) > 0;
+            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql.CommandText, _dbSQLHelper.Convert(sql.Parameters)) > 0;
         }
 
         public IQueryabel<T> Query<T>()
@@ -114,9 +115,9 @@ namespace HSQL.MSSQLServer
             if (string.IsNullOrWhiteSpace(sql))
                 throw new EmptySQLException();
 
-            SqlParameter[] dbParameters = SQLServerStore.DynamicToSqlParameters(parameter);
+            var parameters = StoreBase.DynamicToParameters(parameter);
 
-            List<dynamic> list = _dbSQLHelper.ExecuteList(_consolePrintSql, sql, dbParameters);
+            List<dynamic> list = _dbSQLHelper.ExecuteList(_consolePrintSql, sql, _dbSQLHelper.Convert(parameters));
             return list;
         }
     }

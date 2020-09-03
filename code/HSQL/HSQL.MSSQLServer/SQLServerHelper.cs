@@ -1,10 +1,12 @@
 ﻿using HSQL.Base;
 using HSQL.ConnectionPools;
 using HSQL.Factory;
+using HSQL.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Reflection;
 
 namespace HSQL.MSSQLServer
@@ -109,6 +111,9 @@ namespace HSQL.MSSQLServer
             return list;
         }
 
-        
+        public IDbDataParameter[] Convert(List<Parameter> parameters)
+        {
+            return parameters.Select(x => new SqlParameter(x.ParameterName, x.Value)).ToArray();
+        }
     }
 }

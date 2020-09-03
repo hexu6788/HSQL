@@ -1,10 +1,12 @@
 ﻿using HSQL.Base;
 using HSQL.ConnectionPools;
 using HSQL.Factory;
+using HSQL.Model;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Reflection;
 
 namespace HSQL.MySQL
@@ -108,5 +110,10 @@ namespace HSQL.MySQL
             return list;
         }
 
+
+        public IDbDataParameter[] Convert(List<Parameter> parameters)
+        {
+            return parameters.Select(x => new MySqlParameter(x.ParameterName, x.Value)).ToArray();
+        }
     }
 }

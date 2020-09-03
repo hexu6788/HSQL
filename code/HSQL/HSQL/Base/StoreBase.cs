@@ -2,6 +2,7 @@
 using HSQL.Const;
 using HSQL.Exceptions;
 using HSQL.Factory;
+using HSQL.Model;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -107,17 +108,45 @@ namespace HSQL.Base
             return $"INSERT INTO {tableName}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(columnName => string.Format("@{0}", columnName)))});";
         }
 
-        public static string BuildDeleteSQL<T>(Expression<Func<T, bool>> predicate)
+        public static Sql BuildDeleteSQL<T>(Expression<Func<T, bool>> predicate)
         {
-            string tableName = GetTableName(typeof(T));
-
-            string where = ExpressionFactory.ToWhereSql(predicate);
-            if (string.IsNullOrWhiteSpace(where))
+            if (predicate == null)
                 throw new ExpressionIsNullException();
 
-            return $"DELETE FROM {tableName} WHERE {where};";
+            string tableName = GetTableName(typeof(T));
+            Sql sql = ExpressionFactory.ToWhereSql(predicate);
+            sql.CommandText = $"DELETE FROM {tableName} WHERE {sql.CommandText};";
+            return sql;
         }
 
-        
+        public static List<Parameter> BuildParameters(List<Column> columnList)
+        {
+            return columnList.Select(x => new Parameter(x.Name, x.Value)).ToList();
+        }
+
+        public static List<Parameter> DynamicToParameters(object parameters)
+        {
+            if (parameters == null)
+                throw new EmptyParameterException();
+
+            PropertyInfo[] properties = parameters.GetType().GetProperties();
+
+            return properties.Select(property => new Parameter(string.Format("@{0}", property.Name), property.GetValue(parameters, null))).ToList();
+        }
+
+        public static Tuple<string, List<Parameter>> BuildUpdateSQLAndParameters<T>(Expression<Func<T, bool>> expression, T instance)
+        {
+            Sql sql = ExpressionFactory.ToWhereSql(expression);
+
+            List<Column> columnList = ExpressionFactory.GetColumnListWithOutNull(instance);
+
+            string tableName = GetTableName(instance.GetType());
+
+            string commandText = $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {sql.CommandText};";
+
+            var parameters = BuildParameters(columnList);
+            parameters.AddRange(sql.Parameters);
+            return new Tuple<string, List<Parameter>>(commandText, parameters);
+        }
     }
 }

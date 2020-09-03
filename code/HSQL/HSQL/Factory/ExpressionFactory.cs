@@ -87,17 +87,17 @@ namespace HSQL.Factory
             return list;
         }
 
-        public static string ToWhereSql(Expression expression)
+        public static Sql ToWhereSql(Expression expression)
         {
             if (expression == null)
-                return string.Empty;
+                return new Sql();
 
-            string where = ResolveWhereSql(expression);
-            return where;
+            Sql sql = ResolveWhereSql(expression);
+            return sql;
         }
 
 
-        private static string ResolveWhereSql(Expression expression)
+        private static Sql ResolveWhereSql(Expression expression)
         {
             if (expression == null)
                 throw new ExpressionException();
@@ -115,9 +115,13 @@ namespace HSQL.Factory
                     case ExpressionType.AndAlso:
                     case ExpressionType.OrElse:
                         {
-                            string left = ResolveWhereSql(binaryExpression.Left);
-                            string right = ResolveWhereSql(binaryExpression.Right);
-                            return Combining(left, symbol, right);
+                            Sql left = ResolveWhereSql(binaryExpression.Left);
+                            Sql right = ResolveWhereSql(binaryExpression.Right);
+
+                            Sql sql = new Sql(Combining(left.CommandText, symbol, right.CommandText));
+                            sql.Parameters.AddRange(left.Parameters);
+                            sql.Parameters.AddRange(right.Parameters);
+                            return sql;
                         }
                     case ExpressionType.Equal:
                     case ExpressionType.NotEqual:
@@ -126,7 +130,7 @@ namespace HSQL.Factory
                     case ExpressionType.LessThanOrEqual:
                     case ExpressionType.LessThan:
                         {
-                            string left = ResolveWhereSql(binaryExpression.Left);
+                            Sql left = ResolveWhereSql(binaryExpression.Left);
                             string right = "";
 
                             if (binaryExpression.Right.NodeType == ExpressionType.MemberAccess)
@@ -142,16 +146,18 @@ namespace HSQL.Factory
                                     || binaryExpression.Right.Type == TypeOfConst.Decimal)
                                     right = value;
                                 else if (binaryExpression.Right.Type == TypeOfConst.String)
-                                    right = $"'{value}'";
+                                    right = value;
                                 else
                                     throw new ExpressionException();
                             }
                             else if (binaryExpression.Right.NodeType == ExpressionType.Call)
-                                right = ResolveMethodCall((MethodCallExpression)binaryExpression.Right);
+                                right = ResolveMethodCall((MethodCallExpression)binaryExpression.Right).CommandText;
                             else
                                 throw new ExpressionException();
 
-                            return Combining(left, symbol, right);
+                            Sql sql = new Sql(Combining(left.CommandText, symbol, $"@{left.CommandText}"));
+                            sql.Parameters.Add(new Parameter(left.CommandText, right));
+                            return sql;
                         }
                     default:
                         throw new ExpressionException();
@@ -163,11 +169,11 @@ namespace HSQL.Factory
             }
             else if (expression is MemberExpression)
             {
-                return ResolveMemberName((MemberExpression)expression);
+                return new Sql(ResolveMemberName((MemberExpression)expression));
             }
             else if (expression is ConstantExpression)
             {
-                return ResolveConstant((ConstantExpression)expression);
+                return new Sql(ResolveConstant((ConstantExpression)expression));
             }
             else if (expression is UnaryExpression)
             {
@@ -176,10 +182,10 @@ namespace HSQL.Factory
             throw new ExpressionException();
         }
 
-        private static string ResolveMethodCall(MethodCallExpression expression)
+        private static Sql ResolveMethodCall(MethodCallExpression expression)
         {
             if (expression.Object == null)
-                return Eval(expression);
+                return new Sql(Eval(expression));
             else if (expression.Object.Type.IsGenericType && expression.Method.Name.Equals(KeywordConst.Contains))
                 return ResolveMethodCallIn(expression);
             else
@@ -188,24 +194,24 @@ namespace HSQL.Factory
             throw new ExpressionException();
         }
 
-        private static string ResolveMethodCallIn(MethodCallExpression expression)
+        private static Sql ResolveMethodCallIn(MethodCallExpression expression)
         {
             string left = ResolveMemberName((MemberExpression)expression.Arguments[0]);
             string right = "";
             if (expression.Object.NodeType == ExpressionType.MemberAccess)
                 right = ResolveMemberValue((MemberExpression)expression.Object);
             else if (expression.Object.NodeType == ExpressionType.Call)
-                right = ResolveMethodCall((MethodCallExpression)expression.Object);
+                right = ResolveMethodCall((MethodCallExpression)expression.Object).CommandText;
             else
                 throw new ExpressionException();
 
             if (string.IsNullOrWhiteSpace(right))
                 throw new Exception("IN 右侧部分不能为空");
 
-            return Combining(left, KeywordConst.IN, $"({right})");
+            return new Sql(Combining(left, KeywordConst.IN, $"({right})"));
         }
 
-        private static string ResolveMethodCallEqualsOrLike(MethodCallExpression expression)
+        private static Sql ResolveMethodCallEqualsOrLike(MethodCallExpression expression)
         {
             string left = ResolveMemberName((MemberExpression)expression.Object);
             string right = "";
@@ -214,16 +220,21 @@ namespace HSQL.Factory
             else if (expression.Arguments[0] is ConstantExpression)
                 right = ResolveConstant((ConstantExpression)expression.Arguments[0]);
             else if (expression.Arguments[0] is MethodCallExpression)
-                right = ResolveMethodCall((MethodCallExpression)expression.Arguments[0]);
+                right = ResolveMethodCall((MethodCallExpression)expression.Arguments[0]).CommandText;
             else
                 throw new ExpressionException();
 
+            Sql sql = new Sql();
             switch (expression.Method.Name)
             {
                 case KeywordConst.Equals:
-                    return Combining(left, "=", $"'{right}'");
+                    sql.CommandText = Combining(left, "=", $"@{left}");
+                    sql.Parameters.Add(new Parameter(left, right));
+                    return sql;
                 case KeywordConst.Contains:
-                    return Combining(left, KeywordConst.LIKE, $"'%{right}%'");
+                    sql.CommandText = Combining(left, KeywordConst.LIKE, $"@{left}");
+                    sql.Parameters.Add(new Parameter(left, $"%{right}%"));
+                    return sql;
                 default:
                     throw new ExpressionException();
             }
@@ -244,12 +255,13 @@ namespace HSQL.Factory
             return expression.Value.ToString();
         }
 
-        private static string ResolveUnary(UnaryExpression expression)
+        private static Sql ResolveUnary(UnaryExpression expression)
         {
             if (expression.NodeType == ExpressionType.Not)
             {
-                string value = ResolveMethodCall((MethodCallExpression)expression.Operand).Replace(" = ", " != ");
-                return value;
+                Sql sql = ResolveMethodCall((MethodCallExpression)expression.Operand);
+                sql.CommandText = sql.CommandText.Replace(" = ", " != ");
+                return sql;
             }
             throw new ExpressionException();
         }
