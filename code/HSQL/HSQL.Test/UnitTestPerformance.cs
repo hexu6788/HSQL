@@ -84,7 +84,7 @@ namespace HSQL.Test
         [TestMethod]
         public void TestQueryAll()
         {
-            var number = 2000000;
+            var number = 50000;
 
             dbContext.Delete<Student>(x => x.Age >= 0);
             var list = new List<Student>();
@@ -98,17 +98,20 @@ namespace HSQL.Test
                     SchoolId = "123"
                 });
             }
-
-
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
             dbContext.Transaction(() =>
             {
                 list.ForEach(x =>
                 {
-                    var student = dbContext.Query<Student>(x => x.Age == 18).ToList();
+                    dbContext.Insert(x);
                 });
             });
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            for (var i = 0; i < number; i++)
+            {
+                var student = dbContext.Query<Student>(x => x.Age == 18 && x.Id == $"{i}").ToList();
+            }
             stopwatch.Stop();
 
             var elapsedMilliseconds = $"数据量为{number}条时，耗时：{stopwatch.ElapsedMilliseconds} ms";

@@ -70,5 +70,12 @@ namespace HSQL
         /// </summary>
         /// <param name="field">排序字段</param>
         IQueryabel<T> OrderByDescending(string field);
+
+        /// <summary>
+        /// 倒排序
+        /// </summary>
+        /// <param name="by">排序方式</param>
+        /// <param name="field">排序字段</param>
+        IQueryabel<T> Order(string by,string field);
     }
 }

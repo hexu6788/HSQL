@@ -218,5 +218,12 @@ namespace HSQL.MSSQLServer
             _orderField = field;
             return this;
         }
+
+        public IQueryabel<T> Order(string by, string field)
+        {
+            _orderBy = by;
+            _orderField = field;
+            return this;
+        }
     }
 }

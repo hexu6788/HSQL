@@ -22,7 +22,12 @@ namespace HSQL.Factory
             finally
             {
                 if (reader != null)
-                    reader.Dispose();
+                {
+                    if (!reader.IsClosed)
+                    {
+                        reader.Close();
+                    }
+                }
             }
             return instance;
         }
@@ -74,7 +79,12 @@ namespace HSQL.Factory
             finally
             {
                 if (reader != null)
-                    reader.Dispose();
+                {
+                    if (!reader.IsClosed)
+                    {
+                        reader.Close();
+                    }
+                }
             }
             return list;
         }
@@ -90,14 +100,15 @@ namespace HSQL.Factory
                     list.Add(a);
                 }
             }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
             finally
             {
                 if (reader != null)
-                    reader.Dispose();
+                {
+                    if (!reader.IsClosed)
+                    {
+                        reader.Close();
+                    }
+                }
             }
 
             return list;
