@@ -186,5 +186,12 @@
             </summary>
             <param name="field">排序字段</param>
         </member>
+        <member name="M:HSQL.IQueryabel`1.Order(System.String,System.String)">
+            <summary>
+            倒排序
+            </summary>
+            <param name="by">排序方式</param>
+            <param name="field">排序字段</param>
+        </member>
     </members>
 </doc>

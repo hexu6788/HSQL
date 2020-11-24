@@ -1,6 +1,7 @@
 using HSQL.MySQL;
 using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 
 namespace HSQL.Test
 {
@@ -123,6 +124,23 @@ namespace HSQL.Test
                 Assert.AreEqual("zhangsan", x.Name);
             });
             Assert.IsTrue(list.Count == 1);
+        }
+
+        [TestMethod]
+        public void TestQueryListByIn()
+        {
+            dbContext.Delete<Student>(x => x.Id.Contains("test_query_in_list"));
+
+            dbContext.Insert(new Student()
+            {
+                Id = $"test_query_in_list",
+                Name = "zhangsan",
+                Age = 19
+            });
+            var studentList = new List<string>();
+            var listNo = dbContext.Query<Student>(x => studentList.Contains(x.Id)).ConditionAnd(x => x.Id == "test_query_in_list" && x.Name == "zhangsan").ToList();
+
+            Assert.IsTrue(listNo.Count == 1);
         }
 
         [TestMethod]

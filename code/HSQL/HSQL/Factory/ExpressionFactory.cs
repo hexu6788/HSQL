@@ -118,6 +118,11 @@ namespace HSQL.Factory
                             Sql left = ResolveWhereSql(binaryExpression.Left);
                             Sql right = ResolveWhereSql(binaryExpression.Right);
 
+                            if (left == null)
+                                return right;
+                            if (right == null)
+                                return left;
+
                             Sql sql = new Sql(Combining(left.CommandText, symbol, right.CommandText));
                             sql.Parameters.AddRange(left.Parameters);
                             sql.Parameters.AddRange(right.Parameters);
@@ -205,8 +210,8 @@ namespace HSQL.Factory
             else
                 throw new ExpressionException();
 
-            if (string.IsNullOrWhiteSpace(right))
-                throw new Exception("IN 右侧部分不能为空");
+            if (string.IsNullOrWhiteSpace(right)) 
+                return null;
 
             return new Sql(Combining(left, KeywordConst.IN, $"({right})"));
         }

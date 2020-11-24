@@ -3,13 +3,14 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0.14</Version>
+    <Version>1.0.0.15</Version>
     <Authors>何旭</Authors>
     <Company>何旭</Company>
     <Product>HSQL</Product>
     <Description>HSQL 是一种轻量级的基于 .NET 的 ORM 框架</Description>
     <RepositoryUrl>https://github.com/hexu6788/HSQL</RepositoryUrl>
     <PackageProjectUrl>https://github.com/hexu6788/HSQL</PackageProjectUrl>
+    <AssemblyVersion>1.0.0.15</AssemblyVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
