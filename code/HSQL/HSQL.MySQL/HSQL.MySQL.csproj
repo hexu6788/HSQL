@@ -9,8 +9,9 @@
     <Product>HSQL</Product>
     <RepositoryUrl>https://github.com/hexu6788/HSQL</RepositoryUrl>
     <PackageProjectUrl>https://github.com/hexu6788/HSQL</PackageProjectUrl>
-    <Version>1.0.0.15</Version>
-    <AssemblyVersion>1.0.0.15</AssemblyVersion>
+    <Version>1.0.0.16</Version>
+    <AssemblyVersion>1.0.0.16</AssemblyVersion>
+    <FileVersion>1.0.0.16</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

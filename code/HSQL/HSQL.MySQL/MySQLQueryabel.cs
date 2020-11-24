@@ -73,7 +73,6 @@ namespace HSQL.MySQL
             sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName}");
             if (!string.IsNullOrWhiteSpace(sql.CommandText))
                 sqlStringBuilder.Append($" WHERE {sql.CommandText}");
-
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
                 sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
