@@ -18,6 +18,7 @@ namespace HSQL.Base
         private static ConcurrentDictionary<Type, string> _tableNameStore = new ConcurrentDictionary<Type, string>();
         private static ConcurrentDictionary<Type, List<string>> _columnNameListStore = new ConcurrentDictionary<Type, List<string>>();
         private static ConcurrentDictionary<PropertyInfo, string> _columnAttributeNameStore = new ConcurrentDictionary<PropertyInfo, string>();
+        private static ConcurrentDictionary<MemberInfo, string> _memberAttributeNameStore = new ConcurrentDictionary<MemberInfo, string>();
 
         public static List<PropertyInfo> GetPropertyInfoList(Type type)
         {
@@ -52,6 +53,21 @@ namespace HSQL.Base
             tableName = ((TableAttribute)type.GetCustomAttributes(TypeOfConst.TableAttribute, true)[0]).Name;
             _tableNameStore.TryAdd(type, tableName);
             return tableName;
+        }
+
+        internal static string GetColumnName(MemberExpression expression)
+        {
+            string columnName = string.Empty;
+            if (_memberAttributeNameStore.ContainsKey(expression.Member))
+            {
+                bool tryGetValue = _memberAttributeNameStore.TryGetValue(expression.Member, out columnName);
+                if (tryGetValue)
+                    return columnName;
+            }
+
+            columnName = ((ColumnAttribute)expression.Member.GetCustomAttributes(TypeOfConst.ColumnAttribute, true)[0]).Name;
+            _memberAttributeNameStore.TryAdd(expression.Member, columnName);
+            return columnName;
         }
 
         internal static List<string> GetColumnNameList(Type type)

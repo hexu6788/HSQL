@@ -1,4 +1,5 @@
 ﻿using HSQL.Attribute;
+using HSQL.Base;
 using HSQL.Const;
 using HSQL.Exceptions;
 using HSQL.Model;
@@ -174,7 +175,7 @@ namespace HSQL.Factory
             }
             else if (expression is MemberExpression)
             {
-                return new Sql(ResolveMemberName((MemberExpression)expression));
+                return new Sql(StoreBase.GetColumnName((MemberExpression)expression));
             }
             else if (expression is ConstantExpression)
             {
@@ -201,7 +202,7 @@ namespace HSQL.Factory
 
         private static Sql ResolveMethodCallIn(MethodCallExpression expression)
         {
-            string left = ResolveMemberName((MemberExpression)expression.Arguments[0]);
+            string left = StoreBase.GetColumnName((MemberExpression)expression.Arguments[0]);
             string right = "";
             if (expression.Object.NodeType == ExpressionType.MemberAccess)
                 right = ResolveMemberValue((MemberExpression)expression.Object);
@@ -218,7 +219,7 @@ namespace HSQL.Factory
 
         private static Sql ResolveMethodCallEqualsOrLike(MethodCallExpression expression)
         {
-            string left = ResolveMemberName((MemberExpression)expression.Object);
+            string left = StoreBase.GetColumnName((MemberExpression)expression.Object);
             string right = "";
             if (expression.Arguments[0] is MemberExpression)
                 right = Eval((MemberExpression)expression.Arguments[0]);
@@ -243,11 +244,6 @@ namespace HSQL.Factory
                 default:
                     throw new ExpressionException();
             }
-        }
-
-        private static string ResolveMemberName(MemberExpression expression)
-        {
-            return ((ColumnAttribute)expression.Member.GetCustomAttributes(TypeOfConst.ColumnAttribute, true)[0]).Name;
         }
 
         private static string ResolveMemberValue(MemberExpression expression, bool onlyValue = true)
