@@ -109,8 +109,6 @@ namespace HSQL.Factory
             {
                 BinaryExpression binaryExpression = (BinaryExpression)expression;
 
-                string symbol = ExpressionTypeSymbol(expression.NodeType);
-
                 switch (expression.NodeType)
                 {
                     case ExpressionType.AndAlso:
@@ -124,7 +122,7 @@ namespace HSQL.Factory
                             if (right == null)
                                 return left;
 
-                            Sql sql = new Sql(Combining(left.CommandText, symbol, right.CommandText));
+                            Sql sql = new Sql(Combining(left.CommandText, ResolveSymbol(expression.NodeType), right.CommandText));
                             sql.Parameters.AddRange(left.Parameters);
                             sql.Parameters.AddRange(right.Parameters);
                             return sql;
@@ -136,7 +134,6 @@ namespace HSQL.Factory
                     case ExpressionType.LessThanOrEqual:
                     case ExpressionType.LessThan:
                         {
-                            Sql left = ResolveWhereSql(binaryExpression.Left);
                             string right = "";
 
                             if (binaryExpression.Right.NodeType == ExpressionType.MemberAccess)
@@ -161,8 +158,9 @@ namespace HSQL.Factory
                             else
                                 throw new ExpressionException();
 
-                            Sql sql = new Sql(Combining(left.CommandText, symbol, $"@{left.CommandText}"));
-                            sql.Parameters.Add(new Parameter(left.CommandText, right));
+                            string memberName = ResolveMemberName((MemberExpression)binaryExpression.Left);
+                            Sql sql = new Sql(Combining(memberName, ResolveSymbol(expression.NodeType), $"@{memberName}"));
+                            sql.Parameters.Add(new Parameter(memberName, right));
                             return sql;
                         }
                     default:
@@ -172,10 +170,6 @@ namespace HSQL.Factory
             else if (expression is MethodCallExpression)
             {
                 return ResolveMethodCall((MethodCallExpression)expression);
-            }
-            else if (expression is MemberExpression)
-            {
-                return new Sql(StoreBase.GetColumnName((MemberExpression)expression));
             }
             else if (expression is ConstantExpression)
             {
@@ -187,6 +181,8 @@ namespace HSQL.Factory
             }
             throw new ExpressionException();
         }
+
+        
 
         private static Sql ResolveMethodCall(MethodCallExpression expression)
         {
@@ -246,6 +242,11 @@ namespace HSQL.Factory
             }
         }
 
+        private static string ResolveMemberName(MemberExpression expression)
+        {
+            return StoreBase.GetColumnName(expression);
+        }
+
         private static string ResolveMemberValue(MemberExpression expression, bool onlyValue = true)
         {
             return Eval(expression, onlyValue);
@@ -267,7 +268,7 @@ namespace HSQL.Factory
             throw new ExpressionException();
         }
 
-        private static string ExpressionTypeSymbol(ExpressionType nodeType)
+        private static string ResolveSymbol(ExpressionType nodeType)
         {
             switch (nodeType)
             {

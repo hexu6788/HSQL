@@ -94,7 +94,6 @@ namespace HSQL.MySQL
 
         public IQueryabel<T> Query<T>(Expression<Func<T, bool>> predicate)
         {
-            bool isNewConnection = TransactionIsOpen.Value;
             IQueryabel<T> queryabel = new MySQLQueryabel<T>(_dbSQLHelper, _consolePrintSql, predicate);
             return queryabel;
         }

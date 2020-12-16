@@ -1,4 +1,4 @@
-using HSQL.MSSQLServer;
+using HSQL.MySQL;
 using HSQL.Test.TestDataBaseModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -13,10 +13,10 @@ namespace HSQL.Test
     public class UnitTestTransaction
     {
         //MYSQL
-        //IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
+        IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456", 3, true);
 
         //SQLSERVER
-        IDbContext dbContext = new DbContext("127.0.0.1", "test", "sa", "123");
+        //IDbContext dbContext = new DbContext("127.0.0.1", "test", "sa", "123");
 
         [TestMethod]
         public void TestTransactionInsert()
