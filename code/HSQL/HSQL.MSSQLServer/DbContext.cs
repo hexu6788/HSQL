@@ -119,6 +119,12 @@ namespace HSQL.MSSQLServer
             List<dynamic> list = _dbSQLHelper.ExecuteList(_consolePrintSql, sql, _dbSQLHelper.Convert(parameters));
             return list;
         }
+
+        public void TruncateTable<T>()
+        {
+            string tableName = StoreBase.GetTableName(typeof(T));
+            _dbSQLHelper.ExecuteNonQuery(true, _consolePrintSql, $"TRUNCATE TABLE {tableName};");
+        }
     }
 
 

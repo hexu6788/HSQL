@@ -68,5 +68,11 @@ namespace HSQL
         /// <param name="sql">SQL语句</param>
         /// <param name="parameter">参数</param>
         List<dynamic> Query(string sql, dynamic parameter);
+
+        /// <summary>
+        /// 清空表
+        /// </summary>
+        /// <typeparam name="T">类型</typeparam>
+        void TruncateTable<T>();
     }
 }

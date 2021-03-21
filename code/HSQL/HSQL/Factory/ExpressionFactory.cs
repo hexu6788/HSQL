@@ -155,6 +155,11 @@ namespace HSQL.Factory
                             }
                             else if (binaryExpression.Right.NodeType == ExpressionType.Call)
                                 right = ResolveMethodCall((MethodCallExpression)binaryExpression.Right).CommandText;
+                            else if (binaryExpression.Right.NodeType == ExpressionType.Convert)
+                            {
+                                var operand = (binaryExpression.Right as UnaryExpression).Operand as MemberExpression;
+                                right = ResolveMemberValue(operand);
+                            }
                             else
                                 throw new ExpressionException();
 
@@ -252,6 +257,11 @@ namespace HSQL.Factory
             return Eval(expression, onlyValue);
         }
 
+        private static string ResolveConvertValue(MemberExpression expression, bool onlyValue = true)
+        {
+            return Eval(expression, onlyValue);
+        }
+
         private static string ResolveConstant(ConstantExpression expression)
         {
             return expression.Value.ToString();
@@ -323,6 +333,13 @@ namespace HSQL.Factory
                 return string.Join(",", Expression.Lambda<Func<List<double>>>(Expression.Convert(expression, TypeOfConst.ListDouble)).Compile().Invoke().Select(x => string.Format("{0}", x)));
             else if (expression.Type == TypeOfConst.ListString)
                 return string.Join(",", Expression.Lambda<Func<List<string>>>(Expression.Convert(expression, TypeOfConst.ListString)).Compile().Invoke().Select(x => string.Format("'{0}'", x)));
+            else
+            {
+                if (expression.Type.BaseType == typeof(Enum))
+                {
+                    return Expression.Lambda<Func<int>>(Expression.Convert(expression, TypeOfConst.Int)).Compile().Invoke().ToString();
+                }
+            }
 
             throw new ExpressionException();
         }
