@@ -213,7 +213,7 @@ namespace HSQL.Factory
                 throw new ExpressionException();
 
             if (string.IsNullOrWhiteSpace(right)) 
-                return new Sql();
+                return new Sql(Combining(left, KeywordConst.IN, "('')"));
 
             return new Sql(Combining(left, KeywordConst.IN, $"({right})"));
         }
