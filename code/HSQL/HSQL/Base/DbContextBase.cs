@@ -54,6 +54,9 @@ namespace HSQL.Base
         {
             _consolePrintSql = print;
         }
+
+
+
     }
 
 

@@ -119,8 +119,8 @@ namespace HSQL.MySQL
 
         public void TruncateTable<T>()
         {
-            string tableName = StoreBase.GetTableName(typeof(T));
-            _dbSQLHelper.ExecuteNonQuery(true, _consolePrintSql, $"TRUNCATE TABLE {tableName};");
+            var tableInfo = StoreBase.GetTableInfo(typeof(T));
+            _dbSQLHelper.ExecuteNonQuery(true, _consolePrintSql, $"TRUNCATE TABLE {tableInfo.Name};");
         }
     }
 

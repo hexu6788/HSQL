@@ -64,7 +64,6 @@ Table 标记一个表对象。如：[Table("t_student")] 代表 Student 类将�
 IDbContext dbContext = new DbContext("127.0.0.1", "test", "root", "123456");
 ```
 
-
 <a id="新增">新增：</a>
 ```csharp
 var result = dbContext.Insert(new Student()

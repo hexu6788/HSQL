@@ -87,7 +87,7 @@ namespace HSQL.MSSQLServer
             return list;
         }
 
-        public List<T> ExecuteList<T>(bool consolePrintSql, List<PropertyInfo> propertyInfoList, string commandText, params IDbDataParameter[] parameters)
+        public List<T> ExecuteList<T>(bool consolePrintSql, string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -103,7 +103,7 @@ namespace HSQL.MSSQLServer
                 }
                 PrintSql(consolePrintSql, commandText);
                 IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
-                list = InstanceFactory.CreateListAndDisposeReader<T>(reader, propertyInfoList);
+                list = InstanceFactory.CreateListAndDisposeReader<T>(reader);
             }
             return list;
         }

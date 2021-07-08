@@ -1,22 +1,25 @@
 ﻿using HSQL.Base;
+using HSQL.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
+using System.Linq;
 using System.Reflection;
 
 namespace HSQL.Factory
 {
     public class InstanceFactory
     {
-        public static T CreateSingleAndDisposeReader<T>(IDataReader reader, List<PropertyInfo> propertyInfoList)
+        public static T CreateSingleAndDisposeReader<T>(IDataReader reader)
         {
             T instance = default(T);
+            var tableInfo = StoreBase.GetTableInfo(typeof(T));
             try
             {
                 while (reader.Read())
                 {
-                    instance = Create<T>(reader, propertyInfoList);
+                    instance = Create<T>(tableInfo, reader);
                 }
             }
             finally
@@ -32,17 +35,16 @@ namespace HSQL.Factory
             return instance;
         }
 
-        public static T Create<T>(IDataReader reader, List<PropertyInfo> propertyInfoList)
+        public static T Create<T>(TableInfo tableInfo, IDataReader reader)
         {
             T instance = Activator.CreateInstance<T>();
-            foreach (PropertyInfo property in propertyInfoList)
+            foreach (var column in tableInfo.Columns)
             {
-                string key = StoreBase.GetPropertyColumnAttributeName(property);
-                object value = reader[key];
+                object value = reader[column.Name];
                 if (value is DBNull)
                     continue;
 
-                property.SetValue(instance, value);
+                column.Property.SetValue(instance, value);
             }
             return instance;
         }
@@ -66,14 +68,15 @@ namespace HSQL.Factory
             return expando;
         }
 
-        public static List<T> CreateListAndDisposeReader<T>(IDataReader reader, List<PropertyInfo> propertyInfoList)
+        public static List<T> CreateListAndDisposeReader<T>(IDataReader reader)
         {
+            var tableInfo = StoreBase.GetTableInfo(typeof(T));
             List<T> list = new List<T>();
             try
             {
                 while (reader.Read())
                 {
-                    list.Add(Create<T>(reader, propertyInfoList));
+                    list.Add(Create<T>(tableInfo, reader));
                 }
             }
             finally

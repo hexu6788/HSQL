@@ -44,8 +44,8 @@ namespace HSQL.MSSQLServer
         public int Count()
         {
             Sql sql = ExpressionFactory.ToWhereSql(_predicate);
-
-            StringBuilder stringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {StoreBase.GetTableName(typeof(T))} WITH(NOLOCK)");
+            var tableInfo = StoreBase.GetTableInfo(typeof(T));
+            StringBuilder stringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableInfo.Name} WITH(NOLOCK)");
 
             if (!string.IsNullOrWhiteSpace(sql.CommandText))
             {
@@ -64,38 +64,30 @@ namespace HSQL.MSSQLServer
         public List<T> ToList()
         {
             Type type = typeof(T);
-            List<PropertyInfo> propertyInfoList = StoreBase.GetPropertyInfoList(type);
-            string tableName = StoreBase.GetTableName(type);
-            string columnJoinString = StoreBase.GetColumnJoinString(type);
+            var tableInfo = StoreBase.GetTableInfo(type);
             Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
-            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName} WITH(NOLOCK)");
+            sqlStringBuilder.Append($"SELECT {tableInfo.ColumnsComma} FROM {tableInfo.Name} WITH(NOLOCK)");
             if (!string.IsNullOrWhiteSpace(sql.CommandText))
                 sqlStringBuilder.Append($" WHERE {sql.CommandText}");
 
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
-                sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
-            else
-                sqlStringBuilder.Append($" ORDER BY id");
+                sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy} OFFSET 0 ROWS FETCH NEXT {PageConst.MaxCount} ROWS ONLY;");
 
-            sqlStringBuilder.Append($" OFFSET 0 ROWS FETCH NEXT 9999999 ROWS ONLY;");
-
-            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters));
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters));
             return list;
         }
 
         public List<T> ToList(int pageIndex, int pageSize)
         {
             Type type = typeof(T);
-            string tableName = StoreBase.GetTableName(type);
-            string columnJoinString = StoreBase.GetColumnJoinString(type);
-            List<PropertyInfo> propertyInfoList = StoreBase.GetPropertyInfoList(type);
+            var tableInfo = StoreBase.GetTableInfo(type);
             int pageStart = (pageIndex - 1) * pageSize;
             Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
-            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName} WITH(NOLOCK)");
+            sqlStringBuilder.Append($"SELECT {tableInfo.ColumnsComma} FROM {tableInfo.Name} WITH(NOLOCK)");
             if (!string.IsNullOrWhiteSpace(sql.CommandText))
                 sqlStringBuilder.Append($" WHERE {sql.CommandText}");
 
@@ -106,22 +98,20 @@ namespace HSQL.MSSQLServer
 
             sqlStringBuilder.Append($" OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters));
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters));
             return list;
         }
 
         public List<T> ToList(int pageIndex, int pageSize, out int total, out int totalPage)
         {
             Type type = typeof(T);
-            List<PropertyInfo> propertyInfoList = StoreBase.GetPropertyInfoList(type);
-            string tableName = StoreBase.GetTableName(type);
-            string columnJoinString = StoreBase.GetColumnJoinString(type);
+            var tableInfo = StoreBase.GetTableInfo(type);
             Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
             int pageStart = (pageIndex - 1) * pageSize;
 
-            StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName} WITH(NOLOCK)");
-            StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName} WITH(NOLOCK)");
+            StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {tableInfo.ColumnsComma} FROM {tableInfo.Name} WITH(NOLOCK)");
+            StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableInfo.Name} WITH(NOLOCK)");
 
             if (!string.IsNullOrWhiteSpace(sql.CommandText))
             {
@@ -141,7 +131,7 @@ namespace HSQL.MSSQLServer
 
             sqlStringBuilder.Append($" OFFSET {pageStart} ROWS FETCH NEXT {pageSize} ROWS ONLY;");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString(), parameters);
+            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, sqlStringBuilder.ToString(), parameters);
 
             return list;
         }
@@ -149,13 +139,11 @@ namespace HSQL.MSSQLServer
         public T SingleOrDefault()
         {
             Type type = typeof(T);
-            List<PropertyInfo> propertyInfoList = StoreBase.GetPropertyInfoList(type);
-            string tableName = StoreBase.GetTableName(type);
-            string columnJoinString = StoreBase.GetColumnJoinString(type);
+            var tableInfo = StoreBase.GetTableInfo(type);
             Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
-            StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {columnJoinString} FROM {tableName} WITH(NOLOCK)");
-            StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableName} WITH(NOLOCK)");
+            StringBuilder sqlStringBuilder = new StringBuilder($"SELECT {tableInfo.ColumnsComma} FROM {tableInfo.Name} WITH(NOLOCK)");
+            StringBuilder pageStringBuilder = new StringBuilder($"SELECT COUNT(*) FROM {tableInfo.Name} WITH(NOLOCK)");
 
             if (!string.IsNullOrWhiteSpace(sql.CommandText))
             {
@@ -177,31 +165,25 @@ namespace HSQL.MSSQLServer
 
             sqlStringBuilder.Append($" OFFSET 1 ROWS FETCH NEXT 1 ROWS ONLY;");
 
-            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString(), parameters).FirstOrDefault();
+            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, sqlStringBuilder.ToString(), parameters).FirstOrDefault();
             return instance;
         }
 
         public T FirstOrDefault()
         {
             Type type = typeof(T);
-            List<PropertyInfo> propertyInfoList = StoreBase.GetPropertyInfoList(type);
-            string tableName = StoreBase.GetTableName(type);
-            string columnJoinString = StoreBase.GetColumnJoinString(type);
+            var tableInfo = StoreBase.GetTableInfo(type);
             Sql sql = ExpressionFactory.ToWhereSql(_predicate);
 
             StringBuilder sqlStringBuilder = new StringBuilder();
-            sqlStringBuilder.Append($"SELECT {columnJoinString} FROM {tableName} WITH(NOLOCK)");
+            sqlStringBuilder.Append($"SELECT {tableInfo.ColumnsComma} FROM {tableInfo.Name} WITH(NOLOCK)");
             if (!string.IsNullOrWhiteSpace(sql.CommandText))
                 sqlStringBuilder.Append($" WHERE {sql.CommandText}");
 
             if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
-                sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
-            else
-                sqlStringBuilder.Append($" ORDER BY id");
+                sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy} OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;");
 
-            sqlStringBuilder.Append($" OFFSET 0 ROWS FETCH NEXT 1 ROWS ONLY;");
-
-            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, propertyInfoList, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters)).FirstOrDefault();
+            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters)).FirstOrDefault();
             return instance;
         }
 

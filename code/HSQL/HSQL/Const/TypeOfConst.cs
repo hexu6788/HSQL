@@ -25,5 +25,6 @@ namespace HSQL.Const
 
         internal static Type TableAttribute = typeof(TableAttribute);
         internal static Type ColumnAttribute = typeof(ColumnAttribute);
+        internal static Type IdentityAttribute = typeof(IdentityAttribute);
     }
 }

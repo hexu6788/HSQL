@@ -14,46 +14,47 @@ namespace HSQL.Base
 {
     public class StoreBase
     {
-        private static ConcurrentDictionary<Type, List<PropertyInfo>> _propertyInfoListStore = new ConcurrentDictionary<Type, List<PropertyInfo>>();
-        private static ConcurrentDictionary<Type, string> _tableNameStore = new ConcurrentDictionary<Type, string>();
-        private static ConcurrentDictionary<Type, List<string>> _columnNameListStore = new ConcurrentDictionary<Type, List<string>>();
-        private static ConcurrentDictionary<PropertyInfo, string> _columnAttributeNameStore = new ConcurrentDictionary<PropertyInfo, string>();
+        private static ConcurrentDictionary<Type, TableInfo> _tableInfoStore = new ConcurrentDictionary<Type, TableInfo>();
         private static ConcurrentDictionary<MemberInfo, string> _memberAttributeNameStore = new ConcurrentDictionary<MemberInfo, string>();
 
-        public static List<PropertyInfo> GetPropertyInfoList(Type type)
+        public static TableInfo GetTableInfo(Type type)
         {
-            List<PropertyInfo> propertyInfoList;
-            if (_propertyInfoListStore.ContainsKey(type))
+            TableInfo tableInfo;
+            if (_tableInfoStore.ContainsKey(type))
             {
-                bool tryGetValue = _propertyInfoListStore.TryGetValue(type, out propertyInfoList);
+                bool tryGetValue = _tableInfoStore.TryGetValue(type, out tableInfo);
                 if (tryGetValue)
-                    return propertyInfoList;
+                    return tableInfo;
             }
 
-            propertyInfoList = type.GetProperties().Where(property =>
+            var columns = new List<ColumnInfo>();
+            foreach (PropertyInfo property in type.GetProperties())
             {
-                int count = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true).Count();
-                return count > 0;
-            }).ToList();
-
-            _propertyInfoListStore.TryAdd(type, propertyInfoList);
-            return propertyInfoList;
-        }
-
-        public static string GetTableName(Type type)
-        {
-            string tableName = string.Empty;
-            if (_tableNameStore.ContainsKey(type))
-            {
-                bool tryGetValue = _tableNameStore.TryGetValue(type, out tableName);
-                if (tryGetValue)
-                    return tableName;
+                foreach (var attribute in property.GetCustomAttributes(true))
+                {
+                    if (attribute is ColumnAttribute)
+                    {
+                        columns.Add(new ColumnInfo()
+                        {
+                            Identity = attribute is IdentityAttribute ? true : false,
+                            Name = ((ColumnAttribute)attribute).Name,
+                            Property = property
+                        });
+                    }
+                }
             }
 
-            tableName = ((TableAttribute)type.GetCustomAttributes(TypeOfConst.TableAttribute, true)[0]).Name;
-            _tableNameStore.TryAdd(type, tableName);
-            return tableName;
+            tableInfo = new TableInfo()
+            {
+                Name = ((TableAttribute)type.GetCustomAttributes(TypeOfConst.TableAttribute, true)[0]).Name,
+                Columns = columns,
+                ColumnsComma = string.Join(",", columns.Select(column => column.Name))
+            };
+            _tableInfoStore.TryAdd(type, tableInfo);
+            return tableInfo;
         }
+
+
 
         internal static string GetColumnName(MemberExpression expression)
         {
@@ -70,58 +71,13 @@ namespace HSQL.Base
             return columnName;
         }
 
-        internal static List<string> GetColumnNameList(Type type)
-        {
-            List<string> columnNameList;
-            if (_columnNameListStore.ContainsKey(type))
-            {
-                bool tryGetValue = _columnNameListStore.TryGetValue(type, out columnNameList);
-                if (tryGetValue)
-                    return columnNameList;
-            }
-
-            columnNameList = new List<string>();
-            foreach (PropertyInfo property in type.GetProperties())
-            {
-                foreach (ColumnAttribute attribute in property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true))
-                {
-                    columnNameList.Add(attribute.Name);
-                }
-            }
-            _columnNameListStore.TryAdd(type, columnNameList);
-            return columnNameList;
-        }
-
-        public static string GetColumnJoinString(Type type)
-        {
-            string columnJoinString = string.Join(",", GetColumnNameList(type));
-            return columnJoinString;
-        }
-
-        internal static string GetPropertyColumnAttributeName(PropertyInfo property)
-        {
-            string name = string.Empty;
-            if (_columnAttributeNameStore.ContainsKey(property))
-            {
-                bool tryGetValue = _columnAttributeNameStore.TryGetValue(property, out name);
-                if (tryGetValue)
-                    return name;
-            }
-
-            object[] attributes = property.GetCustomAttributes(TypeOfConst.ColumnAttribute, true);
-            name = ((ColumnAttribute)attributes[0]).Name;
-            _columnAttributeNameStore.TryAdd(property, name);
-            return name;
-        }
-
         public static string BuildInsertSQL<T>(T instance)
         {
             Type type = instance.GetType();
 
-            string tableName = GetTableName(type);
-            List<string> columnNameList = GetColumnNameList(type);
-
-            return $"INSERT INTO {tableName}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(columnName => string.Format("@{0}", columnName)))});";
+            var tableInfo = GetTableInfo(type);
+            var columnNameList = tableInfo.Columns.Where(column => column.Identity == false).Select(column => column.Name).ToList();
+            return $"INSERT INTO {tableInfo.Name}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(columnName => $"@{columnName}"))});";
         }
 
         public static Sql BuildDeleteSQL<T>(Expression<Func<T, bool>> predicate)
@@ -129,9 +85,9 @@ namespace HSQL.Base
             if (predicate == null)
                 throw new ExpressionIsNullException();
 
-            string tableName = GetTableName(typeof(T));
+            var tableInfo = GetTableInfo(typeof(T));
             Sql sql = ExpressionFactory.ToWhereSql(predicate);
-            sql.CommandText = $"DELETE FROM {tableName} WHERE {sql.CommandText};";
+            sql.CommandText = $"DELETE FROM {tableInfo.Name} WHERE {sql.CommandText};";
             return sql;
         }
 
@@ -156,9 +112,8 @@ namespace HSQL.Base
 
             List<Column> columnList = ExpressionFactory.GetColumnListWithOutNull(instance);
 
-            string tableName = GetTableName(instance.GetType());
-
-            string commandText = $"UPDATE {tableName} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {sql.CommandText};";
+            var tableInfo = GetTableInfo(instance.GetType());
+            string commandText = $"UPDATE {tableInfo.Name} SET {string.Join(" , ", columnList.Select(x => string.Format("{0} = @{1}", x.Name, x.Name)))} WHERE {sql.CommandText};";
 
             var parameters = BuildParameters(columnList);
             parameters.AddRange(sql.Parameters);
