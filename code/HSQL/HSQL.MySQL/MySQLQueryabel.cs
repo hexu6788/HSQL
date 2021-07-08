@@ -1,5 +1,4 @@
 ﻿using HSQL.Base;
-using HSQL.Const;
 using HSQL.Exceptions;
 using HSQL.Factory;
 using HSQL.Model;
@@ -7,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
 
 namespace HSQL.MySQL
@@ -17,7 +15,7 @@ namespace HSQL.MySQL
         public MySQLQueryabel(IDbSQLHelper dbSQLHelper,bool consolePrintSql, Expression<Func<T, bool>> predicate)
         {
             _dbSQLHelper = dbSQLHelper;
-            _consolePrintSql = consolePrintSql;
+            ConsolePrintSql = consolePrintSql;
             _predicate = predicate;
         }
 
@@ -53,7 +51,7 @@ namespace HSQL.MySQL
                 stringBuilder.Append($" WHERE {sql.CommandText}");
             }
 
-            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, stringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters)));
+            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(ConsolePrintSql, stringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters)));
             return total;
         }
 
@@ -72,12 +70,11 @@ namespace HSQL.MySQL
             sqlStringBuilder.Append($"SELECT {tableInfo.ColumnsComma} FROM {tableInfo.Name}");
             if (!string.IsNullOrWhiteSpace(sql.CommandText))
                 sqlStringBuilder.Append($" WHERE {sql.CommandText}");
-            if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
-                sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
 
-            sqlStringBuilder.Append(";");
+            if (OrderInfoList.Count > 0)
+                sqlStringBuilder.Append(StoreBase.BuildOrderSQL(OrderInfoList));
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters));
+            List<T> list = _dbSQLHelper.ExecuteList<T>(ConsolePrintSql, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters));
             return list;
         }
 
@@ -93,12 +90,12 @@ namespace HSQL.MySQL
             if (!string.IsNullOrWhiteSpace(sql.CommandText))
                 sqlStringBuilder.Append($" WHERE {sql.CommandText}");
 
-            if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
-                sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+            if (OrderInfoList.Count > 0)
+                sqlStringBuilder.Append(StoreBase.BuildOrderSQL(OrderInfoList));
 
-            sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
+            sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize}");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters));
+            List<T> list = _dbSQLHelper.ExecuteList<T>(ConsolePrintSql, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters));
             return list;
         }
 
@@ -121,15 +118,15 @@ namespace HSQL.MySQL
             pageStringBuilder.Append(";");
 
             var parameters = _dbSQLHelper.Convert(sql.Parameters);
-            total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, pageStringBuilder.ToString(), parameters));
+            total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(ConsolePrintSql, pageStringBuilder.ToString(), parameters));
             totalPage = (total % pageSize == 0) ? (total / pageSize) : (total / pageSize + 1);
 
-            if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
-                sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+            if (OrderInfoList.Count > 0)
+                sqlStringBuilder.Append(StoreBase.BuildOrderSQL(OrderInfoList));
 
-            sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize};");
+            sqlStringBuilder.Append($" LIMIT {pageStart},{pageSize}");
 
-            List<T> list = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, sqlStringBuilder.ToString(), parameters);
+            List<T> list = _dbSQLHelper.ExecuteList<T>(ConsolePrintSql, sqlStringBuilder.ToString(), parameters);
             return list;
         }
 
@@ -150,13 +147,13 @@ namespace HSQL.MySQL
             pageStringBuilder.Append(";");
 
             var parameters = _dbSQLHelper.Convert(sql.Parameters);
-            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(_consolePrintSql, pageStringBuilder.ToString(), parameters));
+            int total = Convert.ToInt32(_dbSQLHelper.ExecuteScalar(ConsolePrintSql, pageStringBuilder.ToString(), parameters));
             if (total > 1)
                 throw new SingleOrDefaultException();
 
             sqlStringBuilder.Append($" LIMIT 0,1;");
 
-            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, sqlStringBuilder.ToString(), parameters).FirstOrDefault();
+            T instance = _dbSQLHelper.ExecuteList<T>(ConsolePrintSql, sqlStringBuilder.ToString(), parameters).FirstOrDefault();
             return instance;
         }
 
@@ -171,35 +168,13 @@ namespace HSQL.MySQL
             if (!string.IsNullOrWhiteSpace(sql.CommandText))
                 sqlStringBuilder.Append($" WHERE {sql.CommandText}");
 
-            if (!string.IsNullOrWhiteSpace(_orderField) && !string.IsNullOrWhiteSpace(_orderBy))
-                sqlStringBuilder.Append($" ORDER BY {_orderField} {_orderBy}");
+            if (OrderInfoList.Count > 0)
+                sqlStringBuilder.Append(StoreBase.BuildOrderSQL(OrderInfoList));
 
-            sqlStringBuilder.Append($" LIMIT 0,1;");
+            sqlStringBuilder.Append($" LIMIT 0,1");
 
-            T instance = _dbSQLHelper.ExecuteList<T>(_consolePrintSql, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters)).FirstOrDefault();
+            T instance = _dbSQLHelper.ExecuteList<T>(ConsolePrintSql, sqlStringBuilder.ToString(), _dbSQLHelper.Convert(sql.Parameters)).FirstOrDefault();
             return instance;
-        }
-
-        public IQueryabel<T> OrderBy(string field)
-        {
-            _orderBy = KeywordConst.ASC;
-            _orderField = field;
-            return this;
-        }
-
-        public IQueryabel<T> OrderByDescending(string field)
-        {
-            _orderBy = KeywordConst.DESC;
-            _orderField = field;
-            return this;
-        }
-
-
-        public IQueryabel<T> Order(string by, string field)
-        {
-            _orderBy = by;
-            _orderField = field;
-            return this;
         }
     }
 }

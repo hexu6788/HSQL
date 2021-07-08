@@ -47,6 +47,7 @@ namespace HSQL.Base
             tableInfo = new TableInfo()
             {
                 Name = ((TableAttribute)type.GetCustomAttributes(TypeOfConst.TableAttribute, true)[0]).Name,
+                DefaultOrderColumnName = columns[0].Name,
                 Columns = columns,
                 ColumnsComma = string.Join(",", columns.Select(column => column.Name))
             };
@@ -89,6 +90,14 @@ namespace HSQL.Base
             Sql sql = ExpressionFactory.ToWhereSql(predicate);
             sql.CommandText = $"DELETE FROM {tableInfo.Name} WHERE {sql.CommandText};";
             return sql;
+        }
+
+        public static string BuildOrderSQL(List<OrderInfo> orderInfoList)
+        {
+            if (orderInfoList.Count <= 0)
+                return string.Empty;
+
+            return $" ORDER BY {string.Join(", ", orderInfoList.Select(order => $"{order.Field} {order.By}"))}";
         }
 
         public static List<Parameter> BuildParameters(List<Column> columnList)

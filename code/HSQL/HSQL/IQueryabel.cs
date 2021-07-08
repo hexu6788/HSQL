@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HSQL.Base;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -58,24 +59,5 @@ namespace HSQL
         /// <param name="total">总记录条数</param>
         /// <param name="totalPage">总页数</param>
         List<T> ToList(int pageIndex, int pageSize, out int total, out int totalPage);
-
-        /// <summary>
-        /// 正排序
-        /// </summary>
-        /// <param name="field">排序字段</param>
-        IQueryabel<T> OrderBy(string field);
-
-        /// <summary>
-        /// 倒排序
-        /// </summary>
-        /// <param name="field">排序字段</param>
-        IQueryabel<T> OrderByDescending(string field);
-
-        /// <summary>
-        /// 倒排序
-        /// </summary>
-        /// <param name="by">排序方式</param>
-        /// <param name="field">排序字段</param>
-        IQueryabel<T> Order(string by,string field);
     }
 }

@@ -1,14 +1,69 @@
-﻿using System;
+﻿using HSQL.Const;
+using HSQL.Model;
+using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace HSQL.Base
 {
     public class QueryabelBase<T>
     {
-        protected bool _consolePrintSql;
+        public QueryabelBase()
+        {
+            OrderInfoList = new List<OrderInfo>();
+        }
+
+
         protected IDbSQLHelper _dbSQLHelper;
         protected Expression<Func<T, bool>> _predicate;
-        public string _orderField = string.Empty;
-        public string _orderBy = string.Empty;
+
+        protected bool ConsolePrintSql;
+        public List<OrderInfo> OrderInfoList { get; set; }
+
+
+
+
+        internal void OrderBy(string field)
+        {
+            OrderInfoList = new List<OrderInfo>()
+            {
+                new OrderInfo()
+                {
+                    By = KeywordConst.ASC,
+                    Field = field
+                }
+            };
+        }
+
+        internal void OrderByDescending(string field)
+        {
+            OrderInfoList = new List<OrderInfo>()
+            {
+                new OrderInfo()
+                {
+                    By = KeywordConst.DESC,
+                    Field = field
+                }
+            };
+        }
+
+        internal void ThenOrderBy(string field)
+        {
+            OrderInfoList.Add(new OrderInfo()
+            {
+                By = KeywordConst.ASC,
+                Field = field
+            });
+        }
+
+        internal void ThenOrderByDescending(string field)
+        {
+            OrderInfoList.Add(new OrderInfo()
+            {
+                By = KeywordConst.DESC,
+                Field = field
+            });
+        }
+
     }
 }

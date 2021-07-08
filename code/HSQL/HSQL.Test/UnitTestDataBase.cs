@@ -70,9 +70,14 @@ namespace HSQL.Test
         public void TestQueryOrderBy()
         {
             var list = dbContext.Query<Student>().OrderBy(x => x.Id).ToList();
-
-            dbContext.Query<Student>().OrderBy("id").ToList();
         }
+
+        [TestMethod]
+        public void TestQueryThenOrderByDescending()
+        {
+            var list = dbContext.Query<Student>().OrderBy(x => x.Id).ThenOrderByDescending(x => x.Name).ToList();
+        }
+
 
         [TestMethod]
         public void TestQueryAll()

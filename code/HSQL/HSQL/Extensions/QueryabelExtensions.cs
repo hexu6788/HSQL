@@ -1,5 +1,4 @@
 ﻿using HSQL.Base;
-using HSQL.Const;
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -15,8 +14,8 @@ namespace HSQL
             foreach (CustomAttributeData attribute in (keySelector.Body as MemberExpression).Member.CustomAttributes)
             {
                 string field = attribute.ConstructorArguments[0].Value as string;
-                queryabel._orderBy = KeywordConst.ASC;
-                queryabel._orderField = field;
+
+                queryabel.OrderBy(field);
                 break;
             }
             return (IQueryabel<TSource>)queryabel;
@@ -29,8 +28,37 @@ namespace HSQL
             foreach (CustomAttributeData attribute in (keySelector.Body as MemberExpression).Member.CustomAttributes)
             {
                 string field = attribute.ConstructorArguments[0].Value as string;
-                queryabel._orderBy = KeywordConst.DESC;
-                queryabel._orderField = field;
+
+                queryabel.OrderByDescending(field);
+                break;
+            }
+            return (IQueryabel<TSource>)queryabel;
+        }
+
+
+        public static IQueryabel<TSource> ThenOrderBy<TSource, TKey>(this IQueryabel<TSource> source, Expression<Func<TSource, TKey>> keySelector)
+        {
+            QueryabelBase<TSource> queryabel = (QueryabelBase<TSource>)source;
+
+            foreach (CustomAttributeData attribute in (keySelector.Body as MemberExpression).Member.CustomAttributes)
+            {
+                string field = attribute.ConstructorArguments[0].Value as string;
+
+                queryabel.ThenOrderBy(field);
+                break;
+            }
+            return (IQueryabel<TSource>)queryabel;
+        }
+
+        public static IQueryabel<TSource> ThenOrderByDescending<TSource, TKey>(this IQueryabel<TSource> source, Expression<Func<TSource, TKey>> keySelector)
+        {
+            QueryabelBase<TSource> queryabel = (QueryabelBase<TSource>)source;
+
+            foreach (CustomAttributeData attribute in (keySelector.Body as MemberExpression).Member.CustomAttributes)
+            {
+                string field = attribute.ConstructorArguments[0].Value as string;
+
+                queryabel.ThenOrderByDescending(field);
                 break;
             }
             return (IQueryabel<TSource>)queryabel;
