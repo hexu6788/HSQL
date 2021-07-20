@@ -32,7 +32,7 @@ namespace HSQL.Model
     public class ColumnInfo
     {
         /// <summary>
-        /// 是否为主键列
+        /// 是否为自增列
         /// </summary>
         public bool Identity { get; set; }
 

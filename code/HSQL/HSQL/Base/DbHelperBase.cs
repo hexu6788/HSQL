@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Data;
-using System.Threading.Tasks;
 
 namespace HSQL.Base
 {
     public class DbHelperBase
     {
+        /// <summary>
+        /// 是否在控制台输出Sql语句
+        /// </summary>
+        public bool ConsolePrintSql { get; set; }
+
         /// <summary>
         /// 执行增删改操作
         /// </summary>
@@ -14,7 +18,7 @@ namespace HSQL.Base
         /// <param name="commandText">执行命令</param>
         /// <param name="parameters">参数</param>
         /// <returns>执行完成后，影响行数</returns>
-        public int ExecuteNonQuery(IDbConnection connection, bool consolePrintSql, string commandText, params IDbDataParameter[] parameters)
+        public int ExecuteNonQuery(IDbConnection connection, string commandText, params IDbDataParameter[] parameters)
         {
             int result = 0;
             using (IDbCommand command = connection.CreateCommand())
@@ -25,7 +29,7 @@ namespace HSQL.Base
                     command.Parameters.Add(parameter);
                 }
 
-                PrintSql(consolePrintSql, commandText);
+                PrintSql(commandText);
                 result = command.ExecuteNonQuery();
             }
             return result;
@@ -36,13 +40,12 @@ namespace HSQL.Base
         /// </summary>
         /// <param name="consolePrintSql">是否打印SQL语句</param>
         /// <param name="commandText">将要打印的Sql语句</param>
-        public void PrintSql(bool consolePrintSql, string commandText)
+        public void PrintSql(string commandText)
         {
-            if (consolePrintSql)
+            if (ConsolePrintSql)
             {
                 if (!string.IsNullOrWhiteSpace(commandText))
                     System.Diagnostics.Trace.WriteLine($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} 执行的Sql语句为：{commandText}");
-
             }
         }
     }

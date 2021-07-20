@@ -59,7 +59,7 @@ namespace HSQL.Base
 
         internal static string GetColumnName(MemberExpression expression)
         {
-            string columnName = string.Empty;
+            var columnName = string.Empty;
             if (_memberAttributeNameStore.ContainsKey(expression.Member))
             {
                 bool tryGetValue = _memberAttributeNameStore.TryGetValue(expression.Member, out columnName);
@@ -74,9 +74,7 @@ namespace HSQL.Base
 
         public static string BuildInsertSQL<T>(T instance)
         {
-            Type type = instance.GetType();
-
-            var tableInfo = GetTableInfo(type);
+            var tableInfo = GetTableInfo(instance.GetType());
             var columnNameList = tableInfo.Columns.Where(column => column.Identity == false).Select(column => column.Name).ToList();
             return $"INSERT INTO {tableInfo.Name}({string.Join(",", columnNameList)}) VALUES({string.Join(",", columnNameList.Select(columnName => $"@{columnName}"))});";
         }

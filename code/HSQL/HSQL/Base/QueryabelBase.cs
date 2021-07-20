@@ -13,11 +13,8 @@ namespace HSQL.Base
             OrderInfoList = new List<OrderInfo>();
         }
 
-
-        protected IDbSQLHelper _dbSQLHelper;
-        protected Expression<Func<T, bool>> _predicate;
-
-        protected bool ConsolePrintSql;
+        protected IDbSQLHelper DbSQLHelper { get; set; }
+        protected Expression<Func<T, bool>> Predicate { get; set; }
         public List<OrderInfo> OrderInfoList { get; set; }
 
 

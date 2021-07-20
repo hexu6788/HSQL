@@ -7,10 +7,10 @@ namespace HSQL
 {
     public interface IDbSQLHelper
     {
-        int ExecuteNonQuery(bool isNewConnection, bool consolePrintSql, string commandText, params IDbDataParameter[] parameters);
-        object ExecuteScalar(bool consolePrintSql, string commandText, params IDbDataParameter[] parameters);
-        List<dynamic> ExecuteList(bool consolePrintSql, string commandText, params IDbDataParameter[] parameters);
-        List<T> ExecuteList<T>(bool consolePrintSql, string commandText, params IDbDataParameter[] parameters);
+        int ExecuteNonQuery(bool isNewConnection, string commandText, params IDbDataParameter[] parameters);
+        object ExecuteScalar(string commandText, params IDbDataParameter[] parameters);
+        List<dynamic> ExecuteList(string commandText, params IDbDataParameter[] parameters);
+        List<T> ExecuteList<T>(string commandText, params IDbDataParameter[] parameters);
         IDbDataParameter[] Convert(List<Parameter> parameters);
     }
 }

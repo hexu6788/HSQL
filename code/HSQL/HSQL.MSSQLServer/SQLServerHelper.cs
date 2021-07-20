@@ -14,13 +14,14 @@ namespace HSQL.MSSQLServer
     internal class SQLServerHelper : DbHelperBase, IDbSQLHelper
     {
         
-        private string _connectionString;
-        public SQLServerHelper(string connectionString)
+        private string ConnectionString { get; set; }
+        public SQLServerHelper(string connectionString, bool consolePrintSql)
         {
-            _connectionString = connectionString;
+            ConnectionString = connectionString;
+            ConsolePrintSql = consolePrintSql;
         }
 
-        public int ExecuteNonQuery(bool isNewConnection, bool consolePrintSql, string commandText, params IDbDataParameter[] parameters)
+        public int ExecuteNonQuery(bool isNewConnection, string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -28,23 +29,23 @@ namespace HSQL.MSSQLServer
             int result = 0;
             if (isNewConnection == true)
             {
-                using (IDbConnection connection = new SqlConnection(_connectionString))
+                using (IDbConnection connection = new SqlConnection(ConnectionString))
                 {
                     connection.Open();
-                    result = ExecuteNonQuery(connection, consolePrintSql, commandText, parameters);
+                    result = ExecuteNonQuery(connection, commandText, parameters);
                 }
             }
             else
             {
                 using (IConnector connector = SQLServerConnectionPools.GetConnector())
                 {
-                    result = ExecuteNonQuery(connector.GetConnection(), consolePrintSql, commandText, parameters);
+                    result = ExecuteNonQuery(connector.GetConnection(), commandText, parameters);
                 }
             }
             return result;
         }
 
-        public object ExecuteScalar(bool consolePrintSql, string commandText, params IDbDataParameter[] parameters)
+        public object ExecuteScalar(string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -59,14 +60,14 @@ namespace HSQL.MSSQLServer
                     {
                         command.Parameters.Add(parameter);
                     }
-                    PrintSql(consolePrintSql, commandText);
+                    PrintSql(commandText);
                     result = command.ExecuteScalar();
                 }
             }
             return result;
         }
 
-        public List<dynamic> ExecuteList(bool consolePrintSql, string commandText, params IDbDataParameter[] parameters)
+        public List<dynamic> ExecuteList(string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -80,14 +81,14 @@ namespace HSQL.MSSQLServer
                 {
                     command.Parameters.Add(parameter);
                 }
-                PrintSql(consolePrintSql, commandText);
+                PrintSql(commandText);
                 IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
                 list = InstanceFactory.CreateListAndDisposeReader(reader);
             }
             return list;
         }
 
-        public List<T> ExecuteList<T>(bool consolePrintSql, string commandText, params IDbDataParameter[] parameters)
+        public List<T> ExecuteList<T>(string commandText, params IDbDataParameter[] parameters)
         {
             if (string.IsNullOrWhiteSpace(commandText))
                 throw new ArgumentNullException("执行命令不能为空");
@@ -101,7 +102,7 @@ namespace HSQL.MSSQLServer
                 {
                     command.Parameters.Add(parameter);
                 }
-                PrintSql(consolePrintSql, commandText);
+                PrintSql(commandText);
                 IDataReader reader = command.ExecuteReader(CommandBehavior.CloseConnection);
                 list = InstanceFactory.CreateListAndDisposeReader<T>(reader);
             }

@@ -7,11 +7,6 @@ namespace HSQL.Base
     public abstract class DbContextBase
     {
         /// <summary>
-        /// 是否在控制台输出Sql语句
-        /// </summary>
-        public bool _consolePrintSql = false;
-
-        /// <summary>
         /// 是否开启事务
         /// </summary>
         public ThreadLocal<bool> TransactionIsOpen = new ThreadLocal<bool>(() => false);
@@ -19,7 +14,7 @@ namespace HSQL.Base
         /// <summary>
         /// SQL帮助对象
         /// </summary>
-        protected IDbSQLHelper _dbSQLHelper;
+        protected IDbSQLHelper DbSQLHelper { get; set; }
 
         /// <summary>
         /// 构建连接字符串
@@ -44,15 +39,6 @@ namespace HSQL.Base
                 scope.Complete();
             }
             TransactionIsOpen.Value = false;
-        }
-
-        /// <summary>
-        /// 设置在执行操作的时候是否将Sql语句打印到控制台
-        /// </summary>
-        /// <param name="print">True 为打印，False 为不打印</param>
-        public void SetConsolePrintSql(bool print)
-        {
-            _consolePrintSql = print;
         }
 
 

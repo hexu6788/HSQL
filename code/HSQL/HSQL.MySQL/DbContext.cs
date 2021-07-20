@@ -28,15 +28,12 @@ namespace HSQL.MySQL
                 || string.IsNullOrWhiteSpace(password))
                 throw new ConnectionStringIsEmptyException();
 
-            if (consolePrintSql)
-                _consolePrintSql = true;
-
             if (poolSize <= 0)
                 throw new ConnectionStringIsEmptyException($"连接数最小为一个！");
 
             string connectionString = BuildConnectionString(server, database, userId, password);
             MySQLConnectionPools.Init(connectionString, poolSize);
-            _dbSQLHelper = new MySQLHelper(connectionString);
+            DbSQLHelper = new MySQLHelper(connectionString, consolePrintSql);
         }
 
         public override string BuildConnectionString(string server, string database, string userID, string password)
@@ -60,7 +57,7 @@ namespace HSQL.MySQL
             var parameters = StoreBase.BuildParameters(ExpressionFactory.GetColumnList(instance));
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql, _dbSQLHelper.Convert(parameters)) > 0;
+            return DbSQLHelper.ExecuteNonQuery(isNewConnection, sql, DbSQLHelper.Convert(parameters)) > 0;
         }
 
         public bool Update<T>(Expression<Func<T, bool>> expression, T instance)
@@ -73,7 +70,7 @@ namespace HSQL.MySQL
             var result = StoreBase.BuildUpdateSQLAndParameters(expression, instance);
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, result.Item1, _dbSQLHelper.Convert(result.Item2)) > 0;
+            return DbSQLHelper.ExecuteNonQuery(isNewConnection, result.Item1, DbSQLHelper.Convert(result.Item2)) > 0;
         }
 
         public bool Delete<T>(Expression<Func<T, bool>> predicate)
@@ -84,7 +81,7 @@ namespace HSQL.MySQL
             Sql sql = StoreBase.BuildDeleteSQL(predicate);
 
             bool isNewConnection = TransactionIsOpen.Value;
-            return _dbSQLHelper.ExecuteNonQuery(isNewConnection, _consolePrintSql, sql.CommandText, _dbSQLHelper.Convert(sql.Parameters)) > 0;
+            return DbSQLHelper.ExecuteNonQuery(isNewConnection, sql.CommandText, DbSQLHelper.Convert(sql.Parameters)) > 0;
         }
 
         public IQueryabel<T> Query<T>()
@@ -94,7 +91,7 @@ namespace HSQL.MySQL
 
         public IQueryabel<T> Query<T>(Expression<Func<T, bool>> predicate)
         {
-            IQueryabel<T> queryabel = new MySQLQueryabel<T>(_dbSQLHelper, _consolePrintSql, predicate);
+            IQueryabel<T> queryabel = new MySQLQueryabel<T>(DbSQLHelper, predicate);
             return queryabel;
         }
 
@@ -103,7 +100,7 @@ namespace HSQL.MySQL
             if (string.IsNullOrWhiteSpace(sql))
                 throw new EmptySQLException();
 
-            List<dynamic> list = _dbSQLHelper.ExecuteList(_consolePrintSql, sql);
+            List<dynamic> list = DbSQLHelper.ExecuteList(sql);
             return list;
         }
 
@@ -113,14 +110,14 @@ namespace HSQL.MySQL
                 throw new EmptySQLException();
 
             var parameters = StoreBase.DynamicToParameters(parameter);
-            List<dynamic> list = _dbSQLHelper.ExecuteList(_consolePrintSql, sql, _dbSQLHelper.Convert(parameters));
+            List<dynamic> list = DbSQLHelper.ExecuteList(sql, DbSQLHelper.Convert(parameters));
             return list;
         }
 
         public void TruncateTable<T>()
         {
             var tableInfo = StoreBase.GetTableInfo(typeof(T));
-            _dbSQLHelper.ExecuteNonQuery(true, _consolePrintSql, $"TRUNCATE TABLE {tableInfo.Name};");
+            DbSQLHelper.ExecuteNonQuery(true, $"TRUNCATE TABLE {tableInfo.Name};");
         }
     }
 
