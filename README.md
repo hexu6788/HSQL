@@ -9,11 +9,11 @@ HSQL 是一种可以使用非常`简单`且`高效`的方式进行数据库操�
 ### 安装方法
 MySQL
 ```csharp
-Install-Package HSQL.MySQL -Version 1.0.0.9
+Install-Package HSQL.MySQL -Version 1.0.0.16
 ```
 MSSQLServer
 ```csharp
-Install-Package HSQL.MSSQLServer -Version 1.0.0.9
+Install-Package HSQL.MSSQLServer -Version 1.0.0.16
 ```
 
 ### 使用方法
